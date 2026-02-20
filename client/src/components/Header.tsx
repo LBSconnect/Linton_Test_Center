@@ -51,12 +51,12 @@ export default function Header() {
             <div className="flex items-center gap-3 cursor-pointer">
               <img
                 src={logoImg}
-                alt="LBS4 Logo"
+                alt="LBS Logo"
                 className="h-12 w-12 object-contain rounded-md"
               />
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight text-[#1e3a6e] dark:text-white leading-tight">
-                  LBS4
+                  LBS
                 </span>
                 <span className="text-[11px] text-muted-foreground leading-tight">
                   Test & Exam Center
@@ -105,11 +105,11 @@ export default function Header() {
                   <div className="flex items-center gap-3">
                     <img
                       src={logoImg}
-                      alt="LBS4 Logo"
+                      alt="LBS Logo"
                       className="h-10 w-10 object-contain rounded-md"
                     />
                     <div>
-                      <div className="font-bold text-[#1e3a6e] dark:text-white">LBS4</div>
+                      <div className="font-bold text-[#1e3a6e] dark:text-white">LBS</div>
                       <div className="text-xs text-muted-foreground">Test & Exam Center</div>
                     </div>
                   </div>

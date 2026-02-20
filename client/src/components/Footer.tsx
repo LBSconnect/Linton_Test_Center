@@ -11,11 +11,11 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <img
                 src={logoImg}
-                alt="LBS4 Logo"
+                alt="LBS Logo"
                 className="h-12 w-12 object-contain rounded-md bg-white/10 p-1"
               />
               <div>
-                <h3 className="text-lg font-bold text-white">LBS4</h3>
+                <h3 className="text-lg font-bold text-white">LBS</h3>
                 <p className="text-xs text-white/60">Test & Exam Center</p>
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} Linton Business Solutions LLC (LVBS). All rights reserved.</p>
-          <p>LBS4 - Test & Exam Center Division</p>
+          <p>LBS - Test & Exam Center Division</p>
         </div>
       </div>
     </footer>

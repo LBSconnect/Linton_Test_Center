@@ -24,7 +24,7 @@ export async function sendContactNotification(data: {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #1e3a6e; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0; font-size: 22px;">LBS4 - New Contact Submission</h1>
+            <h1 style="margin: 0; font-size: 22px;">LBS - New Contact Submission</h1>
           </div>
           <div style="padding: 24px; background-color: #f9fafb; border: 1px solid #e5e7eb;">
             <table style="width: 100%; border-collapse: collapse;">
@@ -45,7 +45,7 @@ export async function sendContactNotification(data: {
             </div>
           </div>
           <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">
-            LBS4 Test &amp; Exam Center | 616 FM 1960 Road West, Suite 575, Houston, TX 77090
+            LBS Test &amp; Exam Center | 616 FM 1960 Road West, Suite 575, Houston, TX 77090
           </div>
         </div>
       `,
@@ -82,7 +82,7 @@ export async function sendPaymentNotification(data: {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background-color: #1e3a6e; color: white; padding: 20px; text-align: center;">
-            <h1 style="margin: 0; font-size: 22px;">LBS4 - Payment Received</h1>
+            <h1 style="margin: 0; font-size: 22px;">LBS - Payment Received</h1>
           </div>
           <div style="padding: 24px; background-color: #f9fafb; border: 1px solid #e5e7eb;">
             <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 16px; text-align: center; margin-bottom: 20px;">
@@ -100,7 +100,7 @@ export async function sendPaymentNotification(data: {
             </table>
           </div>
           <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">
-            LBS4 Test &amp; Exam Center | 616 FM 1960 Road West, Suite 575, Houston, TX 77090
+            LBS Test &amp; Exam Center | 616 FM 1960 Road West, Suite 575, Houston, TX 77090
           </div>
         </div>
       `,

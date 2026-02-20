@@ -170,7 +170,7 @@ export default function Contact() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="LBS4 Location"
+                  title="LBS Location"
                   data-testid="map-iframe"
                 />
               </div>

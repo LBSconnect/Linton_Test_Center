@@ -25,7 +25,7 @@ export default function Home() {
         <div className="absolute inset-0">
           <img
             src="/images/hero-testing-center.png"
-            alt="LBS4 Testing Center"
+            alt="LBS Testing Center"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0f1f3d]/95 via-[#1a2d52]/85 to-[#1a2d52]/60" />
@@ -171,7 +171,7 @@ export default function Home() {
                 Why Choose LBS Test & Exam Center?
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                At LBS4, we provide a professional, stress-free testing
+                At LBS, we provide a professional, stress-free testing
                 environment. Our commitment to excellence ensures you have
                 everything you need to succeed.
               </p>
@@ -208,7 +208,7 @@ export default function Home() {
                   <div className="flex items-center gap-4 mb-4">
                     <img
                       src={logoImg}
-                      alt="LBS4"
+                      alt="LBS"
                       className="w-16 h-16 object-contain rounded-md"
                     />
                     <div>

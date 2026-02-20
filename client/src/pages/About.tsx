@@ -22,7 +22,7 @@ export default function About() {
         <div className="absolute inset-0 bg-[url('/images/hero-testing-center.png')] bg-cover bg-center opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="text-about-title">
-            About LBS4
+            About LBS
           </h1>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
             A division of Linton Business Solutions LLC, providing professional
@@ -37,7 +37,7 @@ export default function About() {
             <div className="space-y-6">
               <h2 className="text-3xl font-bold">Our Story</h2>
               <p className="text-muted-foreground leading-relaxed">
-                LBS4 is the Test and Exam Center division of Linton Business
+                LBS is the Test and Exam Center division of Linton Business
                 Solutions LLC (LVBS). We were established to provide the Houston
                 community with a professional, reliable, and accessible testing
                 center that meets the highest industry standards.
@@ -174,7 +174,7 @@ export default function About() {
             Ready to Experience the Difference?
           </h2>
           <p className="text-lg text-white/80">
-            Visit our testing center today and see why professionals choose LBS4.
+            Visit our testing center today and see why professionals choose LBS.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link href="/services">
