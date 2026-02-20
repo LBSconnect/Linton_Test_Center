@@ -46,5 +46,12 @@ LBS4 is the Test and Exam Center division of Linton Business Solutions LLC (LVBS
 - Checkout uses Stripe Checkout Sessions
 - Webhook endpoint: /api/stripe/webhook
 
+## Email Notifications (Resend)
+- Contact form submissions: branded HTML email sent to info@lbsconnect.net
+- Successful payments (checkout.session.completed): branded HTML email with customer/product details sent to info@lbsconnect.net
+- Email client: server/resendClient.ts (uses Replit connector)
+- Email templates: server/emailService.ts (sendContactNotification, sendPaymentNotification)
+
 ## Recent Changes
+- Added Resend email notifications for contact form and payment events
 - Initial build: Full site with 5 services, Stripe checkout, contact form
