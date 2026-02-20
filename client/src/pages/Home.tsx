@@ -168,7 +168,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h2 className="text-3xl md:text-4xl font-bold" data-testid="text-why-heading">
-                Why Choose LBS4?
+                Why Choose LBS Test & Exam Center?
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 At LBS4, we provide a professional, stress-free testing
