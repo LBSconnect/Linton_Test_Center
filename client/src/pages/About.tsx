@@ -25,7 +25,7 @@ export default function About() {
             About LBS
           </h1>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            A division of Linton Business Solutions LLC, providing professional
+            LBS is a skilling division of Linton Business Solutions LLC (LBS), providing professional
             testing and business services in Houston, Texas.
           </p>
         </div>
@@ -37,8 +37,8 @@ export default function About() {
             <div className="space-y-6">
               <h2 className="text-3xl font-bold">Our Story</h2>
               <p className="text-muted-foreground leading-relaxed">
-                LBS is the Test and Exam Center division of Linton Business
-                Solutions LLC (LVBS). We were established to provide the Houston
+                LBS is a skilling division of Linton Business
+                Solutions LLC (LBS). We were established to provide the Houston
                 community with a professional, reliable, and accessible testing
                 center that meets the highest industry standards.
               </p>
@@ -71,7 +71,7 @@ export default function About() {
                       Linton Business Solutions
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      LLC (LVBS)
+                      LLC (LBS)
                     </p>
                   </div>
                   <p className="text-sm text-muted-foreground">

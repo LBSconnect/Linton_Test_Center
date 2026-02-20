@@ -128,12 +128,12 @@ export default function ServiceDetail() {
 
   const price = matchingProduct?.prices?.[0];
 
-  // Disable weekends in calendar
+  // Disable Sundays in calendar (Saturdays are now open)
   const disabledDays = (date: Date) => {
     const day = date.getDay();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return day === 0 || day === 6 || date < today;
+    return day === 0 || date < today; // Only disable Sunday
   };
 
   const formatTime = (isoString: string) => {
@@ -315,7 +315,7 @@ export default function ServiceDetail() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Available Monday - Friday only
+                          Available Monday - Saturday
                         </p>
                       </div>
 
@@ -349,7 +349,7 @@ export default function ServiceDetail() {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            Business hours: 8:00 AM - 4:00 PM
+                            Mon-Thu: 8AM-4PM | Fri: 8AM-5PM | Sat: 9AM-5PM
                           </p>
                         </div>
                       )}
@@ -461,9 +461,11 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <Clock className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          Mon - Fri: 8 AM - 4 PM
+                          Mon - Thu: 8 AM - 4 PM
                           <br />
-                          <span className="text-xs">(Appointments only)</span>
+                          Fri: 8 AM - 5 PM
+                          <br />
+                          Sat: 9 AM - 5 PM
                         </span>
                       </div>
                     </div>

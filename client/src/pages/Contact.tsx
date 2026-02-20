@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/Header";
@@ -22,12 +22,26 @@ import {
   Clock,
   Send,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Declare global grecaptcha
+declare global {
+  interface Window {
+    grecaptcha: any;
+    onRecaptchaLoad: () => void;
+  }
+}
+
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "";
 
 export default function Contact() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaLoaded, setCaptchaLoaded] = useState(false);
+  const captchaRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -36,8 +50,61 @@ export default function Contact() {
     message: "",
   });
 
+  // Load reCAPTCHA script
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) {
+      console.warn("RECAPTCHA_SITE_KEY not configured");
+      return;
+    }
+
+    // Check if script already exists
+    if (document.querySelector('script[src*="recaptcha"]')) {
+      if (window.grecaptcha && window.grecaptcha.render) {
+        renderCaptcha();
+      }
+      return;
+    }
+
+    window.onRecaptchaLoad = () => {
+      setCaptchaLoaded(true);
+      renderCaptcha();
+    };
+
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      window.onRecaptchaLoad = () => {};
+    };
+  }, []);
+
+  const renderCaptcha = () => {
+    if (captchaRef.current && window.grecaptcha && window.grecaptcha.render) {
+      try {
+        // Clear any existing captcha
+        captchaRef.current.innerHTML = "";
+        window.grecaptcha.render(captchaRef.current, {
+          sitekey: RECAPTCHA_SITE_KEY,
+          callback: (token: string) => setCaptchaToken(token),
+          "expired-callback": () => setCaptchaToken(null),
+        });
+      } catch (e) {
+        // Captcha might already be rendered
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (captchaLoaded) {
+      renderCaptcha();
+    }
+  }, [captchaLoaded]);
+
   const contactMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: typeof formData & { captchaToken?: string }) => {
       const res = await apiRequest("POST", "/api/contact", data);
       return await res.json();
     },
@@ -54,12 +121,31 @@ export default function Contact() {
         description: error.message || "Failed to send message. Please try again.",
         variant: "destructive",
       });
+      // Reset captcha on error
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
+      setCaptchaToken(null);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    contactMutation.mutate(formData);
+
+    // Check captcha if configured
+    if (RECAPTCHA_SITE_KEY && !captchaToken) {
+      toast({
+        title: "Please complete the captcha",
+        description: "Verify that you are not a robot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    contactMutation.mutate({
+      ...formData,
+      captchaToken: captchaToken || undefined,
+    });
   };
 
   return (
@@ -96,7 +182,7 @@ export default function Contact() {
                   href="https://maps.google.com/?q=616+FM+1960+Road+West+Suite+575+Houston+TX+77090"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors"
+                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors hover:bg-muted/50"
                   data-testid="link-contact-address"
                 >
                   <div className="w-12 h-12 rounded-md bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center shrink-0">
@@ -116,7 +202,7 @@ export default function Contact() {
 
                 <a
                   href="tel:2818365357"
-                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors"
+                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors hover:bg-muted/50"
                   data-testid="link-contact-phone"
                 >
                   <div className="w-12 h-12 rounded-md bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center shrink-0">
@@ -132,7 +218,7 @@ export default function Contact() {
 
                 <a
                   href="mailto:info@lbsconnect.net"
-                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors"
+                  className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors hover:bg-muted/50"
                   data-testid="link-contact-email"
                 >
                   <div className="w-12 h-12 rounded-md bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center shrink-0">
@@ -153,8 +239,9 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold text-sm">Business Hours</h3>
                     <div className="text-sm text-muted-foreground mt-1 space-y-1">
-                      <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-                      <p>Saturday: 10:00 AM - 4:00 PM</p>
+                      <p>Monday - Thursday: 8:00 AM - 4:00 PM</p>
+                      <p>Friday: 8:00 AM - 5:00 PM</p>
+                      <p>Saturday: 9:00 AM - 5:00 PM</p>
                       <p>Sunday: Closed</p>
                     </div>
                   </div>
@@ -193,6 +280,7 @@ export default function Contact() {
                         variant="outline"
                         onClick={() => {
                           setSubmitted(false);
+                          setCaptchaToken(null);
                           setFormData({
                             name: "",
                             email: "",
@@ -200,6 +288,8 @@ export default function Contact() {
                             service: "",
                             message: "",
                           });
+                          // Re-render captcha
+                          setTimeout(() => renderCaptcha(), 100);
                         }}
                         data-testid="button-send-another"
                       >
@@ -305,13 +395,31 @@ export default function Contact() {
                           data-testid="input-message"
                         />
                       </div>
+
+                      {/* reCAPTCHA */}
+                      {RECAPTCHA_SITE_KEY && (
+                        <div className="flex justify-center">
+                          <div ref={captchaRef} data-testid="recaptcha-container" />
+                        </div>
+                      )}
+
                       <Button
                         type="submit"
                         className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
+                        disabled={contactMutation.isPending || (RECAPTCHA_SITE_KEY ? !captchaToken : false)}
                         data-testid="button-submit-contact"
                       >
-                        <Send className="w-4 h-4 mr-2" />
-                        Send Message
+                        {contactMutation.isPending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Send Message
+                          </>
+                        )}
                       </Button>
                     </form>
                   )}

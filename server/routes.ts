@@ -23,36 +23,60 @@ const bookAppointmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Business hours validation (Mon-Fri 8am-4pm)
+// Business hours validation
+// Mon-Thu: 8am-4pm, Fri: 8am-5pm, Sat: 9am-5pm, Sun: closed
 function isValidBusinessTime(date: Date): boolean {
   const dayOfWeek = date.getDay();
   const hours = date.getHours();
 
-  // 0 = Sunday, 6 = Saturday - not valid
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
+  // Sunday (0) - closed
+  if (dayOfWeek === 0) {
     return false;
   }
 
-  // Valid hours: 8am (8) to 4pm (16) - last appointment at 4pm
-  if (hours < 8 || hours > 16) {
-    return false;
+  // Saturday (6): 9am-5pm
+  if (dayOfWeek === 6) {
+    return hours >= 9 && hours <= 17;
   }
 
-  return true;
+  // Friday (5): 8am-5pm
+  if (dayOfWeek === 5) {
+    return hours >= 8 && hours <= 17;
+  }
+
+  // Monday-Thursday (1-4): 8am-4pm
+  return hours >= 8 && hours <= 16;
 }
 
 // Generate available time slots for a given date
+// Mon-Thu: 8am-4pm, Fri: 8am-5pm, Sat: 9am-5pm, Sun: closed
 function getAvailableTimeSlots(date: Date): string[] {
   const slots: string[] = [];
   const dayOfWeek = date.getDay();
 
-  // No slots on weekends
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
+  // Sunday - no slots
+  if (dayOfWeek === 0) {
     return slots;
   }
 
-  // Generate hourly slots from 8am to 4pm
-  for (let hour = 8; hour <= 16; hour++) {
+  let startHour: number;
+  let endHour: number;
+
+  if (dayOfWeek === 6) {
+    // Saturday: 9am-5pm
+    startHour = 9;
+    endHour = 17;
+  } else if (dayOfWeek === 5) {
+    // Friday: 8am-5pm
+    startHour = 8;
+    endHour = 17;
+  } else {
+    // Monday-Thursday: 8am-4pm
+    startHour = 8;
+    endHour = 16;
+  }
+
+  for (let hour = startHour; hour <= endHour; hour++) {
     const slotDate = new Date(date);
     slotDate.setHours(hour, 0, 0, 0);
     slots.push(slotDate.toISOString());
@@ -161,7 +185,29 @@ export async function registerRoutes(
 
   app.post('/api/contact', async (req, res) => {
     try {
-      const parsed = insertContactSchema.safeParse(req.body);
+      // Verify captcha if secret key is configured
+      const captchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+      const { captchaToken, ...formData } = req.body;
+
+      if (captchaSecretKey) {
+        if (!captchaToken) {
+          return res.status(400).json({ error: 'Captcha verification required' });
+        }
+
+        // Verify with Google reCAPTCHA
+        const verifyResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `secret=${captchaSecretKey}&response=${captchaToken}`,
+        });
+
+        const verifyResult = await verifyResponse.json() as { success: boolean };
+        if (!verifyResult.success) {
+          return res.status(400).json({ error: 'Captcha verification failed' });
+        }
+      }
+
+      const parsed = insertContactSchema.safeParse(formData);
       if (!parsed.success) {
         return res.status(400).json({ error: 'Invalid form data', details: parsed.error.flatten() });
       }
@@ -211,8 +257,12 @@ export async function registerRoutes(
       res.json({
         date: requestedDate.toISOString().split('T')[0],
         slots: availableSlots,
-        businessHours: { start: '08:00', end: '16:00' },
-        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        businessHours: {
+          monThu: { start: '08:00', end: '16:00' },
+          fri: { start: '08:00', end: '17:00' },
+          sat: { start: '09:00', end: '17:00' },
+        },
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
       });
     } catch (error: any) {
       console.error('Error fetching available slots:', error.message);
