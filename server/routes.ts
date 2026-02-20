@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { insertContactSchema } from "@shared/schema";
+import { sendContactNotification } from "./emailService";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -110,6 +111,7 @@ export async function registerRoutes(
       }
       const submission = await storage.createContactSubmission(parsed.data);
       console.log('Contact form submission saved:', submission.id);
+      sendContactNotification(parsed.data);
       res.json({ success: true, message: 'Message received' });
     } catch (error: any) {
       console.error('Contact form error:', error.message);
