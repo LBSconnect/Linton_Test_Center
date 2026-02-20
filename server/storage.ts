@@ -1,6 +1,14 @@
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { contactSubmissions, type InsertContact, type ContactSubmission } from "@shared/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
+import {
+  contactSubmissions,
+  appointments,
+  type InsertContact,
+  type ContactSubmission,
+  type InsertAppointment,
+  type Appointment
+} from "@shared/schema";
 import { getUncachableStripeClient } from "./stripeClient";
 
 // Create pool only if DATABASE_URL is set
@@ -23,6 +31,10 @@ export interface IStorage {
   getPrice(priceId: string): Promise<any | null>;
   getPricesForProduct(productId: string): Promise<any[]>;
   createContactSubmission(data: InsertContact): Promise<ContactSubmission>;
+  createAppointment(data: InsertAppointment): Promise<Appointment>;
+  getAppointment(id: string): Promise<Appointment | null>;
+  updateAppointmentPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<Appointment | null>;
+  getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -114,6 +126,58 @@ export class DatabaseStorage implements IStorage {
     }
     const [result] = await db.insert(contactSubmissions).values(data).returning();
     return result;
+  }
+
+  async createAppointment(data: InsertAppointment): Promise<Appointment> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
+    const [result] = await db.insert(appointments).values(data).returning();
+    return result;
+  }
+
+  async getAppointment(id: string): Promise<Appointment | null> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
+    const [result] = await db.select().from(appointments).where(eq(appointments.id, id));
+    return result || null;
+  }
+
+  async updateAppointmentPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<Appointment | null> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
+    const updateData: any = {
+      paymentStatus,
+      updatedAt: new Date(),
+      status: paymentStatus === 'paid' ? 'confirmed' : 'pending'
+    };
+    if (stripeSessionId) {
+      updateData.stripeSessionId = stripeSessionId;
+    }
+    const [result] = await db
+      .update(appointments)
+      .set(updateData)
+      .where(eq(appointments.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
+    const results = await db
+      .select()
+      .from(appointments)
+      .where(
+        and(
+          gte(appointments.appointmentDate, startDate),
+          lte(appointments.appointmentDate, endDate)
+        )
+      );
+    return results;
   }
 }
 

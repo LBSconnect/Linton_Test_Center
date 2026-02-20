@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "wouter";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -5,7 +6,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -13,6 +19,8 @@ import {
   MapPin,
   Clock,
   Loader2,
+  CalendarDays,
+  CreditCard,
 } from "lucide-react";
 import { getServiceBySlug } from "@/lib/services";
 import { apiRequest } from "@/lib/queryClient";
@@ -22,6 +30,16 @@ export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
   const service = getServiceBySlug(slug || "");
   const { toast } = useToast();
+
+  // Booking form state
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [payNow, setPayNow] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
     data: Array<{
@@ -39,20 +57,41 @@ export default function ServiceDetail() {
     queryKey: ["/api/products-with-prices"],
   });
 
-  const checkoutMutation = useMutation({
-    mutationFn: async (priceId: string) => {
-      const res = await apiRequest("POST", "/api/checkout", { priceId });
+  // Fetch available time slots for selected date
+  const { data: slotsData, isLoading: slotsLoading } = useQuery<{
+    slots: string[];
+    businessHours: { start: string; end: string };
+    daysOpen: string[];
+  }>({
+    queryKey: ["/api/appointments/available-slots", selectedDate?.toISOString()],
+    queryFn: async () => {
+      if (!selectedDate) return { slots: [], businessHours: { start: "08:00", end: "16:00" }, daysOpen: [] };
+      const res = await fetch(`/api/appointments/available-slots?date=${selectedDate.toISOString()}`);
+      return res.json();
+    },
+    enabled: !!selectedDate,
+  });
+
+  const bookingMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("POST", "/api/appointments", data);
       return await res.json();
     },
-    onSuccess: (data: { url: string }) => {
-      if (data.url) {
-        window.location.href = data.url;
+    onSuccess: (data: { success: boolean; checkoutUrl?: string; message?: string }) => {
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        setBookingSuccess(true);
+        toast({
+          title: "Appointment Booked!",
+          description: "You will receive a confirmation email shortly.",
+        });
       }
     },
     onError: (error: Error) => {
       toast({
-        title: "Checkout Error",
-        description: error.message || "Unable to start checkout. Please try again.",
+        title: "Booking Error",
+        description: error.message || "Unable to book appointment. Please try again.",
         variant: "destructive",
       });
     },
@@ -87,9 +126,81 @@ export default function ServiceDetail() {
       service.stripeProductName.toLowerCase() === p.name.toLowerCase()
   );
 
-  const handleBookNow = (priceId: string) => {
-    checkoutMutation.mutate(priceId);
+  const price = matchingProduct?.prices?.[0];
+
+  // Disable weekends in calendar
+  const disabledDays = (date: Date) => {
+    const day = date.getDay();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return day === 0 || day === 6 || date < today;
   };
+
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const handleBookAppointment = () => {
+    if (!selectedDate || !selectedTime || !customerName || !customerEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields and select a date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const appointmentData = {
+      customerName,
+      customerEmail,
+      customerPhone: customerPhone || undefined,
+      serviceName: service.title,
+      serviceId: matchingProduct?.id,
+      priceId: price?.id,
+      priceAmount: price?.unit_amount,
+      appointmentDate: selectedTime,
+      payNow: payNow && !!price,
+      notes: notes || undefined,
+    };
+
+    bookingMutation.mutate(appointmentData);
+  };
+
+  if (bookingSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center py-20">
+          <div className="text-center space-y-6 max-w-md px-6">
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-bold">Appointment Booked!</h1>
+            <p className="text-muted-foreground">
+              Your appointment for <span className="font-semibold">{service.title}</span> has been confirmed.
+              A confirmation email has been sent to <span className="font-semibold">{customerEmail}</span>.
+            </p>
+            <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
+              <p><span className="font-medium">Date:</span> {selectedDate?.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+              <p><span className="font-medium">Time:</span> {formatTime(selectedTime)}</p>
+              <p><span className="font-medium">Payment:</span> {payNow ? "Paid Online" : "Pay at Visit"}</p>
+            </div>
+            <Link href="/services">
+              <Button className="mt-4">
+                Back to Services
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -170,69 +281,167 @@ export default function ServiceDetail() {
             </div>
 
             <div className="space-y-6">
-              <Card className="border-border/50 sticky top-24">
+              <Card className="border-border/50">
                 <CardContent className="p-6 space-y-5">
                   <div className="text-center space-y-1">
                     <div className="text-3xl font-bold text-[#1e3a6e] dark:text-white">
-                      {service.price}
+                      {price ? `$${(price.unit_amount / 100).toFixed(2)}` : service.price}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {service.priceLabel}
                     </div>
                   </div>
 
-                  {productsLoading ? (
-                    <div className="space-y-3">
-                      <Skeleton className="h-10 w-full" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  ) : matchingProduct && matchingProduct.prices.length > 0 ? (
-                    <div className="space-y-3">
-                      {matchingProduct.prices.map((price) => (
-                        <Button
-                          key={price.id}
-                          className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
-                          onClick={() => handleBookNow(price.id)}
-                          disabled={checkoutMutation.isPending}
-                          data-testid={`button-purchase-${price.id}`}
-                        >
-                          {checkoutMutation.isPending ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Processing...
-                            </>
+                  <div className="border-t border-border/50 pt-5">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5 text-[#e85d40]" />
+                      Book an Appointment
+                    </h3>
+
+                    <div className="space-y-4">
+                      {/* Date Picker */}
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">Select Date</Label>
+                        <div className="border rounded-md p-2">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={(date) => {
+                              setSelectedDate(date);
+                              setSelectedTime("");
+                            }}
+                            disabled={disabledDays}
+                            className="rounded-md"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Available Monday - Friday only
+                        </p>
+                      </div>
+
+                      {/* Time Slots */}
+                      {selectedDate && (
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Select Time</Label>
+                          {slotsLoading ? (
+                            <div className="grid grid-cols-3 gap-2">
+                              {[...Array(6)].map((_, i) => (
+                                <Skeleton key={i} className="h-10" />
+                              ))}
+                            </div>
+                          ) : slotsData?.slots && slotsData.slots.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-2">
+                              {slotsData.slots.map((slot) => (
+                                <Button
+                                  key={slot}
+                                  variant={selectedTime === slot ? "default" : "outline"}
+                                  size="sm"
+                                  className={selectedTime === slot ? "bg-[#1e3a6e]" : ""}
+                                  onClick={() => setSelectedTime(slot)}
+                                >
+                                  {formatTime(slot)}
+                                </Button>
+                              ))}
+                            </div>
                           ) : (
-                            <>
-                              Purchase - $
-                              {(price.unit_amount / 100).toFixed(2)}
-                              {price.recurring ? `/${price.recurring.interval}` : ""}
-                            </>
+                            <p className="text-sm text-muted-foreground">
+                              No available slots for this date.
+                            </p>
                           )}
-                        </Button>
-                      ))}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Business hours: 8:00 AM - 4:00 PM
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Customer Info */}
+                      {selectedTime && (
+                        <>
+                          <div className="border-t border-border/50 pt-4 space-y-3">
+                            <div>
+                              <Label htmlFor="name" className="text-sm">Full Name *</Label>
+                              <Input
+                                id="name"
+                                placeholder="Your full name"
+                                value={customerName}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="email" className="text-sm">Email *</Label>
+                              <Input
+                                id="email"
+                                type="email"
+                                placeholder="your@email.com"
+                                value={customerEmail}
+                                onChange={(e) => setCustomerEmail(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="phone" className="text-sm">Phone (Optional)</Label>
+                              <Input
+                                id="phone"
+                                type="tel"
+                                placeholder="(123) 456-7890"
+                                value={customerPhone}
+                                onChange={(e) => setCustomerPhone(e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
+                              <Textarea
+                                id="notes"
+                                placeholder="Any special requests or notes..."
+                                rows={2}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                              />
+                            </div>
+                          </div>
+
+                          {/* Payment Option */}
+                          {price && (
+                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="w-4 h-4 text-[#e85d40]" />
+                                <span className="text-sm font-medium">Pay online now</span>
+                              </div>
+                              <Switch
+                                checked={payNow}
+                                onCheckedChange={setPayNow}
+                              />
+                            </div>
+                          )}
+
+                          {/* Book Button */}
+                          <Button
+                            className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
+                            onClick={handleBookAppointment}
+                            disabled={bookingMutation.isPending}
+                          >
+                            {bookingMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Booking...
+                              </>
+                            ) : payNow && price ? (
+                              <>
+                                Book & Pay ${(price.unit_amount / 100).toFixed(2)}
+                              </>
+                            ) : (
+                              "Book Appointment"
+                            )}
+                          </Button>
+
+                          {!payNow && (
+                            <p className="text-xs text-center text-muted-foreground">
+                              Payment will be collected at the time of your visit
+                            </p>
+                          )}
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <a href="tel:2818365357">
-                        <Button
-                          className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
-                          data-testid="button-call-to-book"
-                        >
-                          <Phone className="w-4 h-4 mr-2" />
-                          Call to Book
-                        </Button>
-                      </a>
-                      <a href="mailto:info@lbsconnect.net">
-                        <Button
-                          variant="outline"
-                          className="w-full mt-2"
-                          data-testid="button-email-to-book"
-                        >
-                          Email to Schedule
-                        </Button>
-                      </a>
-                    </div>
-                  )}
+                  </div>
 
                   <div className="border-t border-border/50 pt-5 space-y-4">
                     <h3 className="font-semibold text-sm">Visit Us</h3>
@@ -252,9 +461,9 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <Clock className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          Mon - Fri: 9 AM - 6 PM
+                          Mon - Fri: 8 AM - 4 PM
                           <br />
-                          Sat: 10 AM - 4 PM
+                          <span className="text-xs">(Appointments only)</span>
                         </span>
                       </div>
                     </div>
