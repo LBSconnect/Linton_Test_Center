@@ -3,11 +3,18 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { contactSubmissions, type InsertContact, type ContactSubmission } from "@shared/schema";
 import { getUncachableStripeClient } from "./stripeClient";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+// Create pool only if DATABASE_URL is set
+let pool: Pool | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
 
-const db = drizzle(pool);
+if (process.env.DATABASE_URL) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+  db = drizzle(pool);
+} else {
+  console.warn('DATABASE_URL not set, database features will be disabled');
+}
 
 export interface IStorage {
   listProducts(active?: boolean): Promise<any[]>;
@@ -102,6 +109,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createContactSubmission(data: InsertContact): Promise<ContactSubmission> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
     const [result] = await db.insert(contactSubmissions).values(data).returning();
     return result;
   }
