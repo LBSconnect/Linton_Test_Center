@@ -42,24 +42,47 @@ export async function seedStripeProducts() {
         query: `name:'${productData.name}'`,
       });
 
+      let productId: string;
+
       if (existingProducts.data.length > 0) {
-        console.log(`Product "${productData.name}" already exists, skipping.`);
-        continue;
+        productId = existingProducts.data[0].id;
+
+        const prices = await stripe.prices.list({ product: productId, active: true });
+        const correctPrice = prices.data.find(p => p.unit_amount === productData.priceAmount);
+
+        if (correctPrice) {
+          console.log(`Product "${productData.name}" already exists with correct price, skipping.`);
+          continue;
+        }
+
+        for (const oldPrice of prices.data) {
+          if (oldPrice.unit_amount !== productData.priceAmount) {
+            await stripe.prices.update(oldPrice.id, { active: false });
+          }
+        }
+
+        await stripe.prices.create({
+          product: productId,
+          unit_amount: productData.priceAmount,
+          currency: 'usd',
+        });
+
+        console.log(`Updated price for "${productData.name}" to $${(productData.priceAmount / 100).toFixed(2)}`);
+      } else {
+        const product = await stripe.products.create({
+          name: productData.name,
+          description: productData.description,
+          metadata: productData.metadata,
+        });
+
+        await stripe.prices.create({
+          product: product.id,
+          unit_amount: productData.priceAmount,
+          currency: 'usd',
+        });
+
+        console.log(`Created product: ${productData.name} ($${(productData.priceAmount / 100).toFixed(2)})`);
       }
-
-      const product = await stripe.products.create({
-        name: productData.name,
-        description: productData.description,
-        metadata: productData.metadata,
-      });
-
-      await stripe.prices.create({
-        product: product.id,
-        unit_amount: productData.priceAmount,
-        currency: 'usd',
-      });
-
-      console.log(`Created product: ${productData.name} ($${(productData.priceAmount / 100).toFixed(2)})`);
     } catch (error: any) {
       console.error(`Error creating product "${productData.name}":`, error.message);
     }
