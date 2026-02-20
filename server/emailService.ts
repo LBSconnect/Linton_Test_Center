@@ -10,7 +10,13 @@ export async function sendContactNotification(data: {
   message: string;
 }) {
   try {
-    const { client, fromEmail } = await getUncachableResendClient();
+    const resend = await getUncachableResendClient();
+    if (!resend) {
+      console.log('Email skipped (Resend not configured): Contact notification for', data.name);
+      return;
+    }
+
+    const { client, fromEmail } = resend;
     await client.emails.send({
       from: fromEmail,
       to: NOTIFICATION_EMAIL,
@@ -59,7 +65,13 @@ export async function sendPaymentNotification(data: {
   sessionId: string;
 }) {
   try {
-    const { client, fromEmail } = await getUncachableResendClient();
+    const resend = await getUncachableResendClient();
+    if (!resend) {
+      console.log('Email skipped (Resend not configured): Payment notification for session', data.sessionId);
+      return;
+    }
+
+    const { client, fromEmail } = resend;
     const formattedAmount = (data.amount / 100).toFixed(2);
     const currencySymbol = data.currency.toUpperCase() === 'USD' ? '$' : data.currency.toUpperCase();
 
