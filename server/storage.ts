@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { contactSubmissions, type InsertContact, type ContactSubmission } from "@shared/schema";
+import { getUncachableStripeClient } from "./stripeClient";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -19,63 +20,85 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getProduct(productId: string) {
-    const result = await pool.query(
-      'SELECT * FROM stripe.products WHERE id = $1',
-      [productId]
-    );
-    return result.rows[0] || null;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const product = await stripe.products.retrieve(productId);
+      return product;
+    } catch (error) {
+      return null;
+    }
   }
 
   async listProducts(active = true) {
-    const result = await pool.query(
-      'SELECT * FROM stripe.products WHERE active = $1 ORDER BY name',
-      [active]
-    );
-    return result.rows;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const products = await stripe.products.list({ active, limit: 100 });
+      return products.data;
+    } catch (error) {
+      console.error('Error listing products from Stripe:', error);
+      return [];
+    }
   }
 
   async listProductsWithPrices(active = true) {
-    const result = await pool.query(
-      `WITH active_products AS (
-        SELECT id, name, description, metadata, active
-        FROM stripe.products
-        WHERE active = $1
-        ORDER BY name
-      )
-      SELECT 
-        p.id as product_id,
-        p.name as product_name,
-        p.description as product_description,
-        p.active as product_active,
-        p.metadata as product_metadata,
-        pr.id as price_id,
-        pr.unit_amount,
-        pr.currency,
-        pr.recurring,
-        pr.active as price_active,
-        pr.metadata as price_metadata
-      FROM active_products p
-      LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-      ORDER BY p.name, pr.unit_amount`,
-      [active]
-    );
-    return result.rows;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const products = await stripe.products.list({ active, limit: 100 });
+
+      const result = [];
+      for (const product of products.data) {
+        const prices = await stripe.prices.list({ product: product.id, active: true });
+
+        for (const price of prices.data) {
+          result.push({
+            product_id: product.id,
+            product_name: product.name,
+            product_description: product.description,
+            product_active: product.active,
+            product_metadata: product.metadata,
+            price_id: price.id,
+            unit_amount: price.unit_amount,
+            currency: price.currency,
+            recurring: price.recurring,
+            price_active: price.active,
+            price_metadata: price.metadata,
+          });
+        }
+      }
+
+      // Sort by name and price
+      result.sort((a, b) => {
+        const nameCompare = (a.product_name || '').localeCompare(b.product_name || '');
+        if (nameCompare !== 0) return nameCompare;
+        return (a.unit_amount || 0) - (b.unit_amount || 0);
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error listing products with prices from Stripe:', error);
+      return [];
+    }
   }
 
   async getPrice(priceId: string) {
-    const result = await pool.query(
-      'SELECT * FROM stripe.prices WHERE id = $1',
-      [priceId]
-    );
-    return result.rows[0] || null;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const price = await stripe.prices.retrieve(priceId);
+      return price;
+    } catch (error) {
+      return null;
+    }
   }
 
   async getPricesForProduct(productId: string) {
-    const result = await pool.query(
-      'SELECT * FROM stripe.prices WHERE product = $1 AND active = true',
-      [productId]
-    );
-    return result.rows;
+    try {
+      const stripe = await getUncachableStripeClient();
+      const prices = await stripe.prices.list({ product: productId, active: true });
+      return prices.data;
+    } catch (error) {
+      console.error('Error getting prices for product from Stripe:', error);
+      return [];
+    }
   }
 
   async createContactSubmission(data: InsertContact): Promise<ContactSubmission> {

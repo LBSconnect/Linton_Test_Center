@@ -2,10 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { runMigrations } from 'stripe-replit-sync';
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getUncachableStripeClient } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
-import { seedStripeProducts } from './seedProducts';
 import { sendPaymentNotification } from './emailService';
 
 const app = express();
@@ -18,44 +16,22 @@ declare module "http" {
 }
 
 async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL environment variable is required for Stripe integration.');
+  // Check if Stripe is configured
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn('STRIPE_SECRET_KEY not set, Stripe features will be disabled');
+    return;
   }
 
   try {
-    console.log('Initializing Stripe schema...');
-    await runMigrations({ databaseUrl } as any);
-    console.log('Stripe schema ready');
+    console.log('Initializing Stripe...');
+    const stripe = await getUncachableStripeClient();
 
-    const stripeSync = await getStripeSync();
-
-    console.log('Setting up managed webhook...');
-    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-    try {
-      const result = await stripeSync.findOrCreateManagedWebhook(
-        `${webhookBaseUrl}/api/stripe/webhook`
-      );
-      if (result?.webhook) {
-        console.log(`Webhook configured: ${result.webhook.url}`);
-      } else {
-        console.log('Webhook setup completed (no URL returned)');
-      }
-    } catch (whErr: any) {
-      console.warn('Webhook setup warning:', whErr.message);
-    }
-
-    console.log('Syncing Stripe data...');
-    stripeSync.syncBackfill()
-      .then(() => console.log('Stripe data synced'))
-      .catch((err: any) => console.error('Error syncing Stripe data:', err));
-
-    seedStripeProducts()
-      .then(() => console.log('Stripe products seeded'))
-      .catch((err: any) => console.error('Error seeding products:', err));
-  } catch (error) {
-    console.error('Failed to initialize Stripe:', error);
-    throw error;
+    // Verify Stripe connection
+    await stripe.products.list({ limit: 1 });
+    console.log('Stripe connection verified');
+  } catch (error: any) {
+    console.error('Failed to initialize Stripe:', error.message);
+    // Don't throw - allow server to start without Stripe
   }
 }
 
