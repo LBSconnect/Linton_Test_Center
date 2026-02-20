@@ -86,6 +86,11 @@ app.post(
   }
 );
 
+// Health check endpoint for Render
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
