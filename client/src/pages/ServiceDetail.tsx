@@ -38,7 +38,7 @@ export default function ServiceDetail() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [payNow, setPayNow] = useState(false);
+  const [payNow, setPayNow] = useState(true); // Default to pay online
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
