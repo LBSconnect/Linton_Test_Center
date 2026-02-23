@@ -58,18 +58,19 @@ export default function ServiceDetail() {
   });
 
   // Fetch available time slots for selected date
-  const { data: slotsData, isLoading: slotsLoading } = useQuery<{
+  const { data: slotsData, isLoading: slotsLoading, isError: slotsError } = useQuery<{
     slots: string[];
-    businessHours: { start: string; end: string };
     daysOpen: string[];
   }>({
     queryKey: ["/api/appointments/available-slots", selectedDate?.toISOString()],
     queryFn: async () => {
-      if (!selectedDate) return { slots: [], businessHours: { start: "08:00", end: "16:00" }, daysOpen: [] };
+      if (!selectedDate) return { slots: [], daysOpen: [] };
       const res = await fetch(`/api/appointments/available-slots?date=${selectedDate.toISOString()}`);
+      if (!res.ok) throw new Error("Failed to load time slots");
       return res.json();
     },
     enabled: !!selectedDate,
+    retry: 1,
   });
 
   const bookingMutation = useMutation({
@@ -136,12 +137,14 @@ export default function ServiceDetail() {
     return day === 0 || date < today; // Only disable Sunday
   };
 
+  // Always display in Central Time (business timezone: Houston, TX)
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
+      timeZone: "America/Chicago",
     });
   };
 
@@ -329,6 +332,10 @@ export default function ServiceDetail() {
                                 <Skeleton key={i} className="h-10" />
                               ))}
                             </div>
+                          ) : slotsError ? (
+                            <p className="text-sm text-destructive">
+                              Could not load available times. Please try again or call us at (281) 836-5357.
+                            </p>
                           ) : slotsData?.slots && slotsData.slots.length > 0 ? (
                             <div className="grid grid-cols-3 gap-2">
                               {slotsData.slots.map((slot) => (

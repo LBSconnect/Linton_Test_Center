@@ -23,63 +23,70 @@ const bookAppointmentSchema = z.object({
   notes: z.string().optional(),
 });
 
-// Business hours validation
-// Mon-Thu: 8am-4pm, Fri: 8am-5pm, Sat: 9am-5pm, Sun: closed
-function isValidBusinessTime(date: Date): boolean {
-  const dayOfWeek = date.getDay();
-  const hours = date.getHours();
+// Business is in Houston, TX — all hours are Central Time (America/Chicago)
+// CST = UTC-6 (Nov–Mar), CDT = UTC-5 (Mar–Nov)
+// DST rules: starts 2nd Sunday of March, ends 1st Sunday of November
 
-  // Sunday (0) - closed
-  if (dayOfWeek === 0) {
-    return false;
-  }
-
-  // Saturday (6): 9am-5pm
-  if (dayOfWeek === 6) {
-    return hours >= 9 && hours <= 17;
-  }
-
-  // Friday (5): 8am-5pm
-  if (dayOfWeek === 5) {
-    return hours >= 8 && hours <= 17;
-  }
-
-  // Monday-Thursday (1-4): 8am-4pm
-  return hours >= 8 && hours <= 16;
+function isCDT(date: Date): boolean {
+  const year = date.getUTCFullYear();
+  // 2nd Sunday of March @ 2:00 AM CT = 8:00 AM UTC (CST+6)
+  const mar1Dow = new Date(Date.UTC(year, 2, 1)).getUTCDay();
+  const dstStartDay = 1 + (7 - mar1Dow) % 7 + 7; // 8–14
+  const dstStart = new Date(Date.UTC(year, 2, dstStartDay, 8, 0, 0));
+  // 1st Sunday of November @ 2:00 AM CT = 7:00 AM UTC (CDT+5)
+  const nov1Dow = new Date(Date.UTC(year, 10, 1)).getUTCDay();
+  const dstEndDay = 1 + (7 - nov1Dow) % 7;
+  const dstEnd = new Date(Date.UTC(year, 10, dstEndDay, 7, 0, 0));
+  return date >= dstStart && date < dstEnd;
 }
 
-// Generate available time slots for a given date
-// Mon-Thu: 8am-4pm, Fri: 8am-5pm, Sat: 9am-5pm, Sun: closed
+// Returns hours CT is behind UTC (5 for CDT, 6 for CST)
+function ctUtcOffset(date: Date): number {
+  return isCDT(date) ? 5 : 6;
+}
+
+// Convert a UTC Date to its Central Time hour-of-day
+function utcToCTHour(date: Date): number {
+  return (date.getUTCHours() - ctUtcOffset(date) + 24) % 24;
+}
+
+// Business hours validation — all comparisons done in Central Time
+function isValidBusinessTime(date: Date): boolean {
+  const dow = date.getUTCDay();
+  const ctHour = utcToCTHour(date);
+
+  if (dow === 0) return false;                          // Sunday: closed
+  if (dow === 6) return ctHour >= 9 && ctHour <= 17;   // Saturday: 9am–5pm
+  if (dow === 5) return ctHour >= 8 && ctHour <= 17;   // Friday: 8am–5pm
+  return ctHour >= 8 && ctHour <= 16;                  // Mon–Thu: 8am–4pm
+}
+
+// Generate available time slots for a given date (all in Central Time)
+// Mon–Thu: 8am–4pm CT | Fri: 8am–5pm CT | Sat: 9am–5pm CT | Sun: closed
 function getAvailableTimeSlots(date: Date): string[] {
   const slots: string[] = [];
-  const dayOfWeek = date.getDay();
+  const dow = date.getUTCDay();
 
-  // Sunday - no slots
-  if (dayOfWeek === 0) {
-    return slots;
-  }
+  if (dow === 0) return slots; // Sunday — closed
 
   let startHour: number;
   let endHour: number;
 
-  if (dayOfWeek === 6) {
-    // Saturday: 9am-5pm
-    startHour = 9;
-    endHour = 17;
-  } else if (dayOfWeek === 5) {
-    // Friday: 8am-5pm
-    startHour = 8;
-    endHour = 17;
-  } else {
-    // Monday-Thursday: 8am-4pm
-    startHour = 8;
-    endHour = 16;
-  }
+  if (dow === 6)      { startHour = 9;  endHour = 17; } // Saturday
+  else if (dow === 5) { startHour = 8;  endHour = 17; } // Friday
+  else                { startHour = 8;  endHour = 16; } // Mon–Thu
 
-  for (let hour = startHour; hour <= endHour; hour++) {
-    const slotDate = new Date(date);
-    slotDate.setHours(hour, 0, 0, 0);
-    slots.push(slotDate.toISOString());
+  const offset = ctUtcOffset(date); // hours CT is behind UTC
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
+
+  for (let ctHour = startHour; ctHour <= endHour; ctHour++) {
+    // Convert CT hour to UTC — may roll into next UTC day (rare at end of DST range)
+    const utcHour = ctHour + offset;
+    const dayOffset = utcHour >= 24 ? 1 : 0;
+    const slot = new Date(Date.UTC(y, m, d + dayOffset, utcHour % 24, 0, 0, 0));
+    slots.push(slot.toISOString());
   }
 
   return slots;
@@ -284,7 +291,7 @@ export async function registerRoutes(
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
-          error: 'Invalid appointment time. Appointments are only available Monday-Friday, 8am-4pm.',
+          error: 'Invalid appointment time. Mon–Thu 8am–4pm, Fri 8am–5pm, Sat 9am–5pm CT.',
         });
       }
 

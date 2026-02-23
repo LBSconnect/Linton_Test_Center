@@ -4,3 +4,10 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# E2E test secrets — never commit
+.env.test
+
+# Playwright output
+playwright-report/
+test-results/
