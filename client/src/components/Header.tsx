@@ -82,6 +82,16 @@ export default function Header() {
                 </Button>
               </Link>
             ))}
+            <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-foreground"
+                data-testid="link-nav-exam-cram"
+              >
+                Exam Cram
+              </Button>
+            </a>
             <Link href="/services">
               <Button
                 size="sm"
@@ -127,6 +137,20 @@ export default function Header() {
                       </Button>
                     </Link>
                   ))}
+                  <a
+                    href="https://www.myeasypass.net"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      data-testid="link-mobile-exam-cram"
+                    >
+                      Exam Cram
+                    </Button>
+                  </a>
                   <Link href="/services">
                     <Button
                       className="w-full mt-3 bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
