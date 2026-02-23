@@ -1,6 +1,6 @@
-import { getUncachableResendClient } from './resendClient';
+import { sendEmail } from './gmailClient';
 
-const NOTIFICATION_EMAIL = 'info@lbsconnect.net';
+const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 const BUSINESS_NAME = 'LBS Test & Exam Center';
 const BUSINESS_ADDRESS = '616 FM 1960 Road West, Suite 575, Houston, TX 77090';
 
@@ -59,15 +59,7 @@ export async function sendContactNotification(data: {
   message: string;
 }) {
   try {
-    const resend = await getUncachableResendClient();
-    if (!resend) {
-      console.log('Email skipped (Resend not configured): Contact notification for', data.name);
-      return;
-    }
-
-    const { client, fromEmail } = resend;
-    await client.emails.send({
-      from: fromEmail,
+    await sendEmail({
       to: NOTIFICATION_EMAIL,
       subject: `New Contact Form Submission from ${data.name}`,
       html: `
@@ -114,18 +106,10 @@ export async function sendPaymentNotification(data: {
   sessionId: string;
 }) {
   try {
-    const resend = await getUncachableResendClient();
-    if (!resend) {
-      console.log('Email skipped (Resend not configured): Payment notification for session', data.sessionId);
-      return;
-    }
-
-    const { client, fromEmail } = resend;
     const formattedAmount = `$${(data.amount / 100).toFixed(2)}`;
     const serviceName = data.productName || 'Service';
 
-    await client.emails.send({
-      from: fromEmail,
+    await sendEmail({
       to: NOTIFICATION_EMAIL,
       subject: `A ${serviceName} has been purchased`,
       html: `
@@ -175,13 +159,6 @@ export async function sendAppointmentConfirmation(data: {
   paymentStatus: string;
 }) {
   try {
-    const resend = await getUncachableResendClient();
-    if (!resend) {
-      console.log('Email skipped (Resend not configured): Appointment confirmation for', data.customerName);
-      return;
-    }
-
-    const { client, fromEmail } = resend;
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -200,8 +177,7 @@ export async function sendAppointmentConfirmation(data: {
       ? '<span style="background-color: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 12px; font-size: 12px;">PAID</span>'
       : '<span style="background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px;">Pay at Visit</span>';
 
-    await client.emails.send({
-      from: fromEmail,
+    await sendEmail({
       to: data.customerEmail,
       subject: `Appointment Confirmed - ${data.serviceName} at LBS Test & Exam Center`,
       html: `
@@ -272,13 +248,6 @@ export async function sendAppointmentCalendarInvite(data: {
   notes?: string;
 }) {
   try {
-    const resend = await getUncachableResendClient();
-    if (!resend) {
-      console.log('Email skipped (Resend not configured): Calendar invite for appointment', data.appointmentId);
-      return;
-    }
-
-    const { client, fromEmail } = resend;
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -309,11 +278,7 @@ export async function sendAppointmentCalendarInvite(data: {
       notes: data.notes,
     });
 
-    // Convert to base64 for attachment
-    const icsBase64 = Buffer.from(icsContent).toString('base64');
-
-    await client.emails.send({
-      from: fromEmail,
+    await sendEmail({
       to: NOTIFICATION_EMAIL,
       subject: `New Appointment: ${data.serviceName} - ${data.customerName} on ${formattedDate}`,
       html: `
@@ -365,8 +330,8 @@ export async function sendAppointmentCalendarInvite(data: {
       attachments: [
         {
           filename: `appointment-${data.appointmentId}.ics`,
-          content: icsBase64,
-          content_type: 'text/calendar',
+          content: icsContent,
+          contentType: 'text/calendar',
         },
       ],
     });
