@@ -126,7 +126,15 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-white/50">
           <p>&copy; {new Date().getFullYear()} Linton Business Solutions LLC (LBS). All rights reserved.</p>
-          <p>LBS - Test & Exam Center Division</p>
+          <div className="flex items-center gap-4">
+            <Link href="/privacy-policy">
+              <span className="cursor-pointer hover:text-white transition-colors">Privacy Policy</span>
+            </Link>
+            <span className="text-white/30">|</span>
+            <Link href="/terms-of-use">
+              <span className="cursor-pointer hover:text-white transition-colors">Terms of Use</span>
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
