@@ -1,27 +1,26 @@
 import nodemailer from 'nodemailer';
 
-// Gmail SMTP configuration
-// Requires: GMAIL_USER and GMAIL_APP_PASSWORD environment variables
-// To get an App Password:
-// 1. Go to https://myaccount.google.com/apppasswords
-// 2. Select "Mail" and your device
-// 3. Copy the 16-character password (no spaces)
+// Microsoft 365 / Outlook SMTP configuration
+// Requires: SMTP_USER and SMTP_PASSWORD environment variables
+// For Office 365: Use your Microsoft account email and password
+// If you have 2FA enabled, create an app password at:
+// https://account.microsoft.com/security (Security > App passwords)
 
 function getCredentials() {
-  const user = process.env.GMAIL_USER;
-  const pass = process.env.GMAIL_APP_PASSWORD;
-  const fromName = process.env.GMAIL_FROM_NAME || 'LBS Test & Exam Center';
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  const fromName = process.env.SMTP_FROM_NAME || 'LBS Test & Exam Center';
 
   return { user, pass, fromName };
 }
 
 let transporter: nodemailer.Transporter | null = null;
 
-export async function getGmailTransporter() {
+export async function getEmailTransporter() {
   const { user, pass, fromName } = getCredentials();
 
   if (!user || !pass) {
-    console.warn('GMAIL_USER or GMAIL_APP_PASSWORD not set, email features will be disabled');
+    console.warn('SMTP_USER or SMTP_PASSWORD not set, email features will be disabled');
     return null;
   }
 
@@ -33,20 +32,27 @@ export async function getGmailTransporter() {
     };
   }
 
+  // Microsoft 365 / Outlook.com SMTP settings
   transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.office365.com',
+    port: 587,
+    secure: false, // Use STARTTLS
     auth: {
       user,
       pass,
+    },
+    tls: {
+      ciphers: 'SSLv3',
+      rejectUnauthorized: false,
     },
   });
 
   // Verify connection
   try {
     await transporter.verify();
-    console.log('Gmail SMTP connection verified');
+    console.log('Microsoft SMTP connection verified');
   } catch (error: any) {
-    console.error('Gmail SMTP connection failed:', error.message);
+    console.error('Microsoft SMTP connection failed:', error.message);
     transporter = null;
     return null;
   }
@@ -57,7 +63,7 @@ export async function getGmailTransporter() {
   };
 }
 
-// Send email using Gmail SMTP
+// Send email using SMTP
 export async function sendEmail(options: {
   to: string;
   subject: string;
@@ -68,13 +74,13 @@ export async function sendEmail(options: {
     contentType?: string;
   }>;
 }) {
-  const gmail = await getGmailTransporter();
-  if (!gmail) {
-    console.log('Email skipped (Gmail not configured):', options.subject);
+  const smtp = await getEmailTransporter();
+  if (!smtp) {
+    console.log('Email skipped (SMTP not configured):', options.subject);
     return false;
   }
 
-  const { transporter, fromEmail } = gmail;
+  const { transporter, fromEmail } = smtp;
 
   try {
     const mailOptions: nodemailer.SendMailOptions = {

@@ -1,4 +1,4 @@
-import { sendEmail } from './gmailClient';
+import { sendEmail } from './smtpClient';
 
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 const BUSINESS_NAME = 'LBS Test & Exam Center';
