@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { getUncachableStripeClient } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { sendPaymentNotification } from './emailService';
+import { seedStripeProducts } from './seedProducts';
 
 const app = express();
 const httpServer = createServer(app);
@@ -29,6 +30,10 @@ async function initStripe() {
     // Verify Stripe connection
     await stripe.products.list({ limit: 1 });
     console.log('Stripe connection verified');
+
+    // Sync products and correct prices
+    await seedStripeProducts();
+    console.log('Stripe products synced');
   } catch (error: any) {
     console.error('Failed to initialize Stripe:', error.message);
     // Don't throw - allow server to start without Stripe

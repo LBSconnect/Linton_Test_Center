@@ -36,14 +36,13 @@ export async function getEmailTransporter() {
   transporter = nodemailer.createTransport({
     host: 'smtp.office365.com',
     port: 587,
-    secure: false, // Use STARTTLS
+    secure: false, // STARTTLS — required by Office 365
     auth: {
       user,
       pass,
     },
     tls: {
-      ciphers: 'SSLv3',
-      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2',
     },
   });
 
