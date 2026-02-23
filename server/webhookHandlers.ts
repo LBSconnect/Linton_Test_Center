@@ -14,23 +14,22 @@ export class WebhookHandlers {
       );
     }
 
+    let event: Stripe.Event;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!webhookSecret) {
-      console.warn('STRIPE_WEBHOOK_SECRET not set, skipping signature verification');
-      // Still parse and log the event for debugging
-      const event = JSON.parse(payload.toString());
-      console.log(`Webhook received (unverified): ${event.type}`);
-      return;
+
+    if (webhookSecret) {
+      // Verify signature when secret is configured
+      const stripe = await getUncachableStripeClient();
+      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+      console.log(`Webhook verified: ${event.type} - ${event.id}`);
+    } else {
+      // Process without verification (not recommended for production)
+      console.warn('STRIPE_WEBHOOK_SECRET not set — processing without signature verification');
+      event = JSON.parse(payload.toString()) as Stripe.Event;
+      console.log(`Webhook received (unverified): ${event.type} - ${event.id}`);
     }
 
-    const stripe = await getUncachableStripeClient();
-
-    // Verify the webhook signature
-    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-
-    console.log(`Webhook verified: ${event.type} - ${event.id}`);
-
-    // Handle specific event types as needed
+    // Handle specific event types
     switch (event.type) {
       case 'checkout.session.completed':
         await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
