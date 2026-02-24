@@ -178,9 +178,8 @@ export default function Home() {
                 </div>
                 <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
                   <Button
-                    variant="outline"
                     size="sm"
-                    className="w-full mt-2 group/btn"
+                    className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"
                     data-testid="button-learn-more-exam-cram"
                   >
                     Learn More
