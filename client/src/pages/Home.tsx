@@ -136,31 +136,17 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                title={service.title}
-                description={service.description}
-                image={service.image}
-                price={service.price}
-                priceLabel={service.priceLabel}
-                slug={service.slug}
-                icon={<service.icon className="w-5 h-5" />}
-              />
-            ))}
-            {/* Exam Cram - External Link Card */}
+            {/* Exam Cram - External Link Card (First) */}
             <Card
               className="group border-border/50 bg-card transition-all duration-300 hover-elevate"
               data-testid="card-service-exam-cram"
             >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-t-md bg-gradient-to-br from-[#1e3a6e] via-[#2a4f8e] to-[#3a6fb8]">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center space-y-3">
-                    <GraduationCap className="w-20 h-20 text-white/90 mx-auto" />
-                    <span className="text-white/80 text-sm font-medium">Texas Licensing Prep</span>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-t-md bg-white">
+                <img
+                  src="/images/myeasypass-logo.png"
+                  alt="MyEasyPass - Exam Cram"
+                  className="w-full h-full object-contain p-6"
+                />
                 <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-card/95 backdrop-blur-sm rounded-md px-3 py-1.5 shadow-sm">
                   <span className="text-lg font-bold text-[#1e3a6e] dark:text-white">
                     $19.99
@@ -203,6 +189,22 @@ export default function Home() {
                 </a>
               </CardContent>
             </Card>
+            {/* Reordered services: proctoring, certification first, then others */}
+            {[...services].sort((a, b) => {
+              const order = ['proctoring', 'certification', 'workstation', 'notary', 'passport'];
+              return order.indexOf(a.id) - order.indexOf(b.id);
+            }).map((service) => (
+              <ServiceCard
+                key={service.id}
+                title={service.title}
+                description={service.description}
+                image={service.image}
+                price={service.price}
+                priceLabel={service.priceLabel}
+                slug={service.slug}
+                icon={<service.icon className="w-5 h-5" />}
+              />
+            ))}
           </div>
         </div>
       </section>
