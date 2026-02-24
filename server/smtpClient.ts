@@ -1,14 +1,9 @@
 import nodemailer from 'nodemailer';
 
-// SMTP configuration - auto-detects Gmail vs Microsoft 365 based on email domain
+// Microsoft 365 SMTP configuration
 // Requires: SMTP_USER and SMTP_PASSWORD environment variables
 //
-// For Gmail:
-//   1. Enable 2-Step Verification: https://myaccount.google.com/security
-//   2. Create App Password: https://myaccount.google.com/apppasswords
-//   3. Set SMTP_USER=your@gmail.com, SMTP_PASSWORD=16-char-app-password
-//
-// For Microsoft 365:
+// Setup:
 //   1. Enable SMTP AUTH in Microsoft 365 Admin Center
 //   2. Ensure Basic Auth is not blocked by Security Defaults
 //   3. Set SMTP_USER=your@domain.com, SMTP_PASSWORD=your-password
@@ -22,29 +17,7 @@ function getCredentials() {
 }
 
 function getSmtpConfig(email: string) {
-  const domain = email.split('@')[1]?.toLowerCase() || '';
-
-  // Gmail
-  if (domain === 'gmail.com' || domain === 'googlemail.com') {
-    return {
-      service: 'gmail',
-      auth: { user: email, pass: process.env.SMTP_PASSWORD },
-    };
-  }
-
-  // Microsoft 365 / Outlook
-  if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) {
-    return {
-      host: 'smtp.office365.com',
-      port: 587,
-      secure: false,
-      auth: { user: email, pass: process.env.SMTP_PASSWORD },
-      tls: { minVersion: 'TLSv1.2' as const },
-    };
-  }
-
-  // Default: Try Microsoft 365 for custom domains (common for business email)
-  // You can override this by setting SMTP_HOST environment variable
+  // Allow custom SMTP host override via environment variable
   const customHost = process.env.SMTP_HOST;
   if (customHost) {
     return {
@@ -56,7 +29,7 @@ function getSmtpConfig(email: string) {
     };
   }
 
-  // Default to Microsoft 365 for custom business domains
+  // Microsoft 365 SMTP
   return {
     host: 'smtp.office365.com',
     port: 587,
