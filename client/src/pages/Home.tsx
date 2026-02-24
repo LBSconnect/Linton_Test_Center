@@ -9,6 +9,7 @@ import {
   Shield,
   Clock,
   Users,
+  GraduationCap,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -147,18 +148,61 @@ export default function Home() {
                 icon={<service.icon className="w-5 h-5" />}
               />
             ))}
-          </div>
-          <div className="text-center mt-10">
-            <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
-              <Button
-                size="lg"
-                className="bg-[#1e3a6e] text-white"
-                data-testid="button-view-all-services"
-              >
-                EXAM CRAM TESTS
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </a>
+            {/* Exam Cram - External Link Card */}
+            <Card
+              className="group border-border/50 bg-card transition-all duration-300 hover-elevate"
+              data-testid="card-service-exam-cram"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden rounded-t-md bg-gradient-to-br from-[#1e3a6e] via-[#2a4f8e] to-[#3a6fb8]">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center space-y-3">
+                    <GraduationCap className="w-20 h-20 text-white/90 mx-auto" />
+                    <span className="text-white/80 text-sm font-medium">Texas Licensing Prep</span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-card/95 backdrop-blur-sm rounded-md px-3 py-1.5 shadow-sm">
+                  <span className="text-lg font-bold text-[#1e3a6e] dark:text-white">
+                    $19.99
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-1">
+                    /month
+                  </span>
+                </div>
+              </div>
+              <CardContent className="p-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-md bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center text-[#1e3a6e] dark:text-[#6b9aed]">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div className="space-y-1.5 min-w-0">
+                    <h3
+                      className="font-semibold text-lg leading-tight"
+                      data-testid="text-service-title-exam-cram"
+                    >
+                      Exam Cram
+                    </h3>
+                    <p
+                      className="text-sm text-muted-foreground leading-relaxed line-clamp-2"
+                      data-testid="text-service-desc-exam-cram"
+                    >
+                      Practice tests for Texas Real Estate, Insurance, and Professional licensing exams.
+                    </p>
+                  </div>
+                </div>
+                <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-2 group/btn"
+                    data-testid="button-learn-more-exam-cram"
+                  >
+                    Learn More
+                    <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-0.5" />
+                  </Button>
+                </a>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
