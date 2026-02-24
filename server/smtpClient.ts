@@ -1,87 +1,52 @@
-import nodemailer from 'nodemailer';
+import { ClientSecretCredential } from '@azure/identity';
+import { Client } from '@microsoft/microsoft-graph-client';
+import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials/index.js';
 
-// Microsoft 365 SMTP configuration
-// Requires: SMTP_USER and SMTP_PASSWORD environment variables
+// Microsoft Graph API configuration for sending emails
+// Requires: AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, MAIL_FROM_ADDRESS
 //
-// Setup:
-//   1. Enable SMTP AUTH in Microsoft 365 Admin Center
-//   2. Ensure Basic Auth is not blocked by Security Defaults
-//   3. Set SMTP_USER=your@domain.com, SMTP_PASSWORD=your-password
+// Setup in Azure:
+//   1. Register an app in Azure AD (Entra ID)
+//   2. Create a client secret
+//   3. Grant Mail.Send application permission
+//   4. Admin consent for the permission
 
-function getCredentials() {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
-  const fromName = process.env.SMTP_FROM_NAME || 'LBS Test & Exam Center';
+let graphClient: Client | null = null;
 
-  return { user, pass, fromName };
-}
+function getGraphClient(): Client | null {
+  const tenantId = process.env.AZURE_TENANT_ID;
+  const clientId = process.env.AZURE_CLIENT_ID;
+  const clientSecret = process.env.AZURE_CLIENT_SECRET;
 
-function getSmtpConfig(email: string) {
-  // Allow custom SMTP host override via environment variable
-  const customHost = process.env.SMTP_HOST;
-  if (customHost) {
-    return {
-      host: customHost,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: { user: email, pass: process.env.SMTP_PASSWORD },
-      tls: { minVersion: 'TLSv1.2' as const },
-    };
-  }
-
-  // Microsoft 365 SMTP
-  return {
-    host: 'smtp.office365.com',
-    port: 587,
-    secure: false,
-    auth: { user: email, pass: process.env.SMTP_PASSWORD },
-    tls: { minVersion: 'TLSv1.2' as const },
-  };
-}
-
-let transporter: nodemailer.Transporter | null = null;
-let lastUser: string | null = null;
-
-export async function getEmailTransporter() {
-  const { user, pass, fromName } = getCredentials();
-
-  if (!user || !pass) {
-    console.warn('SMTP_USER or SMTP_PASSWORD not set, email features will be disabled');
+  if (!tenantId || !clientId || !clientSecret) {
+    console.warn('Azure credentials not set (AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET). Email features disabled.');
     return null;
   }
 
-  // Reuse existing transporter if same user
-  if (transporter && lastUser === user) {
-    return {
-      transporter,
-      fromEmail: `"${fromName}" <${user}>`
-    };
+  if (graphClient) {
+    return graphClient;
   }
 
-  // Create new transporter
-  const config = getSmtpConfig(user);
-  console.log('SMTP Config:', { host: config.host, port: config.port, user: config.auth.user });
-  transporter = nodemailer.createTransport(config);
-  lastUser = user;
-
-  // Verify connection
   try {
-    await transporter.verify();
-    console.log('SMTP connection verified for', user);
+    const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+    const authProvider = new TokenCredentialAuthenticationProvider(credential, {
+      scopes: ['https://graph.microsoft.com/.default'],
+    });
+
+    graphClient = Client.initWithMiddleware({
+      authProvider,
+    });
+
+    console.log('Microsoft Graph client initialized');
+    return graphClient;
   } catch (error: any) {
-    console.error('SMTP connection failed:', error.message);
-    transporter = null;
-    lastUser = null;
+    console.error('Failed to initialize Graph client:', error.message);
     return null;
   }
-
-  return {
-    transporter,
-    fromEmail: `"${fromName}" <${user}>`
-  };
 }
 
-// Send email using SMTP
+// Send email using Microsoft Graph API
 export async function sendEmail(options: {
   to: string;
   subject: string;
@@ -91,36 +56,93 @@ export async function sendEmail(options: {
     content: string | Buffer;
     contentType?: string;
   }>;
-}) {
-  const smtp = await getEmailTransporter();
-  if (!smtp) {
-    console.log('Email skipped (SMTP not configured):', options.subject);
+}): Promise<boolean> {
+  const client = getGraphClient();
+  const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USER;
+  const fromName = process.env.SMTP_FROM_NAME || 'LBS Test & Exam Center';
+
+  if (!client) {
+    console.log('Email skipped (Graph API not configured):', options.subject);
     return false;
   }
 
-  const { transporter, fromEmail } = smtp;
+  if (!fromAddress) {
+    console.error('MAIL_FROM_ADDRESS not set');
+    return false;
+  }
 
   try {
-    const mailOptions: nodemailer.SendMailOptions = {
-      from: fromEmail,
-      to: options.to,
+    const message: any = {
       subject: options.subject,
-      html: options.html,
+      body: {
+        contentType: 'HTML',
+        content: options.html,
+      },
+      toRecipients: [
+        {
+          emailAddress: {
+            address: options.to,
+          },
+        },
+      ],
+      from: {
+        emailAddress: {
+          address: fromAddress,
+          name: fromName,
+        },
+      },
     };
 
-    if (options.attachments) {
-      mailOptions.attachments = options.attachments.map(att => ({
-        filename: att.filename,
-        content: att.content,
-        contentType: att.contentType,
-      }));
+    // Handle attachments if provided
+    if (options.attachments && options.attachments.length > 0) {
+      message.attachments = options.attachments.map((att) => {
+        const contentBytes = typeof att.content === 'string'
+          ? Buffer.from(att.content).toString('base64')
+          : att.content.toString('base64');
+
+        return {
+          '@odata.type': '#microsoft.graph.fileAttachment',
+          name: att.filename,
+          contentType: att.contentType || 'application/octet-stream',
+          contentBytes,
+        };
+      });
     }
 
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent to', options.to);
+    console.log('Sending email via Graph API to:', options.to);
+
+    await client
+      .api(`/users/${fromAddress}/sendMail`)
+      .post({ message, saveToSentItems: true });
+
+    console.log('Email sent successfully to', options.to);
     return true;
   } catch (error: any) {
-    console.error('Failed to send email:', error.message);
+    console.error('Failed to send email via Graph API:', error.message);
+    if (error.body) {
+      try {
+        const errorBody = JSON.parse(error.body);
+        console.error('Graph API error details:', errorBody.error?.message || errorBody);
+      } catch {
+        console.error('Graph API error body:', error.body);
+      }
+    }
     return false;
   }
+}
+
+// Legacy function for compatibility - no longer needed with Graph API
+export async function getEmailTransporter() {
+  const client = getGraphClient();
+  const fromAddress = process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USER;
+  const fromName = process.env.SMTP_FROM_NAME || 'LBS Test & Exam Center';
+
+  if (!client || !fromAddress) {
+    return null;
+  }
+
+  return {
+    transporter: null, // Not used with Graph API
+    fromEmail: `"${fromName}" <${fromAddress}>`,
+  };
 }
