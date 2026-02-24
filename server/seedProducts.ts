@@ -26,7 +26,7 @@ export async function seedStripeProducts() {
       name: 'Private Exam Testing',
       description: 'Private proctoring room with camera, headset, and microphone for remote exams. Per hour rate.',
       metadata: { category: 'proctoring', slug: 'remote-proctoring' },
-      priceAmount: 3500, // $35.00
+      priceAmount: 2000, // $20.00
     },
     {
       name: 'Certiport Exam Testing',

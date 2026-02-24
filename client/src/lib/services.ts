@@ -109,7 +109,7 @@ export const services: ServiceInfo[] = [
       "Technical support on standby",
     ],
     image: "/images/service-proctoring.png",
-    price: "$35",
+    price: "$20",
     priceLabel: "/hour",
     icon: Video,
     stripeProductName: "Private Exam Testing",
