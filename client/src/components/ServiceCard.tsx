@@ -71,9 +71,8 @@ export default function ServiceCard({
         </div>
         <Link href={`/services/${slug}`}>
           <Button
-            variant="outline"
             size="sm"
-            className="w-full mt-2 group/btn"
+            className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"
             data-testid={`button-learn-more-${slug}`}
           >
             Learn More & Book
