@@ -56,10 +56,13 @@ function getSmtpConfig(email: string) {
     };
   }
 
-  // Fallback to Gmail service (works for most cases)
+  // Default to Microsoft 365 for custom business domains
   return {
-    service: 'gmail',
+    host: 'smtp.office365.com',
+    port: 587,
+    secure: false,
     auth: { user: email, pass: process.env.SMTP_PASSWORD },
+    tls: { minVersion: 'TLSv1.2' as const },
   };
 }
 
