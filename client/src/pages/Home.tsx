@@ -138,7 +138,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Exam Cram - External Link Card (First) */}
             <Card
-              className="group border-border/50 bg-card transition-all duration-300 hover-elevate"
+              className="group border-2 border-[#1e3a6e] bg-card transition-all duration-300 hover-elevate"
               data-testid="card-service-exam-cram"
             >
               <div className="relative aspect-[4/3] overflow-hidden rounded-t-md bg-white">
