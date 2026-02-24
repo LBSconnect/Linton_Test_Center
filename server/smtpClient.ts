@@ -60,6 +60,7 @@ export async function getEmailTransporter() {
 
   // Create new transporter
   const config = getSmtpConfig(user);
+  console.log('SMTP Config:', { host: config.host, port: config.port, user: config.auth.user });
   transporter = nodemailer.createTransport(config);
   lastUser = user;
 
