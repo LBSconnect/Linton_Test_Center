@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Disallow transactional pages
+Disallow: /checkout-success
+Disallow: /checkout-cancel
+
+# Sitemap location
+Sitemap: https://www.lbs4.com/sitemap.xml
