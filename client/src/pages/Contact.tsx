@@ -369,7 +369,7 @@ export default function Contact() {
                               Passport Photos
                             </SelectItem>
                             <SelectItem value="proctoring">
-                              Remote Proctoring Services
+                              Private Exam Testing
                             </SelectItem>
                             <SelectItem value="certification">
                               Certiport Exam Testing

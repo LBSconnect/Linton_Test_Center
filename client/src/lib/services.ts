@@ -94,7 +94,7 @@ export const services: ServiceInfo[] = [
   {
     id: "proctoring",
     slug: "remote-proctoring",
-    title: "Remote Proctoring Services",
+    title: "Private Exam Testing",
     shortTitle: "Proctoring",
     description:
       "Private proctoring room with camera, headset, and microphone for remote exams. Per hour rate.",
@@ -112,7 +112,7 @@ export const services: ServiceInfo[] = [
     price: "$35",
     priceLabel: "/hour",
     icon: Video,
-    stripeProductName: "Remote Proctoring Services",
+    stripeProductName: "Private Exam Testing",
   },
   {
     id: "certification",

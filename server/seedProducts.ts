@@ -23,7 +23,7 @@ export async function seedStripeProducts() {
       priceAmount: 2500, // $25.00
     },
     {
-      name: 'Remote Proctoring Services',
+      name: 'Private Exam Testing',
       description: 'Private proctoring room with camera, headset, and microphone for remote exams. Per hour rate.',
       metadata: { category: 'proctoring', slug: 'remote-proctoring' },
       priceAmount: 3500, // $35.00

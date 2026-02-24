@@ -47,7 +47,7 @@ export default function TermsOfUse() {
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li><strong>Certiport Exam Testing:</strong> Authorized testing center for Pearson VUE, Certiport, PMI, and other certification programs</li>
-                <li><strong>Remote Proctoring Services:</strong> Private proctoring rooms with equipment for remotely proctored exams</li>
+                <li><strong>Private Exam Testing:</strong> Private proctoring rooms with equipment for remotely proctored exams</li>
                 <li><strong>Computer Workstation Rental:</strong> Fully equipped workstations with high-speed internet access</li>
                 <li><strong>Notary Services:</strong> Certified notary public services for documents and legal papers</li>
                 <li><strong>Passport Photos:</strong> Professional photos meeting government standards for passports and visas</li>
