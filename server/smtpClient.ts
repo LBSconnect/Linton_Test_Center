@@ -1,10 +1,17 @@
 import nodemailer from 'nodemailer';
 
-// Microsoft 365 / Outlook SMTP configuration
+// SMTP configuration - auto-detects Gmail vs Microsoft 365 based on email domain
 // Requires: SMTP_USER and SMTP_PASSWORD environment variables
-// For Office 365: Use your Microsoft account email and password
-// If you have 2FA enabled, create an app password at:
-// https://account.microsoft.com/security (Security > App passwords)
+//
+// For Gmail:
+//   1. Enable 2-Step Verification: https://myaccount.google.com/security
+//   2. Create App Password: https://myaccount.google.com/apppasswords
+//   3. Set SMTP_USER=your@gmail.com, SMTP_PASSWORD=16-char-app-password
+//
+// For Microsoft 365:
+//   1. Enable SMTP AUTH in Microsoft 365 Admin Center
+//   2. Ensure Basic Auth is not blocked by Security Defaults
+//   3. Set SMTP_USER=your@domain.com, SMTP_PASSWORD=your-password
 
 function getCredentials() {
   const user = process.env.SMTP_USER;
@@ -14,7 +21,50 @@ function getCredentials() {
   return { user, pass, fromName };
 }
 
+function getSmtpConfig(email: string) {
+  const domain = email.split('@')[1]?.toLowerCase() || '';
+
+  // Gmail
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    return {
+      service: 'gmail',
+      auth: { user: email, pass: process.env.SMTP_PASSWORD },
+    };
+  }
+
+  // Microsoft 365 / Outlook
+  if (domain.includes('outlook') || domain.includes('hotmail') || domain.includes('live')) {
+    return {
+      host: 'smtp.office365.com',
+      port: 587,
+      secure: false,
+      auth: { user: email, pass: process.env.SMTP_PASSWORD },
+      tls: { minVersion: 'TLSv1.2' as const },
+    };
+  }
+
+  // Default: Try Microsoft 365 for custom domains (common for business email)
+  // You can override this by setting SMTP_HOST environment variable
+  const customHost = process.env.SMTP_HOST;
+  if (customHost) {
+    return {
+      host: customHost,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: email, pass: process.env.SMTP_PASSWORD },
+      tls: { minVersion: 'TLSv1.2' as const },
+    };
+  }
+
+  // Fallback to Gmail service (works for most cases)
+  return {
+    service: 'gmail',
+    auth: { user: email, pass: process.env.SMTP_PASSWORD },
+  };
+}
+
 let transporter: nodemailer.Transporter | null = null;
+let lastUser: string | null = null;
 
 export async function getEmailTransporter() {
   const { user, pass, fromName } = getCredentials();
@@ -24,35 +74,27 @@ export async function getEmailTransporter() {
     return null;
   }
 
-  // Reuse existing transporter if available
-  if (transporter) {
+  // Reuse existing transporter if same user
+  if (transporter && lastUser === user) {
     return {
       transporter,
       fromEmail: `"${fromName}" <${user}>`
     };
   }
 
-  // Microsoft 365 / Outlook.com SMTP settings
-  transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
-    port: 587,
-    secure: false, // STARTTLS — required by Office 365
-    auth: {
-      user,
-      pass,
-    },
-    tls: {
-      minVersion: 'TLSv1.2',
-    },
-  });
+  // Create new transporter
+  const config = getSmtpConfig(user);
+  transporter = nodemailer.createTransport(config);
+  lastUser = user;
 
   // Verify connection
   try {
     await transporter.verify();
-    console.log('Microsoft SMTP connection verified');
+    console.log('SMTP connection verified for', user);
   } catch (error: any) {
-    console.error('Microsoft SMTP connection failed:', error.message);
+    console.error('SMTP connection failed:', error.message);
     transporter = null;
+    lastUser = null;
     return null;
   }
 
