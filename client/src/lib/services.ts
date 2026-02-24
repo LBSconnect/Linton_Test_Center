@@ -117,7 +117,7 @@ export const services: ServiceInfo[] = [
   {
     id: "certification",
     slug: "certification-exam-testing",
-    title: "Certification Exam Testing",
+    title: "Certiport Exam Testing",
     shortTitle: "Certifications",
     description:
       "Professional exam testing environment for IT certifications including Pearson VUE, Certiport, and PMI exams.",
@@ -135,7 +135,7 @@ export const services: ServiceInfo[] = [
     price: "$35",
     priceLabel: "/session",
     icon: Award,
-    stripeProductName: "Certification Exam Testing",
+    stripeProductName: "Certiport Exam Testing",
   },
 ];
 

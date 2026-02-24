@@ -372,7 +372,7 @@ export default function Contact() {
                               Remote Proctoring Services
                             </SelectItem>
                             <SelectItem value="certification">
-                              Certification Exam Testing
+                              Certiport Exam Testing
                             </SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>

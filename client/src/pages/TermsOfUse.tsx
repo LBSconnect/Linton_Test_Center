@@ -46,7 +46,7 @@ export default function TermsOfUse() {
                 LBS Test & Exam Center provides the following services:
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li><strong>Certification Exam Testing:</strong> Authorized testing center for Pearson VUE, Certiport, PMI, and other certification programs</li>
+                <li><strong>Certiport Exam Testing:</strong> Authorized testing center for Pearson VUE, Certiport, PMI, and other certification programs</li>
                 <li><strong>Remote Proctoring Services:</strong> Private proctoring rooms with equipment for remotely proctored exams</li>
                 <li><strong>Computer Workstation Rental:</strong> Fully equipped workstations with high-speed internet access</li>
                 <li><strong>Notary Services:</strong> Certified notary public services for documents and legal papers</li>

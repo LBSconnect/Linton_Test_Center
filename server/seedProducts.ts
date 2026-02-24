@@ -29,7 +29,7 @@ export async function seedStripeProducts() {
       priceAmount: 3500, // $35.00
     },
     {
-      name: 'Certification Exam Testing',
+      name: 'Certiport Exam Testing',
       description: 'Professional exam testing environment for IT certifications including Pearson VUE, Certiport, and PMI exams.',
       metadata: { category: 'certification', slug: 'certification-exam-testing' },
       priceAmount: 3500, // $35.00
