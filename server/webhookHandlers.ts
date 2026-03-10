@@ -1,6 +1,6 @@
 import { getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
-import { sendAppointmentConfirmation } from './emailService';
+import { sendAppointmentConfirmation, sendAppointmentCalendarInvite } from './emailService';
 import type Stripe from 'stripe';
 
 export class WebhookHandlers {
@@ -81,7 +81,20 @@ export class WebhookHandlers {
         paymentStatus: 'paid',
       });
 
-      console.log('Paid confirmation email queued for:', appointment.customerEmail);
+      // Send full appointment notification with calendar invite to company
+      sendAppointmentCalendarInvite({
+        appointmentId: appointment.id,
+        customerName: appointment.customerName,
+        customerEmail: appointment.customerEmail,
+        customerPhone: appointment.customerPhone ?? undefined,
+        serviceName: appointment.serviceName,
+        appointmentDate: appointment.appointmentDate,
+        priceAmount: appointment.priceAmount ?? undefined,
+        paymentStatus: 'paid',
+        notes: appointment.notes ?? undefined,
+      });
+
+      console.log('Payment confirmation emails queued for customer:', appointment.customerEmail, 'and company');
     } catch (error: any) {
       console.error('Error processing checkout.session.completed:', error.message);
     }
