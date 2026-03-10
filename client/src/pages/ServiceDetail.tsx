@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
-import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -20,7 +19,6 @@ import {
   Clock,
   Loader2,
   CalendarDays,
-  CreditCard,
 } from "lucide-react";
 import { getServiceBySlug } from "@/lib/services";
 import { apiRequest } from "@/lib/queryClient";
@@ -38,7 +36,6 @@ export default function ServiceDetail() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
-  const [payNow, setPayNow] = useState(true); // Default to pay online
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
@@ -149,7 +146,7 @@ export default function ServiceDetail() {
   };
 
   const handleBookAppointment = () => {
-    if (!selectedDate || !selectedTime || !customerName || !customerEmail) {
+    if (!selectedDate || !selectedTime || !customerName || !customerEmail || !customerPhone) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields and select a date and time.",
@@ -161,13 +158,13 @@ export default function ServiceDetail() {
     const appointmentData = {
       customerName,
       customerEmail,
-      customerPhone: customerPhone || undefined,
+      customerPhone,
       serviceName: service.title,
       serviceId: matchingProduct?.id,
       priceId: price?.id,
       priceAmount: price?.unit_amount,
       appointmentDate: selectedTime,
-      payNow: payNow && !!price,
+      payNow: !!price,
       notes: notes || undefined,
     };
 
@@ -191,7 +188,7 @@ export default function ServiceDetail() {
             <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
               <p><span className="font-medium">Date:</span> {selectedDate?.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
               <p><span className="font-medium">Time:</span> {formatTime(selectedTime)}</p>
-              <p><span className="font-medium">Payment:</span> {payNow ? "Paid Online" : "Pay at Visit"}</p>
+              <p><span className="font-medium">Payment:</span> Paid Online</p>
             </div>
             <Link href="/services">
               <Button className="mt-4">
@@ -385,13 +382,14 @@ export default function ServiceDetail() {
                               />
                             </div>
                             <div>
-                              <Label htmlFor="phone" className="text-sm">Phone (Optional)</Label>
+                              <Label htmlFor="phone" className="text-sm">Phone *</Label>
                               <Input
                                 id="phone"
                                 type="tel"
                                 placeholder="(123) 456-7890"
                                 value={customerPhone}
                                 onChange={(e) => setCustomerPhone(e.target.value)}
+                                required
                               />
                             </div>
                             <div>
@@ -406,20 +404,6 @@ export default function ServiceDetail() {
                             </div>
                           </div>
 
-                          {/* Payment Option */}
-                          {price && (
-                            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                              <div className="flex items-center gap-2">
-                                <CreditCard className="w-4 h-4 text-[#e85d40]" />
-                                <span className="text-sm font-medium">Pay online now</span>
-                              </div>
-                              <Switch
-                                checked={payNow}
-                                onCheckedChange={setPayNow}
-                              />
-                            </div>
-                          )}
-
                           {/* Book Button */}
                           <Button
                             className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
@@ -431,7 +415,7 @@ export default function ServiceDetail() {
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Booking...
                               </>
-                            ) : payNow && price ? (
+                            ) : price ? (
                               <>
                                 Book & Pay ${(price.unit_amount / 100).toFixed(2)}
                               </>
@@ -439,12 +423,6 @@ export default function ServiceDetail() {
                               "Book Appointment"
                             )}
                           </Button>
-
-                          {!payNow && (
-                            <p className="text-xs text-center text-muted-foreground">
-                              Payment will be collected at the time of your visit
-                            </p>
-                          )}
                         </>
                       )}
                     </div>
