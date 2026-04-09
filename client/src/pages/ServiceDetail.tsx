@@ -126,12 +126,12 @@ export default function ServiceDetail() {
 
   const price = matchingProduct?.prices?.[0];
 
-  // Disable Sundays in calendar (Saturdays are now open)
+  // Disable Sundays, Thursdays, and past dates
   const disabledDays = (date: Date) => {
     const day = date.getDay();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return day === 0 || date < today; // Only disable Sunday
+    return day === 0 || day === 4 || date < today; // Closed Sunday & Thursday
   };
 
   // Always display in Central Time (business timezone: Houston, TX)
@@ -315,7 +315,7 @@ export default function ServiceDetail() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Available Monday - Saturday
+                          Available Mon–Wed, Fri & Sat (closed Thu & Sun)
                         </p>
                       </div>
 
@@ -353,7 +353,7 @@ export default function ServiceDetail() {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            Mon-Thu: 8AM-4PM | Fri: 8AM-5PM | Sat: 9AM-5PM
+                            Mon–Wed & Fri: 8AM–4PM | Sat: 8AM–3PM
                           </p>
                         </div>
                       )}
@@ -446,11 +446,11 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <Clock className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          Mon - Thu: 8 AM - 4 PM
+                          Mon, Tue, Wed & Fri: 8 AM - 5 PM
                           <br />
-                          Fri: 8 AM - 5 PM
+                          Sat: 8 AM - 4 PM
                           <br />
-                          Sat: 9 AM - 5 PM
+                          Closed Thu & Sun
                         </span>
                       </div>
                     </div>

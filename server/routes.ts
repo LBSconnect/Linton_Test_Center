@@ -57,25 +57,25 @@ function isValidBusinessTime(date: Date): boolean {
   const ctHour = utcToCTHour(date);
 
   if (dow === 0) return false;                          // Sunday: closed
-  if (dow === 6) return ctHour >= 9 && ctHour <= 17;   // Saturday: 9am–5pm
-  if (dow === 5) return ctHour >= 8 && ctHour <= 17;   // Friday: 8am–5pm
-  return ctHour >= 8 && ctHour <= 16;                  // Mon–Thu: 8am–4pm
+  if (dow === 4) return false;                          // Thursday: closed
+  if (dow === 6) return ctHour >= 8 && ctHour <= 15;   // Saturday: last slot 3pm (closes 4pm)
+  return ctHour >= 8 && ctHour <= 16;                  // Mon–Wed, Fri: last slot 4pm (closes 5pm)
 }
 
 // Generate available time slots for a given date (all in Central Time)
-// Mon–Thu: 8am–4pm CT | Fri: 8am–5pm CT | Sat: 9am–5pm CT | Sun: closed
+// Last slot is 1hr before close so appointments end at closing time:
+// Mon–Wed, Fri: slots 8am–4pm (business closes 5pm) | Sat: slots 8am–3pm (closes 4pm) | Thu, Sun: closed
 function getAvailableTimeSlots(date: Date): string[] {
   const slots: string[] = [];
   const dow = date.getUTCDay();
 
-  if (dow === 0) return slots; // Sunday — closed
+  if (dow === 0 || dow === 4) return slots; // Sunday, Thursday — closed
 
   let startHour: number;
   let endHour: number;
 
-  if (dow === 6)      { startHour = 9;  endHour = 17; } // Saturday
-  else if (dow === 5) { startHour = 8;  endHour = 17; } // Friday
-  else                { startHour = 8;  endHour = 16; } // Mon–Thu
+  if (dow === 6) { startHour = 8; endHour = 15; } // Saturday: last slot 3pm (closes 4pm)
+  else           { startHour = 8; endHour = 16; } // Mon–Wed, Fri: last slot 4pm (closes 5pm)
 
   const offset = ctUtcOffset(date); // hours CT is behind UTC
   const y = date.getUTCFullYear();
@@ -266,11 +266,10 @@ export async function registerRoutes(
         date: requestedDate.toISOString().split('T')[0],
         slots: availableSlots,
         businessHours: {
-          monThu: { start: '08:00', end: '16:00' },
-          fri: { start: '08:00', end: '17:00' },
-          sat: { start: '09:00', end: '17:00' },
+          monWedFri: { open: '08:00', close: '17:00', lastSlot: '16:00' },
+          sat: { open: '08:00', close: '16:00', lastSlot: '15:00' },
         },
-        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday'],
       });
     } catch (error: any) {
       console.error('Error fetching available slots:', error.message);
@@ -292,7 +291,7 @@ export async function registerRoutes(
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
-          error: 'Invalid appointment time. Mon–Thu 8am–4pm, Fri 8am–5pm, Sat 9am–5pm CT.',
+          error: 'Invalid appointment time. Mon–Wed & Fri: last slot 4pm, Sat: last slot 3pm CT. Closed Thursday & Sunday.',
         });
       }
 
