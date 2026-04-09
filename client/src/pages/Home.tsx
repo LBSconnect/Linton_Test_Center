@@ -294,9 +294,11 @@ export default function Home() {
                       <div>
                         <p className="font-medium text-sm">Hours</p>
                         <p className="text-sm text-muted-foreground">
-                          Mon - Fri: 9:00 AM - 6:00 PM
+                          Mon, Tue, Wed & Fri: 8:00 AM - 5:00 PM
                           <br />
-                          Sat: 10:00 AM - 4:00 PM
+                          Sat: 8:00 AM - 4:00 PM
+                          <br />
+                          Closed Thu & Sun
                         </p>
                       </div>
                     </div>
