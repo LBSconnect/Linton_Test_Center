@@ -165,11 +165,13 @@ export async function sendAppointmentConfirmation(data: {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'America/Chicago',
     });
     const formattedTime = appointmentDateTime.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: 'America/Chicago',
     });
 
     const priceDisplay = data.priceAmount ? `$${(data.priceAmount / 100).toFixed(2)}` : 'To be determined';
@@ -254,11 +256,13 @@ export async function sendAppointmentCalendarInvite(data: {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'America/Chicago',
     });
     const formattedTime = appointmentDateTime.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
+      timeZone: 'America/Chicago',
     });
 
     const priceDisplay = data.priceAmount ? `$${(data.priceAmount / 100).toFixed(2)}` : 'To be determined';
