@@ -353,7 +353,7 @@ export default function ServiceDetail() {
                             </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-1">
-                            Mon–Wed & Fri: 8AM–5PM | Sat: 8AM–4PM
+                            Mon–Wed & Fri: 8AM–4PM | Sat: 8AM–3PM
                           </p>
                         </div>
                       )}
