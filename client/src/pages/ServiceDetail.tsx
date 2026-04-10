@@ -9,6 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -36,7 +43,31 @@ export default function ServiceDetail() {
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
+  const [selectedExam, setSelectedExam] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  const CERTIPORT_EXAMS = [
+    "Adobe Certified Professional",
+    "Agriscience and Technology Careers",
+    "App Development with Swift Certification",
+    "Autodesk Certified User",
+    "Cisco Certified Support Technician",
+    "Critical Career Skills",
+    "Entrepreneurship and Small Business",
+    "Health Sciences Careers",
+    "Hospitality and Culinary Arts Careers",
+    "IC3 Digital Literacy Certification",
+    "Information Technology Specialist",
+    "Intuit Certifications",
+    "Meta Certification",
+    "Microsoft Certified Educator",
+    "Microsoft Certified Fundamentals",
+    "Microsoft Office Specialist",
+    "Project Management Institute",
+    "Unity Certified User",
+  ];
+
+  const isCertiport = slug === "certification-exam-testing";
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
     data: Array<{
@@ -155,6 +186,18 @@ export default function ServiceDetail() {
       return;
     }
 
+    if (isCertiport && !selectedExam) {
+      toast({
+        title: "Missing Information",
+        description: "Please select the exam you are registering for.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const examNote = isCertiport && selectedExam ? `Exam: ${selectedExam}` : "";
+    const combinedNotes = [examNote, notes].filter(Boolean).join("\n\n") || undefined;
+
     const appointmentData = {
       customerName,
       customerEmail,
@@ -165,7 +208,7 @@ export default function ServiceDetail() {
       priceAmount: price?.unit_amount,
       appointmentDate: selectedTime,
       payNow: !!price,
-      notes: notes || undefined,
+      notes: combinedNotes,
     };
 
     bookingMutation.mutate(appointmentData);
@@ -392,6 +435,23 @@ export default function ServiceDetail() {
                                 required
                               />
                             </div>
+                            {isCertiport && (
+                              <div>
+                                <Label htmlFor="exam" className="text-sm">Exam *</Label>
+                                <Select value={selectedExam} onValueChange={setSelectedExam}>
+                                  <SelectTrigger id="exam">
+                                    <SelectValue placeholder="Select an exam..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {CERTIPORT_EXAMS.map((exam) => (
+                                      <SelectItem key={exam} value={exam}>
+                                        {exam}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            )}
                             <div>
                               <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
                               <Textarea
