@@ -356,6 +356,7 @@ export async function registerRoutes(
             appointmentDate: appointmentDate,
             priceAmount: data.priceAmount,
             paymentStatus: 'pending',
+            notes: data.notes,
           });
 
           sendAppointmentCalendarInvite({
@@ -390,6 +391,7 @@ export async function registerRoutes(
         appointmentDate: appointmentDate,
         priceAmount: data.priceAmount,
         paymentStatus: 'unpaid',
+        notes: data.notes,
       });
 
       sendAppointmentCalendarInvite({

@@ -4,6 +4,19 @@ const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.ne
 const BUSINESS_NAME = 'LBS Test & Exam Center';
 const BUSINESS_ADDRESS = '616 FM 1960 Road West, Suite 575, Houston, TX 77090';
 
+// Extracts "Exam: <name>" from the notes field and returns { exam, remainingNotes }
+function parseExamFromNotes(notes?: string): { exam: string | null; remainingNotes: string | null } {
+  if (!notes) return { exam: null, remainingNotes: null };
+  const match = notes.match(/^Exam: (.+?)(?:\n\n|$)([\s\S]*)?/);
+  if (match) {
+    return {
+      exam: match[1].trim(),
+      remainingNotes: match[2]?.trim() || null,
+    };
+  }
+  return { exam: null, remainingNotes: notes };
+}
+
 // Generate ICS calendar file content
 function generateICSContent(data: {
   appointmentId: string;
@@ -157,8 +170,10 @@ export async function sendAppointmentConfirmation(data: {
   appointmentDate: Date;
   priceAmount?: number;
   paymentStatus: string;
+  notes?: string;
 }) {
   try {
+    const { exam } = parseExamFromNotes(data.notes);
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -197,6 +212,7 @@ export async function sendAppointmentConfirmation(data: {
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e; width: 120px;">Service:</td>
                   <td style="padding: 8px 0;">${data.serviceName}</td>
                 </tr>
+                ${exam ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Exam:</td><td style="padding: 8px 0;">${exam}</td></tr>` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Date:</td>
                   <td style="padding: 8px 0;">${formattedDate}</td>
@@ -250,6 +266,7 @@ export async function sendAppointmentCalendarInvite(data: {
   notes?: string;
 }) {
   try {
+    const { exam, remainingNotes } = parseExamFromNotes(data.notes);
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -303,6 +320,7 @@ export async function sendAppointmentCalendarInvite(data: {
                   <td style="padding: 8px 0;"><a href="mailto:${data.customerEmail}">${data.customerEmail}</a></td>
                 </tr>
                 ${data.customerPhone ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Phone:</td><td style="padding: 8px 0;"><a href="tel:${data.customerPhone}">${data.customerPhone}</a></td></tr>` : ''}
+                ${exam ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Exam:</td><td style="padding: 8px 0;">${exam}</td></tr>` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Date:</td>
                   <td style="padding: 8px 0;">${formattedDate}</td>
@@ -319,7 +337,7 @@ export async function sendAppointmentCalendarInvite(data: {
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Payment:</td>
                   <td style="padding: 8px 0;">${paymentBadge}</td>
                 </tr>
-                ${data.notes ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Notes:</td><td style="padding: 8px 0;">${data.notes}</td></tr>` : ''}
+                ${remainingNotes ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Notes:</td><td style="padding: 8px 0;">${remainingNotes}</td></tr>` : ''}
               </table>
             </div>
             <p style="margin: 0; font-size: 14px; color: #6b7280;">
