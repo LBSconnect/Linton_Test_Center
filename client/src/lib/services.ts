@@ -132,7 +132,7 @@ export const services: ServiceInfo[] = [
       "Flexible session lengths (2–6 hrs)",
       "Experienced, qualified tutors",
     ],
-    image: "/images/service-tutoring.png",
+    image: "/images/service-workstation.png",
     price: "$40",
     priceLabel: "/hr · 2 hr min",
     icon: GraduationCap,
