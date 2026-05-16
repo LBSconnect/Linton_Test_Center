@@ -4,6 +4,7 @@ import {
   Camera,
   Video,
   Award,
+  GraduationCap,
 } from "lucide-react";
 
 export interface ServiceInfo {
@@ -113,6 +114,29 @@ export const services: ServiceInfo[] = [
     priceLabel: "/hour",
     icon: Video,
     stripeProductName: "Private Exam Testing",
+  },
+  {
+    id: "tutoring",
+    slug: "tutoring",
+    title: "Tutoring",
+    shortTitle: "Tutoring",
+    description:
+      "One-on-one academic and professional tutoring sessions. Sessions run 2–6 hours at $40/hr. Payment required at booking.",
+    longDescription:
+      "Our experienced tutors provide personalized one-on-one instruction tailored to your goals. Whether you need help with academic subjects, test preparation, or professional skill development, we offer focused sessions in a quiet, professional environment. Sessions are available in 2–6 hour blocks.",
+    features: [
+      "One-on-one personalized instruction",
+      "Academic & professional subjects",
+      "Test prep & exam readiness",
+      "Quiet, distraction-free environment",
+      "Flexible session lengths (2–6 hrs)",
+      "Experienced, qualified tutors",
+    ],
+    image: "/images/service-tutoring.png",
+    price: "$40",
+    priceLabel: "/hr · 2 hr min",
+    icon: GraduationCap,
+    stripeProductName: "Tutoring",
   },
   {
     id: "certification",

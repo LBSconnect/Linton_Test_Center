@@ -17,6 +17,13 @@ function parseExamFromNotes(notes?: string): { exam: string | null; remainingNot
   return { exam: null, remainingNotes: notes };
 }
 
+// Extracts "Duration: X hours" from notes and returns duration in minutes
+function parseDurationFromNotes(notes?: string): number {
+  if (!notes) return 60;
+  const match = notes.match(/Duration: (\d+) hours/);
+  return match ? parseInt(match[1], 10) * 60 : 60;
+}
+
 // Generate ICS calendar file content
 function generateICSContent(data: {
   appointmentId: string;
@@ -174,6 +181,8 @@ export async function sendAppointmentConfirmation(data: {
 }) {
   try {
     const { exam } = parseExamFromNotes(data.notes);
+    const durationMins = parseDurationFromNotes(data.notes);
+    const durationDisplay = durationMins > 60 ? `${durationMins / 60} hours` : null;
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -213,6 +222,7 @@ export async function sendAppointmentConfirmation(data: {
                   <td style="padding: 8px 0;">${data.serviceName}</td>
                 </tr>
                 ${exam ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Exam:</td><td style="padding: 8px 0;">${exam}</td></tr>` : ''}
+                ${durationDisplay ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Duration:</td><td style="padding: 8px 0;">${durationDisplay}</td></tr>` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Date:</td>
                   <td style="padding: 8px 0;">${formattedDate}</td>
@@ -267,6 +277,8 @@ export async function sendAppointmentCalendarInvite(data: {
 }) {
   try {
     const { exam, remainingNotes } = parseExamFromNotes(data.notes);
+    const durationMins = parseDurationFromNotes(data.notes);
+    const durationDisplay = durationMins > 60 ? `${durationMins / 60} hours` : null;
     const appointmentDateTime = new Date(data.appointmentDate);
     const formattedDate = appointmentDateTime.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -295,7 +307,7 @@ export async function sendAppointmentCalendarInvite(data: {
       customerEmail: data.customerEmail,
       customerPhone: data.customerPhone,
       appointmentDate: data.appointmentDate,
-      durationMinutes: 60,
+      durationMinutes: parseDurationFromNotes(data.notes),
       notes: data.notes,
     });
 
@@ -321,6 +333,7 @@ export async function sendAppointmentCalendarInvite(data: {
                 </tr>
                 ${data.customerPhone ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Phone:</td><td style="padding: 8px 0;"><a href="tel:${data.customerPhone}">${data.customerPhone}</a></td></tr>` : ''}
                 ${exam ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Exam:</td><td style="padding: 8px 0;">${exam}</td></tr>` : ''}
+                ${durationDisplay ? `<tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Duration:</td><td style="padding: 8px 0;">${durationDisplay}</td></tr>` : ''}
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Date:</td>
                   <td style="padding: 8px 0;">${formattedDate}</td>
