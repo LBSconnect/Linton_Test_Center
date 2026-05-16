@@ -29,6 +29,12 @@ export async function seedStripeProducts() {
       priceAmount: 2000, // $20.00
     },
     {
+      name: 'Tutoring',
+      description: 'One-on-one academic and professional tutoring. Sessions from 2–6 hours at $40/hr. Payment required at booking.',
+      metadata: { category: 'tutoring', slug: 'tutoring' },
+      priceAmount: 4000, // $40.00/hr base unit
+    },
+    {
       name: 'Certiport Exam Testing',
       description: 'Professional exam testing environment for IT certifications including Pearson VUE, Certiport, and PMI exams.',
       metadata: { category: 'certification', slug: 'certification-exam-testing' },

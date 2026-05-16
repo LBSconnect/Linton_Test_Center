@@ -22,6 +22,7 @@ const bookAppointmentSchema = z.object({
   }, "Invalid date format"),
   payNow: z.boolean().default(false),
   notes: z.string().optional(),
+  tutoringHours: z.number().int().min(2).max(6).optional(),
 });
 
 // Business is in Houston, TX — all hours are Central Time (America/Chicago)
@@ -329,12 +330,28 @@ export async function registerRoutes(
       console.log('Appointment created:', appointment.id);
 
       // If paying now, create Stripe checkout session
-      if (data.payNow && data.priceId) {
+      if (data.payNow && (data.priceId || data.priceAmount)) {
         try {
           const stripe = await getUncachableStripeClient();
+
+          const lineItems = data.priceId
+            ? [{ price: data.priceId, quantity: 1 }]
+            : [{
+                price_data: {
+                  currency: 'usd',
+                  product_data: {
+                    name: data.tutoringHours
+                      ? `${data.serviceName} (${data.tutoringHours} hours)`
+                      : data.serviceName,
+                  },
+                  unit_amount: data.priceAmount!,
+                },
+                quantity: 1,
+              }];
+
           const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: [{ price: data.priceId, quantity: 1 }],
+            line_items: lineItems,
             mode: 'payment',
             success_url: `${req.protocol}://${req.get('host')}/checkout/success?appointment_id=${appointment.id}`,
             cancel_url: `${req.protocol}://${req.get('host')}/services?appointment_id=${appointment.id}&payment_cancelled=true`,

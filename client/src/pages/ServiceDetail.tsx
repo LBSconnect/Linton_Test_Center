@@ -44,7 +44,11 @@ export default function ServiceDetail() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
+  const [selectedHours, setSelectedHours] = useState(2);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  const TUTORING_HOUR_OPTIONS = [2, 3, 4, 5, 6];
+  const isTutoring = slug === "tutoring";
 
   const CERTIPORT_EXAMS = [
     "Adobe Certified Professional",
@@ -196,18 +200,19 @@ export default function ServiceDetail() {
     }
 
     const examNote = isCertiport && selectedExam ? `Exam: ${selectedExam}` : "";
-    const combinedNotes = [examNote, notes].filter(Boolean).join("\n\n") || undefined;
+    const durationNote = isTutoring ? `Duration: ${selectedHours} hours` : "";
+    const combinedNotes = [examNote, durationNote, notes].filter(Boolean).join("\n\n") || undefined;
 
     const appointmentData = {
       customerName,
       customerEmail,
       customerPhone,
       serviceName: service.title,
-      serviceId: matchingProduct?.id,
-      priceId: price?.id,
-      priceAmount: price?.unit_amount,
+      serviceId: isTutoring ? undefined : matchingProduct?.id,
+      priceId: isTutoring ? undefined : price?.id,
+      priceAmount: isTutoring ? selectedHours * 4000 : price?.unit_amount,
       appointmentDate: selectedTime,
-      payNow: !!price,
+      payNow: isTutoring ? true : !!price,
       notes: combinedNotes,
     };
 
@@ -328,10 +333,16 @@ export default function ServiceDetail() {
                 <CardContent className="p-6 space-y-5">
                   <div className="text-center space-y-1">
                     <div className="text-3xl font-bold text-[#1e3a6e] dark:text-white">
-                      {price ? `$${(price.unit_amount / 100).toFixed(2)}` : service.price}
+                      {isTutoring
+                        ? `$${(selectedHours * 40).toFixed(2)}`
+                        : price
+                        ? `$${(price.unit_amount / 100).toFixed(2)}`
+                        : service.price}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {service.priceLabel}
+                      {isTutoring
+                        ? `${selectedHours} hr session · $40/hr`
+                        : service.priceLabel}
                     </div>
                   </div>
 
@@ -435,6 +446,29 @@ export default function ServiceDetail() {
                                 required
                               />
                             </div>
+                            {isTutoring && (
+                              <div>
+                                <Label className="text-sm font-medium mb-2 block">
+                                  Session Duration *
+                                </Label>
+                                <div className="grid grid-cols-5 gap-1.5">
+                                  {TUTORING_HOUR_OPTIONS.map((h) => (
+                                    <Button
+                                      key={h}
+                                      variant={selectedHours === h ? "default" : "outline"}
+                                      size="sm"
+                                      className={selectedHours === h ? "bg-[#1e3a6e]" : ""}
+                                      onClick={() => setSelectedHours(h)}
+                                    >
+                                      {h}h
+                                    </Button>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Total: ${selectedHours * 40}.00 · Paid at checkout
+                                </p>
+                              </div>
+                            )}
                             {isCertiport && (
                               <div>
                                 <Label htmlFor="exam" className="text-sm">Exam *</Label>
@@ -475,10 +509,10 @@ export default function ServiceDetail() {
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Booking...
                               </>
+                            ) : isTutoring ? (
+                              <>Book &amp; Pay ${selectedHours * 40}.00</>
                             ) : price ? (
-                              <>
-                                Book & Pay ${(price.unit_amount / 100).toFixed(2)}
-                              </>
+                              <>Book &amp; Pay ${(price.unit_amount / 100).toFixed(2)}</>
                             ) : (
                               "Book Appointment"
                             )}
