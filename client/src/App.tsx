@@ -12,6 +12,8 @@ import CheckoutSuccess from "@/pages/CheckoutSuccess";
 import CheckoutCancel from "@/pages/CheckoutCancel";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfUse from "@/pages/TermsOfUse";
+import CalendarPage from "@/pages/CalendarPage";
+import ClassRegistration from "@/pages/ClassRegistration";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -20,6 +22,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/services" component={Services} />
       <Route path="/services/:slug" component={ServiceDetail} />
+      <Route path="/calendar" component={CalendarPage} />
+      <Route path="/classes/:classType/:date" component={ClassRegistration} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/checkout/success" component={CheckoutSuccess} />

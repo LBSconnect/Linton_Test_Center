@@ -375,3 +375,124 @@ export async function sendAppointmentCalendarInvite(data: {
     console.error('Failed to send calendar invite email:', error.message);
   }
 }
+
+function formatClassDateFriendly(classDate: string): string {
+  const [year, month, day] = classDate.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+function formatClassTimeFriendly(time: string): string {
+  const [h, m] = time.split(':').map(Number);
+  const ampm = h < 12 ? 'AM' : 'PM';
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
+// Admin notification when a student registers for a class
+export async function sendClassRegistrationNotification(data: {
+  registrationId: string;
+  classTitle: string;
+  classDate: string;
+  classTime: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  priceAmount: number;
+}) {
+  try {
+    const friendlyDate = formatClassDateFriendly(data.classDate);
+    const friendlyTime = formatClassTimeFriendly(data.classTime);
+    const priceDisplay = `$${(data.priceAmount / 100).toFixed(2)}`;
+
+    await sendEmail({
+      to: NOTIFICATION_EMAIL,
+      subject: `New Class Registration: ${data.classTitle} — ${data.customerName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1e3a6e; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 22px;">New Class Registration</h1>
+          </div>
+          <div style="padding: 24px; background-color: #f9fafb; border: 1px solid #e5e7eb;">
+            <div style="background-color: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 16px;">
+              <h2 style="margin: 0 0 16px 0; color: #1e3a6e; font-size: 16px;">${data.classTitle}</h2>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e; width: 130px;">Student:</td><td style="padding: 6px 0;">${data.customerName}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Email:</td><td style="padding: 6px 0;"><a href="mailto:${data.customerEmail}">${data.customerEmail}</a></td></tr>
+                ${data.customerPhone ? `<tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Phone:</td><td style="padding: 6px 0;"><a href="tel:${data.customerPhone}">${data.customerPhone}</a></td></tr>` : ''}
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Date:</td><td style="padding: 6px 0;">${friendlyDate}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Time:</td><td style="padding: 6px 0;">${friendlyTime} CT</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Amount Paid:</td><td style="padding: 6px 0;">${priceDisplay}</td></tr>
+                <tr><td style="padding: 6px 0; font-weight: bold; color: #1e3a6e;">Payment:</td><td style="padding: 6px 0;"><span style="background-color: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 12px; font-size: 12px;">PAID</span></td></tr>
+              </table>
+            </div>
+          </div>
+          <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">
+            LBS Test &amp; Exam Center | ${BUSINESS_ADDRESS}
+          </div>
+        </div>
+      `,
+    });
+    console.log('Class registration notification sent to', NOTIFICATION_EMAIL);
+  } catch (error: any) {
+    console.error('Failed to send class registration notification:', error.message);
+  }
+}
+
+// Customer confirmation email after class registration payment
+export async function sendClassRegistrationConfirmation(data: {
+  registrationId: string;
+  classTitle: string;
+  classDate: string;
+  classTime: string;
+  endTime: string;
+  customerName: string;
+  customerEmail: string;
+  priceAmount: number;
+}) {
+  try {
+    const friendlyDate = formatClassDateFriendly(data.classDate);
+    const friendlyStart = formatClassTimeFriendly(data.classTime);
+    const friendlyEnd = formatClassTimeFriendly(data.endTime);
+    const priceDisplay = `$${(data.priceAmount / 100).toFixed(2)}`;
+
+    await sendEmail({
+      to: data.customerEmail,
+      subject: `Registration Confirmed — ${data.classTitle}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1e3a6e; color: white; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 22px;">You're Registered!</h1>
+          </div>
+          <div style="padding: 24px; background-color: #f9fafb; border: 1px solid #e5e7eb;">
+            <p style="margin: 0 0 20px 0; font-size: 16px;">Hello ${data.customerName},</p>
+            <p style="margin: 0 0 20px 0;">Your registration is confirmed and payment received. See you in class!</p>
+            <div style="background-color: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e; width: 120px;">Class:</td><td style="padding: 8px 0;">${data.classTitle}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Date:</td><td style="padding: 8px 0;">${friendlyDate}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Time:</td><td style="padding: 8px 0;">${friendlyStart} – ${friendlyEnd} CT</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Duration:</td><td style="padding: 8px 0;">2 hours</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Amount Paid:</td><td style="padding: 8px 0;">${priceDisplay}</td></tr>
+                <tr><td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Payment:</td><td style="padding: 8px 0;"><span style="background-color: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 12px; font-size: 12px;">PAID</span></td></tr>
+              </table>
+            </div>
+            <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+              <p style="margin: 0 0 8px 0; font-weight: bold; color: #1e3a6e;">Location (Onsite):</p>
+              <p style="margin: 0; color: #374151;">${BUSINESS_NAME}<br>${BUSINESS_ADDRESS}</p>
+            </div>
+            <p style="margin: 0; font-size: 14px; color: #6b7280;">
+              Questions? Contact us at <a href="mailto:${NOTIFICATION_EMAIL}">${NOTIFICATION_EMAIL}</a> or call (281) 836-5357.
+            </p>
+          </div>
+          <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">
+            LBS Test &amp; Exam Center | ${BUSINESS_ADDRESS}
+          </div>
+        </div>
+      `,
+    });
+    console.log('Class registration confirmation sent to', data.customerEmail);
+  } catch (error: any) {
+    console.error('Failed to send class registration confirmation:', error.message);
+  }
+}

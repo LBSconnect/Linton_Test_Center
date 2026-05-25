@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { insertContactSchema } from "@shared/schema";
-import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
+import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite, sendClassRegistrationNotification, sendClassRegistrationConfirmation } from "./emailService";
 import { sendEmail } from "./smtpClient";
 import { z } from "zod";
+import { CLASS_DEFINITIONS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType } from "@shared/classes";
 
 // Validation schema for appointment booking
 const bookAppointmentSchema = z.object({
@@ -470,6 +471,183 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error('Error fetching appointment:', error.message);
       res.status(500).json({ error: 'Failed to fetch appointment' });
+    }
+  });
+
+  // ── Group Study Classes ─────────────────────────────────────────────────────
+
+  // GET /api/classes/sessions?year=YYYY&month=MM
+  app.get('/api/classes/sessions', async (req, res) => {
+    try {
+      const year = parseInt(req.query.year as string);
+      const month = parseInt(req.query.month as string);
+      if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+        return res.status(400).json({ error: 'Valid year and month (1-12) are required' });
+      }
+
+      const classDates = getClassDatesForMonth(year, month);
+      const sessions: any[] = [];
+
+      for (const { date, dayOfWeek } of classDates) {
+        for (const [classType, def] of Object.entries(CLASS_DEFINITIONS)) {
+          const regCount = await storage.getClassRegistrationCount(classType, date);
+          sessions.push({
+            date,
+            dayOfWeek,
+            classType,
+            title: def.title,
+            shortTitle: def.shortTitle,
+            startTime: def.startTime,
+            endTime: def.endTime,
+            durationHours: def.durationHours,
+            priceAmount: def.priceAmount,
+            registrationCount: regCount,
+            availableSpots: Math.max(0, MAX_CLASS_CAPACITY - regCount),
+            isFull: regCount >= MAX_CLASS_CAPACITY,
+          });
+        }
+      }
+
+      res.json({ sessions });
+    } catch (error: any) {
+      console.error('Error fetching class sessions:', error.message);
+      res.status(500).json({ error: 'Failed to fetch class sessions' });
+    }
+  });
+
+  // GET /api/classes/session-count?classType=&classDate=
+  app.get('/api/classes/session-count', async (req, res) => {
+    try {
+      const { classType, classDate } = req.query;
+      if (!classType || !classDate || typeof classType !== 'string' || typeof classDate !== 'string') {
+        return res.status(400).json({ error: 'classType and classDate are required' });
+      }
+      const regCount = await storage.getClassRegistrationCount(classType, classDate);
+      res.json({
+        registrationCount: regCount,
+        availableSpots: Math.max(0, MAX_CLASS_CAPACITY - regCount),
+        isFull: regCount >= MAX_CLASS_CAPACITY,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: 'Failed to fetch session count' });
+    }
+  });
+
+  // POST /api/classes/register
+  const classRegisterSchema = z.object({
+    classType: z.string().refine(isValidClassType, { message: 'Invalid class type' }),
+    classDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    customerName: z.string().min(2),
+    customerEmail: z.string().email(),
+    customerPhone: z.string().optional(),
+  });
+
+  app.post('/api/classes/register', async (req, res) => {
+    try {
+      const parsed = classRegisterSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: 'Invalid data', details: parsed.error.flatten() });
+      }
+
+      const { classType, classDate, customerName, customerEmail, customerPhone } = parsed.data;
+      const classDef = CLASS_DEFINITIONS[classType as keyof typeof CLASS_DEFINITIONS];
+
+      // Check capacity
+      const count = await storage.getClassRegistrationCount(classType, classDate);
+      if (count >= MAX_CLASS_CAPACITY) {
+        return res.status(409).json({ error: 'This session is full. Please select another date.' });
+      }
+
+      // Create pending registration
+      const registration = await storage.createClassRegistration({
+        classType,
+        classDate,
+        classTime: classDef.startTime,
+        customerName,
+        customerEmail,
+        customerPhone: customerPhone || null,
+        paymentStatus: 'unpaid',
+      });
+
+      // Create Stripe checkout session
+      const stripe = await getUncachableStripeClient();
+      const [year, monthStr, day] = classDate.split('-');
+      const friendlyDate = new Date(parseInt(year), parseInt(monthStr) - 1, parseInt(day))
+        .toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: classDef.title,
+              description: `${friendlyDate} · ${classDef.startTime === '08:00' ? '8:00 AM' : '10:00 AM'} – ${classDef.endTime === '10:00' ? '10:00 AM' : '12:00 PM'} CT`,
+            },
+            unit_amount: classDef.priceAmount,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/checkout/success?registration_id=${registration.id}&source=class`,
+        cancel_url: `${req.protocol}://${req.get('host')}/calendar`,
+        metadata: { registration_id: registration.id, type: 'class_registration' },
+        customer_email: customerEmail,
+      });
+
+      await storage.updateClassRegistrationPayment(registration.id, 'unpaid', session.id!);
+
+      res.json({ checkoutUrl: session.url, registrationId: registration.id });
+    } catch (error: any) {
+      console.error('Class registration error:', error.message);
+      res.status(500).json({ error: 'Failed to register for class' });
+    }
+  });
+
+  // POST /api/classes/registrations/:id/payment-complete
+  app.post('/api/classes/registrations/:id/payment-complete', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const registration = await storage.getClassRegistration(id);
+      if (!registration) {
+        return res.status(404).json({ error: 'Registration not found' });
+      }
+      if (registration.paymentStatus === 'paid') {
+        return res.json({ success: true, registration });
+      }
+
+      const updated = await storage.updateClassRegistrationPayment(id, 'paid');
+      if (!updated) return res.status(500).json({ error: 'Failed to update registration' });
+
+      const classDef = CLASS_DEFINITIONS[updated.classType as keyof typeof CLASS_DEFINITIONS];
+
+      // Send emails
+      sendClassRegistrationNotification({
+        registrationId: updated.id,
+        classTitle: classDef.title,
+        classDate: updated.classDate,
+        classTime: updated.classTime,
+        customerName: updated.customerName,
+        customerEmail: updated.customerEmail,
+        customerPhone: updated.customerPhone ?? undefined,
+        priceAmount: classDef.priceAmount,
+      });
+
+      sendClassRegistrationConfirmation({
+        registrationId: updated.id,
+        classTitle: classDef.title,
+        classDate: updated.classDate,
+        classTime: updated.classTime,
+        endTime: classDef.endTime,
+        customerName: updated.customerName,
+        customerEmail: updated.customerEmail,
+        priceAmount: classDef.priceAmount,
+      });
+
+      res.json({ success: true, registration: updated });
+    } catch (error: any) {
+      console.error('Class payment complete error:', error.message);
+      res.status(500).json({ error: 'Failed to update payment' });
     }
   });
 

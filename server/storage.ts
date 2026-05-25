@@ -1,13 +1,16 @@
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, count } from "drizzle-orm";
 import {
   contactSubmissions,
   appointments,
+  classRegistrations,
   type InsertContact,
   type ContactSubmission,
   type InsertAppointment,
-  type Appointment
+  type Appointment,
+  type InsertClassRegistration,
+  type ClassRegistration,
 } from "@shared/schema";
 import { getUncachableStripeClient } from "./stripeClient";
 
@@ -35,6 +38,12 @@ export interface IStorage {
   getAppointment(id: string): Promise<Appointment | null>;
   updateAppointmentPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<Appointment | null>;
   getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]>;
+  // Class registrations
+  createClassRegistration(data: InsertClassRegistration): Promise<ClassRegistration>;
+  getClassRegistration(id: string): Promise<ClassRegistration | null>;
+  updateClassRegistrationPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<ClassRegistration | null>;
+  getClassRegistrationCount(classType: string, classDate: string): Promise<number>;
+  runMigrations(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -178,6 +187,71 @@ export class DatabaseStorage implements IStorage {
         )
       );
     return results;
+  }
+
+  async createClassRegistration(data: InsertClassRegistration): Promise<ClassRegistration> {
+    if (!db) throw new Error('Database not configured');
+    const [result] = await db.insert(classRegistrations).values(data).returning();
+    return result;
+  }
+
+  async getClassRegistration(id: string): Promise<ClassRegistration | null> {
+    if (!db) throw new Error('Database not configured');
+    const [result] = await db.select().from(classRegistrations).where(eq(classRegistrations.id, id));
+    return result || null;
+  }
+
+  async updateClassRegistrationPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<ClassRegistration | null> {
+    if (!db) throw new Error('Database not configured');
+    const updateData: any = { paymentStatus };
+    if (stripeSessionId) updateData.stripeSessionId = stripeSessionId;
+    const [result] = await db
+      .update(classRegistrations)
+      .set(updateData)
+      .where(eq(classRegistrations.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async getClassRegistrationCount(classType: string, classDate: string): Promise<number> {
+    if (!db) throw new Error('Database not configured');
+    const [result] = await db
+      .select({ total: count() })
+      .from(classRegistrations)
+      .where(
+        and(
+          eq(classRegistrations.classType, classType),
+          eq(classRegistrations.classDate, classDate),
+          eq(classRegistrations.paymentStatus, 'paid')
+        )
+      );
+    return Number(result?.total ?? 0);
+  }
+
+  async runMigrations(): Promise<void> {
+    if (!pool) {
+      console.warn('Database not configured, skipping migrations');
+      return;
+    }
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS class_registrations (
+          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          class_type TEXT NOT NULL,
+          class_date TEXT NOT NULL,
+          class_time TEXT NOT NULL,
+          customer_name TEXT NOT NULL,
+          customer_email TEXT NOT NULL,
+          customer_phone TEXT,
+          payment_status TEXT NOT NULL DEFAULT 'unpaid',
+          stripe_session_id TEXT,
+          created_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+      console.log('Migrations complete: class_registrations table ready');
+    } catch (error: any) {
+      console.error('Migration error:', error.message);
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,21 @@ import { Link } from "wouter";
 import { CheckCircle2, ArrowRight, Phone } from "lucide-react";
 
 export default function CheckoutSuccess() {
+  const called = useRef(false);
+
+  useEffect(() => {
+    if (called.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const registrationId = params.get("registration_id");
+    const source = params.get("source");
+
+    if (registrationId && source === "class") {
+      called.current = true;
+      fetch(`/api/classes/registrations/${registrationId}/payment-complete`, { method: "POST" })
+        .catch(err => console.error("Failed to confirm class registration:", err));
+    }
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />

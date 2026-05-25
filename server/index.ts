@@ -6,6 +6,7 @@ import { getUncachableStripeClient } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { sendPaymentNotification } from './emailService';
 import { seedStripeProducts } from './seedProducts';
+import { storage } from './storage';
 
 const app = express();
 const httpServer = createServer(app);
@@ -135,6 +136,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  await storage.runMigrations();
   await initStripe();
 
   await registerRoutes(httpServer, app);

@@ -41,6 +41,7 @@ export default function Services() {
                 price={service.price}
                 priceLabel={service.priceLabel}
                 slug={service.slug}
+                href={service.link}
                 icon={<service.icon className="w-5 h-5" />}
               />
             ))}

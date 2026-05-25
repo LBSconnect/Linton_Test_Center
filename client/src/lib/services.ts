@@ -4,11 +4,13 @@ import {
   Camera,
   Award,
   GraduationCap,
+  Users,
 } from "lucide-react";
 
 export interface ServiceInfo {
   id: string;
   slug: string;
+  link?: string; // optional override for the card CTA link
   title: string;
   shortTitle: string;
   description: string;
@@ -44,6 +46,30 @@ export const services: ServiceInfo[] = [
     priceLabel: "/hour",
     icon: Monitor,
     stripeProductName: "Computer Workstation Rental",
+  },
+  {
+    id: "group-classes",
+    slug: "group-classes",
+    link: "/calendar",
+    title: "Group Study Classes",
+    shortTitle: "Group Classes",
+    description:
+      "Weekly Friday & Saturday group study sessions for Texas Life Insurance and Property & Casualty licensing exams. $75/session.",
+    longDescription:
+      "Join our instructor-led group study sessions held every Friday and Saturday. We offer two focused 2-hour sessions per day — one for Texas Life Insurance and one for Texas Property & Casualty licensing exam prep. All sessions are held onsite. Payment is required at registration.",
+    features: [
+      "Texas Life Insurance exam prep",
+      "Texas Property & Casualty exam prep",
+      "Every Friday & Saturday",
+      "Small group sessions (max 20)",
+      "Experienced instructors",
+      "Onsite at LBS Test & Exam Center",
+    ],
+    image: "/images/service-workstation.png",
+    price: "$75",
+    priceLabel: "/session",
+    icon: Users,
+    stripeProductName: "Group Study Classes",
   },
   {
     id: "notary",

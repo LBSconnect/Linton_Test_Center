@@ -10,6 +10,7 @@ interface ServiceCardProps {
   price?: string;
   priceLabel?: string;
   slug: string;
+  href?: string; // overrides the default /services/:slug link
   icon?: React.ReactNode;
 }
 
@@ -20,6 +21,7 @@ export default function ServiceCard({
   price,
   priceLabel,
   slug,
+  href,
   icon,
 }: ServiceCardProps) {
   return (
@@ -69,7 +71,7 @@ export default function ServiceCard({
             </p>
           </div>
         </div>
-        <Link href={`/services/${slug}`}>
+        <Link href={href ?? `/services/${slug}`}>
           <Button
             size="sm"
             className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"

@@ -48,3 +48,25 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
 
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
+
+// Class registrations for weekly group study sessions
+export const classRegistrations = pgTable("class_registrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  classType: text("class_type").notNull(),   // "life-insurance" | "property-casualty"
+  classDate: text("class_date").notNull(),   // "2026-06-06" (YYYY-MM-DD)
+  classTime: text("class_time").notNull(),   // "08:00" | "10:00"
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email").notNull(),
+  customerPhone: text("customer_phone"),
+  paymentStatus: text("payment_status").notNull().default("unpaid"),
+  stripeSessionId: text("stripe_session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertClassRegistrationSchema = createInsertSchema(classRegistrations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertClassRegistration = z.infer<typeof insertClassRegistrationSchema>;
+export type ClassRegistration = typeof classRegistrations.$inferSelect;
