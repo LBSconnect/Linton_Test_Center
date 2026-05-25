@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Users, Clock, DollarSign } from "lucide-react";
-import { CLASS_DEFINITIONS, ClassType } from "@shared/classes";
+import { CLASS_DEFINITIONS, CLASS_SCHEDULED_DAYS, ClassType, formatClassTime } from "@shared/classes";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
@@ -15,7 +15,7 @@ const MONTH_NAMES = [
 
 interface ClassSession {
   date: string;
-  dayOfWeek: "Friday" | "Saturday";
+  dayOfWeek: string;
   classType: ClassType;
   title: string;
   shortTitle: string;
@@ -29,10 +29,6 @@ interface ClassSession {
   isPast: boolean;
 }
 
-function formatTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
-}
 
 export default function CalendarPage() {
   const today = new Date();
@@ -93,12 +89,12 @@ export default function CalendarPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-3">
           <h1 className="text-4xl md:text-5xl font-bold text-white">Class Schedule</h1>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            Weekly group study sessions every Friday &amp; Saturday — Texas Life Insurance and Property &amp; Casualty licensing exam prep.
+            Browse available sessions and register online. Group study classes run every Friday &amp; Saturday. Tutoring sessions run Monday–Thursday.
           </p>
           <div className="flex flex-wrap justify-center gap-4 pt-2 text-sm text-white/80">
-            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> 2-hour sessions · 8AM–10AM &amp; 10AM–12PM CT</span>
-            <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Max 20 students per session</span>
-            <span className="flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> $75 per session · paid online</span>
+            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> Sessions from 8 AM · Tutoring at 4:30 PM</span>
+            <span className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Max 20 per session</span>
+            <span className="flex items-center gap-1.5"><DollarSign className="w-4 h-4" /> From $40 · paid online</span>
           </div>
         </div>
       </section>
@@ -124,7 +120,8 @@ export default function CalendarPage() {
           <div className="flex flex-wrap gap-3 mb-4 text-xs">
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-blue-600 inline-block" /> Life Insurance (8–10 AM)</span>
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-orange-500 inline-block" /> Property &amp; Casualty (10AM–12PM)</span>
-            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-gray-400 inline-block" /> Full</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-600 inline-block" /> Tutoring (4:30–5:30 PM)</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-gray-400 inline-block" /> Full / Ended</span>
           </div>
 
           {/* Day headers */}
@@ -157,18 +154,21 @@ export default function CalendarPage() {
                         </span>
                         <div className="space-y-1">
                           {sessions.map(s => {
-                            const isLI = s.classType === "life-insurance";
                             const canRegister = !past && !s.isFull && !s.isPast;
+                            const badgeActive =
+                              s.classType === "life-insurance"
+                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 hover:bg-blue-200 cursor-pointer"
+                                : s.classType === "property-casualty"
+                                ? "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 hover:bg-orange-200 cursor-pointer"
+                                : "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200 hover:bg-green-200 cursor-pointer";
                             const badge = (s.isFull || s.isPast)
                               ? "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
-                              : isLI
-                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 hover:bg-blue-200 cursor-pointer"
-                              : "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200 hover:bg-orange-200 cursor-pointer";
+                              : badgeActive;
 
                             const inner = (
                               <div className={`rounded px-1.5 py-1 text-[10px] leading-tight transition-colors ${badge}`}>
                                 <div className="font-semibold truncate">{s.shortTitle}</div>
-                                <div className="opacity-75">{formatTime(s.startTime)}</div>
+                                <div className="opacity-75">{formatClassTime(s.startTime)}</div>
                                 <div className="opacity-75">
                                   {s.isFull ? "FULL" : s.isPast ? "Ended" : `${s.availableSpots} left`}
                                 </div>
@@ -196,22 +196,33 @@ export default function CalendarPage() {
 
       {/* Info section */}
       <section className="py-12 bg-muted/30">
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {(Object.entries(CLASS_DEFINITIONS) as [ClassType, typeof CLASS_DEFINITIONS[ClassType]][]).map(([type, def]) => (
-            <div key={type} className="bg-card border border-border/50 rounded-lg p-6 space-y-3">
-              <div className={`w-10 h-10 rounded-md flex items-center justify-center ${type === "life-insurance" ? "bg-blue-100 dark:bg-blue-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
-                <Users className={`w-5 h-5 ${type === "life-insurance" ? "text-blue-700" : "text-orange-600"}`} />
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {(Object.entries(CLASS_DEFINITIONS) as [ClassType, typeof CLASS_DEFINITIONS[ClassType]][]).map(([type, def]) => {
+            const scheduledDays = CLASS_SCHEDULED_DAYS[type];
+            const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const daysText = scheduledDays.map(d => SHORT_DAYS[d]).join(', ');
+            const colorMap: Record<ClassType, { ring: string; iconBg: string; iconColor: string }> = {
+              'life-insurance':    { ring: 'border-blue-200 dark:border-blue-800',   iconBg: 'bg-blue-100 dark:bg-blue-900/30',   iconColor: 'text-blue-700 dark:text-blue-300' },
+              'property-casualty': { ring: 'border-orange-200 dark:border-orange-800', iconBg: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600 dark:text-orange-300' },
+              'tutoring':          { ring: 'border-green-200 dark:border-green-800',  iconBg: 'bg-green-100 dark:bg-green-900/30',  iconColor: 'text-green-700 dark:text-green-300' },
+            };
+            const c = colorMap[type];
+            return (
+              <div key={type} className={`bg-card border ${c.ring} rounded-lg p-6 space-y-3`}>
+                <div className={`w-10 h-10 rounded-md flex items-center justify-center ${c.iconBg}`}>
+                  <Users className={`w-5 h-5 ${c.iconColor}`} />
+                </div>
+                <h3 className="font-semibold text-base leading-snug">{def.title}</h3>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p><span className="font-medium text-foreground">Days:</span> {daysText}</p>
+                  <p><span className="font-medium text-foreground">Time:</span> {formatClassTime(def.startTime)} – {formatClassTime(def.endTime)} CT</p>
+                  <p><span className="font-medium text-foreground">Duration:</span> {def.durationHours} hr{def.durationHours !== 1 ? 's' : ''}</p>
+                  <p><span className="font-medium text-foreground">Price:</span> ${(def.priceAmount / 100).toFixed(0)} per session</p>
+                  <p><span className="font-medium text-foreground">Capacity:</span> {def.capacity} max</p>
+                </div>
               </div>
-              <h3 className="font-semibold text-lg">{def.title}</h3>
-              <div className="text-sm text-muted-foreground space-y-1">
-                <p><span className="font-medium text-foreground">Days:</span> Every Friday &amp; Saturday</p>
-                <p><span className="font-medium text-foreground">Time:</span> {formatTime(def.startTime)} – {formatTime(def.endTime)} CT</p>
-                <p><span className="font-medium text-foreground">Duration:</span> 2 hours</p>
-                <p><span className="font-medium text-foreground">Price:</span> $75 per session</p>
-                <p><span className="font-medium text-foreground">Capacity:</span> 20 students max</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

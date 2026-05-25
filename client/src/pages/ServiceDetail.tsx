@@ -37,9 +37,9 @@ export default function ServiceDetail() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
-  // Group study sessions are booked through the Calendar page, not here
+  // These services are booked through the Calendar page, not through this detail page
   useEffect(() => {
-    if (service?.id === "group-classes") {
+    if (service?.id === "group-classes" || service?.id === "tutoring") {
       navigate("/calendar");
     }
   }, [service, navigate]);

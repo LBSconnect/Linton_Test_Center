@@ -9,6 +9,7 @@ export const CLASS_DEFINITIONS = {
     endTime: '10:00',
     durationHours: 2,
     priceAmount: CLASS_PRICE_CENTS,
+    capacity: MAX_CLASS_CAPACITY,
   },
   'property-casualty': {
     title: 'Texas Property & Casualty Salesperson Study Session',
@@ -17,27 +18,48 @@ export const CLASS_DEFINITIONS = {
     endTime: '12:00',
     durationHours: 2,
     priceAmount: CLASS_PRICE_CENTS,
+    capacity: MAX_CLASS_CAPACITY,
+  },
+  'tutoring': {
+    title: 'Tutoring Session',
+    shortTitle: 'Tutoring',
+    startTime: '16:30',
+    endTime: '17:30',
+    durationHours: 1,
+    priceAmount: 4000, // $40
+    capacity: MAX_CLASS_CAPACITY,
   },
 } as const;
 
 export type ClassType = keyof typeof CLASS_DEFINITIONS;
 
+// Days of week each class type is scheduled (0=Sun … 6=Sat)
+export const CLASS_SCHEDULED_DAYS: Record<ClassType, number[]> = {
+  'life-insurance':    [5, 6],       // Fri, Sat
+  'property-casualty': [5, 6],       // Fri, Sat
+  'tutoring':          [1, 2, 3, 4], // Mon–Thu
+};
+
 export function isValidClassType(value: string): value is ClassType {
   return value in CLASS_DEFINITIONS;
 }
 
-// Returns all Fridays (5) and Saturdays (6) in a given month
+// Returns all dates in a month that have at least one class scheduled
 export function getClassDatesForMonth(
   year: number,
   month: number, // 1-based
-): { date: string; dayOfWeek: 'Friday' | 'Saturday' }[] {
-  const dates: { date: string; dayOfWeek: 'Friday' | 'Saturday' }[] = [];
+): { date: string; dayOfWeek: string }[] {
+  const allDays = new Set(Object.values(CLASS_SCHEDULED_DAYS).flat());
+  const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dates: { date: string; dayOfWeek: string }[] = [];
   const d = new Date(year, month - 1, 1);
   while (d.getMonth() === month - 1) {
     const dow = d.getDay();
-    if (dow === 5 || dow === 6) {
-      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      dates.push({ date: dateStr, dayOfWeek: dow === 5 ? 'Friday' : 'Saturday' });
+    if (allDays.has(dow)) {
+      dates.push({
+        date: `${year}-${String(month).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+        dayOfWeek: DAY_NAMES[dow],
+      });
     }
     d.setDate(d.getDate() + 1);
   }

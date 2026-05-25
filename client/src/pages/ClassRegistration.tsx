@@ -134,7 +134,7 @@ export default function ClassRegistration() {
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-white max-w-2xl">{classDef.title}</h1>
           <p className="text-white/80 mt-2">
-            {formatClassTime(classDef.startTime)} – {formatClassTime(classDef.endTime)} CT · $75 per session
+            {formatClassTime(classDef.startTime)} – {formatClassTime(classDef.endTime)} CT · ${(classDef.priceAmount / 100).toFixed(0)} per session
           </p>
         </div>
       </section>

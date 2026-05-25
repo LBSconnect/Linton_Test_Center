@@ -6,7 +6,8 @@ import { insertContactSchema } from "@shared/schema";
 import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite, sendClassRegistrationNotification, sendClassRegistrationConfirmation } from "./emailService";
 import { sendEmail } from "./smtpClient";
 import { z } from "zod";
-import { CLASS_DEFINITIONS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType } from "@shared/classes";
+import { CLASS_DEFINITIONS, CLASS_SCHEDULED_DAYS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType } from "@shared/classes";
+import type { ClassType } from "@shared/classes";
 
 // Validation schema for appointment booking
 const bookAppointmentSchema = z.object({
@@ -486,41 +487,46 @@ export async function registerRoutes(
         return res.status(400).json({ error: 'Valid classType is required' });
       }
 
-      const classDef = CLASS_DEFINITIONS[classType as keyof typeof CLASS_DEFINITIONS];
+      const classDef = CLASS_DEFINITIONS[classType as ClassType];
+      const scheduledDays = CLASS_SCHEDULED_DAYS[classType as ClassType];
+      const [endH, endM] = classDef.endTime.split(':').map(Number);
+
       const now = new Date();
       const today = new Date(now);
       today.setHours(0, 0, 0, 0);
       const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       const currentCTHour = utcToCTHour(now);
-      const classEndHour = parseInt(classDef.endTime.split(':')[0]);
+      const currentUTCMin = now.getUTCMinutes();
 
       const upcoming: any[] = [];
       const cursor = new Date(today);
+      const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-      // Walk day by day for `weeks` weeks, collect Fri/Sat
+      // Walk day by day for `weeks` weeks, collect days this class is scheduled
       for (let d = 0; d < weeks * 7; d++) {
         const dow = cursor.getDay();
-        if (dow === 5 || dow === 6) {
+        if (scheduledDays.includes(dow)) {
           const y = cursor.getFullYear();
           const m = cursor.getMonth() + 1;
           const day = cursor.getDate();
           const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-          // Skip today's session if its end time has already passed in CT
-          if (dateStr === todayDateStr && currentCTHour >= classEndHour) {
+          // Skip today's session if its end time has already passed in CT (hour+minute precise)
+          const sessionEnded = currentCTHour > endH || (currentCTHour === endH && currentUTCMin >= endM);
+          if (dateStr === todayDateStr && sessionEnded) {
             cursor.setDate(cursor.getDate() + 1);
             continue;
           }
 
           const regCount = await storage.getClassRegistrationCount(classType, dateStr);
-          if (regCount < MAX_CLASS_CAPACITY) {
+          if (regCount < classDef.capacity) {
             upcoming.push({
               date: dateStr,
-              dayOfWeek: dow === 5 ? 'Friday' : 'Saturday',
+              dayOfWeek: DAY_NAMES[dow],
               startTime: classDef.startTime,
               endTime: classDef.endTime,
               registrationCount: regCount,
-              availableSpots: MAX_CLASS_CAPACITY - regCount,
+              availableSpots: classDef.capacity - regCount,
             });
           }
         }
@@ -551,13 +557,22 @@ export async function registerRoutes(
       todayForSessions.setHours(0, 0, 0, 0);
       const todayStrForSessions = `${todayForSessions.getFullYear()}-${String(todayForSessions.getMonth() + 1).padStart(2, '0')}-${String(todayForSessions.getDate()).padStart(2, '0')}`;
       const ctHourNow = utcToCTHour(nowForSessions);
+      const utcMinNow = nowForSessions.getUTCMinutes();
 
       for (const { date, dayOfWeek } of classDates) {
+        // Determine the day of week for this date so we only add classes scheduled that day
+        const [dy, dm, dd] = date.split('-').map(Number);
+        const dow = new Date(dy, dm - 1, dd).getDay();
+
         for (const [classType, def] of Object.entries(CLASS_DEFINITIONS)) {
+          if (!CLASS_SCHEDULED_DAYS[classType as ClassType].includes(dow)) continue;
+
           const regCount = await storage.getClassRegistrationCount(classType, date);
-          const endHour = parseInt(def.endTime.split(':')[0]);
-          // Mark as past if date is before today, or if it's today and the session has ended
-          const isPast = date < todayStrForSessions || (date === todayStrForSessions && ctHourNow >= endHour);
+          const [endHour, endMin] = def.endTime.split(':').map(Number);
+          // Mark as past if date is before today, or today and the session end time has passed
+          const sessionEnded = ctHourNow > endHour || (ctHourNow === endHour && utcMinNow >= endMin);
+          const isPast = date < todayStrForSessions || (date === todayStrForSessions && sessionEnded);
+          const capacity = def.capacity;
           sessions.push({
             date,
             dayOfWeek,
@@ -569,8 +584,8 @@ export async function registerRoutes(
             durationHours: def.durationHours,
             priceAmount: def.priceAmount,
             registrationCount: regCount,
-            availableSpots: Math.max(0, MAX_CLASS_CAPACITY - regCount),
-            isFull: regCount >= MAX_CLASS_CAPACITY,
+            availableSpots: Math.max(0, capacity - regCount),
+            isFull: regCount >= capacity,
             isPast,
           });
         }
