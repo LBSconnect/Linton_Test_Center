@@ -349,7 +349,7 @@ export default function ServiceDetail() {
                   <div className="border-t border-border/50 pt-5">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                       <CalendarDays className="w-5 h-5 text-[#e85d40]" />
-                      Book an Appointment
+                      {service.id === "group-classes" ? "Join a Session" : "Book an Appointment"}
                     </h3>
 
                     <div className="space-y-4">

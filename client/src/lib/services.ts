@@ -65,7 +65,7 @@ export const services: ServiceInfo[] = [
       "Experienced instructors",
       "Onsite at LBS Test & Exam Center",
     ],
-    image: "/images/service-proctoring.png",
+    image: "/images/service-group-sessions.png",
     price: "$75",
     priceLabel: "/session",
     icon: Users,

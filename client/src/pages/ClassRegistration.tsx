@@ -237,7 +237,7 @@ export default function ClassRegistration() {
                   ) : (
                     <>
                       <div>
-                        <h3 className="font-semibold text-lg mb-1">Your Information</h3>
+                        <h3 className="font-semibold text-lg mb-1">Join a Session</h3>
                         <p className="text-sm text-muted-foreground">You'll be redirected to Stripe to complete payment.</p>
                       </div>
                       <div className="space-y-3">
