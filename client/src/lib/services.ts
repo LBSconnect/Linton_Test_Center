@@ -4,7 +4,7 @@ import {
   Camera,
   Award,
   GraduationCap,
-  BookOpen,
+  Users,
 } from "lucide-react";
 
 export interface ServiceInfo {
@@ -25,28 +25,28 @@ export interface ServiceInfo {
 
 export const services: ServiceInfo[] = [
   {
-    id: "exam-cram",
-    slug: "exam-cram",
-    link: "https://www.myeasypass.net",
-    title: "Exam Cram",
-    shortTitle: "Exam Cram",
+    id: "group-classes",
+    slug: "group-classes",
+    link: "/calendar",
+    title: "Group Study Sessions",
+    shortTitle: "Group Sessions",
     description:
-      "Online practice exams and study materials for Texas insurance licensing and other professional certifications. Register at MyEasyPass.",
+      "Weekly Friday & Saturday group study sessions for Texas Life Insurance and Property & Casualty licensing exams. $75/session.",
     longDescription:
-      "Prepare for your licensing exam with Exam Cram — online practice tests and study materials designed to help you pass on your first attempt. Covers Texas Life Insurance, Property & Casualty, and other professional certifications. Register and access your materials at MyEasyPass.",
+      "Join our instructor-led group study sessions held every Friday and Saturday. We offer two focused 2-hour sessions per day — one for Texas Life Insurance and one for Texas Property & Casualty licensing exam prep. All sessions are held onsite. Payment is required at registration.",
     features: [
-      "Texas Life Insurance practice exams",
-      "Property & Casualty practice exams",
-      "Online access anytime",
-      "Detailed answer explanations",
-      "Progress tracking",
-      "Exam-ready preparation",
+      "Texas Life Insurance exam prep",
+      "Texas Property & Casualty exam prep",
+      "Every Friday & Saturday",
+      "Small group sessions (max 20)",
+      "Experienced instructors",
+      "Onsite at LBS Test & Exam Center",
     ],
-    image: "/images/service-exam-cram.png",
-    price: "",
-    priceLabel: "",
-    icon: BookOpen,
-    stripeProductName: "Exam Cram",
+    image: "/images/service-group-sessions.png",
+    price: "$75",
+    priceLabel: "/session",
+    icon: Users,
+    stripeProductName: "Group Study Sessions",
   },
   {
     id: "certification",
