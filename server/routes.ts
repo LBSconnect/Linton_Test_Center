@@ -6,7 +6,7 @@ import { insertContactSchema } from "@shared/schema";
 import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite, sendClassRegistrationNotification, sendClassRegistrationConfirmation } from "./emailService";
 import { sendEmail } from "./smtpClient";
 import { z } from "zod";
-import { CLASS_DEFINITIONS, CLASS_SCHEDULED_DAYS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType } from "@shared/classes";
+import { CLASS_DEFINITIONS, CLASS_SCHEDULED_DAYS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType, formatClassTime } from "@shared/classes";
 import type { ClassType } from "@shared/classes";
 
 // Validation schema for appointment booking
@@ -602,14 +602,15 @@ export async function registerRoutes(
   app.get('/api/classes/session-count', async (req, res) => {
     try {
       const { classType, classDate } = req.query;
-      if (!classType || !classDate || typeof classType !== 'string' || typeof classDate !== 'string') {
-        return res.status(400).json({ error: 'classType and classDate are required' });
+      if (!classType || !classDate || typeof classType !== 'string' || typeof classDate !== 'string' || !isValidClassType(classType)) {
+        return res.status(400).json({ error: 'Valid classType and classDate are required' });
       }
+      const classDef = CLASS_DEFINITIONS[classType as ClassType];
       const regCount = await storage.getClassRegistrationCount(classType, classDate);
       res.json({
         registrationCount: regCount,
-        availableSpots: Math.max(0, MAX_CLASS_CAPACITY - regCount),
-        isFull: regCount >= MAX_CLASS_CAPACITY,
+        availableSpots: Math.max(0, classDef.capacity - regCount),
+        isFull: regCount >= classDef.capacity,
       });
     } catch (error: any) {
       res.status(500).json({ error: 'Failed to fetch session count' });
@@ -633,11 +634,11 @@ export async function registerRoutes(
       }
 
       const { classType, classDate, customerName, customerEmail, customerPhone } = parsed.data;
-      const classDef = CLASS_DEFINITIONS[classType as keyof typeof CLASS_DEFINITIONS];
+      const classDef = CLASS_DEFINITIONS[classType as ClassType];
 
-      // Check capacity
+      // Check capacity against this class type's specific limit
       const count = await storage.getClassRegistrationCount(classType, classDate);
-      if (count >= MAX_CLASS_CAPACITY) {
+      if (count >= classDef.capacity) {
         return res.status(409).json({ error: 'This session is full. Please select another date.' });
       }
 
@@ -665,7 +666,7 @@ export async function registerRoutes(
             currency: 'usd',
             product_data: {
               name: classDef.title,
-              description: `${friendlyDate} · ${classDef.startTime === '08:00' ? '8:00 AM' : '10:00 AM'} – ${classDef.endTime === '10:00' ? '10:00 AM' : '12:00 PM'} CT`,
+              description: `${friendlyDate} · ${formatClassTime(classDef.startTime)} – ${formatClassTime(classDef.endTime)} CT`,
             },
             unit_amount: classDef.priceAmount,
           },

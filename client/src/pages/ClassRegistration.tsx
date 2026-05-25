@@ -14,7 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 interface UpcomingSession {
   date: string;
-  dayOfWeek: "Friday" | "Saturday";
+  dayOfWeek: string;
   startTime: string;
   endTime: string;
   registrationCount: number;
@@ -45,7 +45,6 @@ export default function ClassRegistration() {
 
   const validType = classType && isValidClassType(classType);
   const classDef = validType ? CLASS_DEFINITIONS[classType] : null;
-  const isLI = classType === "life-insurance";
 
   // Fetch upcoming available sessions for this class type
   const { data: upcomingData, isLoading: sessionsLoading } = useQuery<UpcomingResponse>({
@@ -202,7 +201,7 @@ export default function ClassRegistration() {
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="w-4 h-4 shrink-0" />
-                        <span>{formatClassTime(selectedSession.startTime)} – {formatClassTime(selectedSession.endTime)} CT · 2 hrs</span>
+                        <span>{formatClassTime(selectedSession.startTime)} – {formatClassTime(selectedSession.endTime)} CT · {classDef.durationHours} hr{classDef.durationHours !== 1 ? "s" : ""}</span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="w-4 h-4 shrink-0" />
