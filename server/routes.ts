@@ -487,8 +487,12 @@ export async function registerRoutes(
       }
 
       const classDef = CLASS_DEFINITIONS[classType as keyof typeof CLASS_DEFINITIONS];
-      const today = new Date();
+      const now = new Date();
+      const today = new Date(now);
       today.setHours(0, 0, 0, 0);
+      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const currentCTHour = utcToCTHour(now);
+      const classEndHour = parseInt(classDef.endTime.split(':')[0]);
 
       const upcoming: any[] = [];
       const cursor = new Date(today);
@@ -501,6 +505,13 @@ export async function registerRoutes(
           const m = cursor.getMonth() + 1;
           const day = cursor.getDate();
           const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+          // Skip today's session if its end time has already passed in CT
+          if (dateStr === todayDateStr && currentCTHour >= classEndHour) {
+            cursor.setDate(cursor.getDate() + 1);
+            continue;
+          }
+
           const regCount = await storage.getClassRegistrationCount(classType, dateStr);
           if (regCount < MAX_CLASS_CAPACITY) {
             upcoming.push({
@@ -535,9 +546,18 @@ export async function registerRoutes(
       const classDates = getClassDatesForMonth(year, month);
       const sessions: any[] = [];
 
+      const nowForSessions = new Date();
+      const todayForSessions = new Date(nowForSessions);
+      todayForSessions.setHours(0, 0, 0, 0);
+      const todayStrForSessions = `${todayForSessions.getFullYear()}-${String(todayForSessions.getMonth() + 1).padStart(2, '0')}-${String(todayForSessions.getDate()).padStart(2, '0')}`;
+      const ctHourNow = utcToCTHour(nowForSessions);
+
       for (const { date, dayOfWeek } of classDates) {
         for (const [classType, def] of Object.entries(CLASS_DEFINITIONS)) {
           const regCount = await storage.getClassRegistrationCount(classType, date);
+          const endHour = parseInt(def.endTime.split(':')[0]);
+          // Mark as past if date is before today, or if it's today and the session has ended
+          const isPast = date < todayStrForSessions || (date === todayStrForSessions && ctHourNow >= endHour);
           sessions.push({
             date,
             dayOfWeek,
@@ -551,6 +571,7 @@ export async function registerRoutes(
             registrationCount: regCount,
             availableSpots: Math.max(0, MAX_CLASS_CAPACITY - regCount),
             isFull: regCount >= MAX_CLASS_CAPACITY,
+            isPast,
           });
         }
       }

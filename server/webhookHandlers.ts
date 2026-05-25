@@ -56,6 +56,12 @@ export class WebhookHandlers {
     const registrationId = session.metadata?.registration_id;
     if (registrationId && session.metadata?.type === 'class_registration') {
       try {
+        // Idempotency: skip if already paid (checkout success page may have already processed it)
+        const existing = await storage.getClassRegistration(registrationId);
+        if (existing?.paymentStatus === 'paid') {
+          console.log(`Class registration ${registrationId} already paid — skipping webhook duplicate`);
+          return;
+        }
         const reg = await storage.updateClassRegistrationPayment(registrationId, 'paid', session.id);
         if (reg) {
           const classDef = CLASS_DEFINITIONS[reg.classType as keyof typeof CLASS_DEFINITIONS];

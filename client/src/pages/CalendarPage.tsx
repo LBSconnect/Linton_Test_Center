@@ -26,6 +26,7 @@ interface ClassSession {
   registrationCount: number;
   availableSpots: number;
   isFull: boolean;
+  isPast: boolean;
 }
 
 function formatTime(t: string) {
@@ -157,8 +158,8 @@ export default function CalendarPage() {
                         <div className="space-y-1">
                           {sessions.map(s => {
                             const isLI = s.classType === "life-insurance";
-                            const canRegister = !past && !s.isFull;
-                            const badge = s.isFull
+                            const canRegister = !past && !s.isFull && !s.isPast;
+                            const badge = (s.isFull || s.isPast)
                               ? "bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
                               : isLI
                               ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 hover:bg-blue-200 cursor-pointer"
@@ -169,7 +170,7 @@ export default function CalendarPage() {
                                 <div className="font-semibold truncate">{s.shortTitle}</div>
                                 <div className="opacity-75">{formatTime(s.startTime)}</div>
                                 <div className="opacity-75">
-                                  {s.isFull ? "FULL" : `${s.availableSpots} left`}
+                                  {s.isFull ? "FULL" : s.isPast ? "Ended" : `${s.availableSpots} left`}
                                 </div>
                               </div>
                             );
