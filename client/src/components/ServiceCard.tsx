@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 
 interface ServiceCardProps {
   title: string;
@@ -12,6 +12,7 @@ interface ServiceCardProps {
   slug: string;
   href?: string; // overrides the default /services/:slug link
   icon?: React.ReactNode;
+  buttonLabel?: string;
 }
 
 export default function ServiceCard({
@@ -23,7 +24,10 @@ export default function ServiceCard({
   slug,
   href,
   icon,
+  buttonLabel,
 }: ServiceCardProps) {
+  const isExternal = !!href && (href.startsWith("http://") || href.startsWith("https://"));
+
   return (
     <Card
       className="group border-border/50 bg-card transition-all duration-300 hover-elevate"
@@ -71,16 +75,29 @@ export default function ServiceCard({
             </p>
           </div>
         </div>
-        <Link href={href ?? `/services/${slug}`}>
-          <Button
-            size="sm"
-            className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"
-            data-testid={`button-learn-more-${slug}`}
-          >
-            Learn More & Book
-            <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-0.5" />
-          </Button>
-        </Link>
+        {isExternal ? (
+          <a href={href} target="_blank" rel="noopener noreferrer" className="block">
+            <Button
+              size="sm"
+              className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"
+              data-testid={`button-learn-more-${slug}`}
+            >
+              {buttonLabel ?? "Register Online"}
+              <ExternalLink className="w-4 h-4 ml-1" />
+            </Button>
+          </a>
+        ) : (
+          <Link href={href ?? `/services/${slug}`}>
+            <Button
+              size="sm"
+              className="w-full mt-2 group/btn bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white border-0"
+              data-testid={`button-learn-more-${slug}`}
+            >
+              {buttonLabel ?? "Learn More & Book"}
+              <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-0.5" />
+            </Button>
+          </Link>
+        )}
       </CardContent>
     </Card>
   );

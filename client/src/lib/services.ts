@@ -4,7 +4,7 @@ import {
   Camera,
   Award,
   GraduationCap,
-  Users,
+  BookOpen,
 } from "lucide-react";
 
 export interface ServiceInfo {
@@ -24,6 +24,76 @@ export interface ServiceInfo {
 }
 
 export const services: ServiceInfo[] = [
+  {
+    id: "exam-cram",
+    slug: "exam-cram",
+    link: "https://www.myeasypass.net",
+    title: "Exam Cram",
+    shortTitle: "Exam Cram",
+    description:
+      "Online practice exams and study materials for Texas insurance licensing and other professional certifications. Register at MyEasyPass.",
+    longDescription:
+      "Prepare for your licensing exam with Exam Cram — online practice tests and study materials designed to help you pass on your first attempt. Covers Texas Life Insurance, Property & Casualty, and other professional certifications. Register and access your materials at MyEasyPass.",
+    features: [
+      "Texas Life Insurance practice exams",
+      "Property & Casualty practice exams",
+      "Online access anytime",
+      "Detailed answer explanations",
+      "Progress tracking",
+      "Exam-ready preparation",
+    ],
+    image: "/images/service-exam-cram.png",
+    price: "",
+    priceLabel: "",
+    icon: BookOpen,
+    stripeProductName: "Exam Cram",
+  },
+  {
+    id: "certification",
+    slug: "certification-exam-testing",
+    title: "Certiport Exam Testing",
+    shortTitle: "Certifications",
+    description:
+      "Professional exam testing environment for IT certifications including Pearson VUE, Certiport, and PMI exams.",
+    longDescription:
+      "Our authorized testing center provides a professional environment for certification exams. We support Pearson VUE, Certiport, and PMI exam programs, among others. Our facility meets all testing program requirements to ensure your exam experience is seamless.",
+    features: [
+      "Pearson VUE authorized center",
+      "Certiport testing available",
+      "PMI exam programs",
+      "Secure testing environment",
+      "Individual testing stations",
+      "Flexible scheduling options",
+    ],
+    image: "/images/service-certification.png",
+    price: "$35",
+    priceLabel: "/session",
+    icon: Award,
+    stripeProductName: "Certiport Exam Testing",
+  },
+  {
+    id: "tutoring",
+    slug: "tutoring",
+    title: "Tutoring",
+    shortTitle: "Tutoring",
+    description:
+      "One-on-one academic and professional tutoring sessions. Sessions run 2–6 hours at $40/hr. Payment required at booking.",
+    longDescription:
+      "Our experienced tutors provide personalized one-on-one instruction tailored to your goals. Whether you need help with academic subjects, test preparation, or professional skill development, we offer focused sessions in a quiet, professional environment. Sessions are available in 2–6 hour blocks.",
+    features: [
+      "One-on-one personalized instruction",
+      "Academic & professional subjects",
+      "Test prep & exam readiness",
+      "Quiet, distraction-free environment",
+      "Flexible session lengths (2–6 hrs)",
+      "Experienced, qualified tutors",
+    ],
+    image: "/images/service-workstation.png",
+    price: "$40",
+    priceLabel: "/hr · 2 hr min",
+    icon: GraduationCap,
+    stripeProductName: "Tutoring",
+  },
   {
     id: "workstation",
     slug: "computer-workstation-rental",
@@ -46,30 +116,6 @@ export const services: ServiceInfo[] = [
     priceLabel: "/hour",
     icon: Monitor,
     stripeProductName: "Computer Workstation Rental",
-  },
-  {
-    id: "group-classes",
-    slug: "group-classes",
-    link: "/calendar",
-    title: "Group Study Sessions",
-    shortTitle: "Group Sessions",
-    description:
-      "Weekly Friday & Saturday group study sessions for Texas Life Insurance and Property & Casualty licensing exams. $75/session.",
-    longDescription:
-      "Join our instructor-led group study sessions held every Friday and Saturday. We offer two focused 2-hour sessions per day — one for Texas Life Insurance and one for Texas Property & Casualty licensing exam prep. All sessions are held onsite. Payment is required at registration.",
-    features: [
-      "Texas Life Insurance exam prep",
-      "Texas Property & Casualty exam prep",
-      "Every Friday & Saturday",
-      "Small group sessions (max 20)",
-      "Experienced instructors",
-      "Onsite at LBS Test & Exam Center",
-    ],
-    image: "/images/service-group-sessions.png",
-    price: "$75",
-    priceLabel: "/session",
-    icon: Users,
-    stripeProductName: "Group Study Sessions",
   },
   {
     id: "notary",
@@ -116,52 +162,6 @@ export const services: ServiceInfo[] = [
     priceLabel: "/set",
     icon: Camera,
     stripeProductName: "Passport Photos",
-  },
-  {
-    id: "tutoring",
-    slug: "tutoring",
-    title: "Tutoring",
-    shortTitle: "Tutoring",
-    description:
-      "One-on-one academic and professional tutoring sessions. Sessions run 2–6 hours at $40/hr. Payment required at booking.",
-    longDescription:
-      "Our experienced tutors provide personalized one-on-one instruction tailored to your goals. Whether you need help with academic subjects, test preparation, or professional skill development, we offer focused sessions in a quiet, professional environment. Sessions are available in 2–6 hour blocks.",
-    features: [
-      "One-on-one personalized instruction",
-      "Academic & professional subjects",
-      "Test prep & exam readiness",
-      "Quiet, distraction-free environment",
-      "Flexible session lengths (2–6 hrs)",
-      "Experienced, qualified tutors",
-    ],
-    image: "/images/service-workstation.png",
-    price: "$40",
-    priceLabel: "/hr · 2 hr min",
-    icon: GraduationCap,
-    stripeProductName: "Tutoring",
-  },
-  {
-    id: "certification",
-    slug: "certification-exam-testing",
-    title: "Certiport Exam Testing",
-    shortTitle: "Certifications",
-    description:
-      "Professional exam testing environment for IT certifications including Pearson VUE, Certiport, and PMI exams.",
-    longDescription:
-      "Our authorized testing center provides a professional environment for certification exams. We support Pearson VUE, Certiport, and PMI exam programs, among others. Our facility meets all testing program requirements to ensure your exam experience is seamless.",
-    features: [
-      "Pearson VUE authorized center",
-      "Certiport testing available",
-      "PMI exam programs",
-      "Secure testing environment",
-      "Individual testing stations",
-      "Flexible scheduling options",
-    ],
-    image: "/images/service-certification.png",
-    price: "$35",
-    priceLabel: "/session",
-    icon: Award,
-    stripeProductName: "Certiport Exam Testing",
   },
 ];
 
