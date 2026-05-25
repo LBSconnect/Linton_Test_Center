@@ -51,8 +51,8 @@ export const services: ServiceInfo[] = [
     id: "group-classes",
     slug: "group-classes",
     link: "/calendar",
-    title: "Group Study Classes",
-    shortTitle: "Group Classes",
+    title: "Group Study Sessions",
+    shortTitle: "Group Sessions",
     description:
       "Weekly Friday & Saturday group study sessions for Texas Life Insurance and Property & Casualty licensing exams. $75/session.",
     longDescription:
@@ -65,11 +65,11 @@ export const services: ServiceInfo[] = [
       "Experienced instructors",
       "Onsite at LBS Test & Exam Center",
     ],
-    image: "/images/service-workstation.png",
+    image: "/images/service-proctoring.png",
     price: "$75",
     priceLabel: "/session",
     icon: Users,
-    stripeProductName: "Group Study Classes",
+    stripeProductName: "Group Study Sessions",
   },
   {
     id: "notary",
