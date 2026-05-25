@@ -476,6 +476,53 @@ export async function registerRoutes(
 
   // ── Group Study Classes ─────────────────────────────────────────────────────
 
+  // GET /api/classes/upcoming-sessions?classType=&weeks=10
+  app.get('/api/classes/upcoming-sessions', async (req, res) => {
+    try {
+      const { classType } = req.query;
+      const weeks = Math.min(parseInt(req.query.weeks as string) || 10, 26);
+
+      if (!classType || typeof classType !== 'string' || !isValidClassType(classType)) {
+        return res.status(400).json({ error: 'Valid classType is required' });
+      }
+
+      const classDef = CLASS_DEFINITIONS[classType as keyof typeof CLASS_DEFINITIONS];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const upcoming: any[] = [];
+      const cursor = new Date(today);
+
+      // Walk day by day for `weeks` weeks, collect Fri/Sat
+      for (let d = 0; d < weeks * 7; d++) {
+        const dow = cursor.getDay();
+        if (dow === 5 || dow === 6) {
+          const y = cursor.getFullYear();
+          const m = cursor.getMonth() + 1;
+          const day = cursor.getDate();
+          const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const regCount = await storage.getClassRegistrationCount(classType, dateStr);
+          if (regCount < MAX_CLASS_CAPACITY) {
+            upcoming.push({
+              date: dateStr,
+              dayOfWeek: dow === 5 ? 'Friday' : 'Saturday',
+              startTime: classDef.startTime,
+              endTime: classDef.endTime,
+              registrationCount: regCount,
+              availableSpots: MAX_CLASS_CAPACITY - regCount,
+            });
+          }
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      res.json({ sessions: upcoming, classType, title: classDef.title });
+    } catch (error: any) {
+      console.error('Error fetching upcoming sessions:', error.message);
+      res.status(500).json({ error: 'Failed to fetch upcoming sessions' });
+    }
+  });
+
   // GET /api/classes/sessions?year=YYYY&month=MM
   app.get('/api/classes/sessions', async (req, res) => {
     try {

@@ -175,7 +175,7 @@ export default function CalendarPage() {
                             );
 
                             return canRegister ? (
-                              <Link key={s.classType} href={`/classes/${s.classType}/${s.date}`}>
+                              <Link key={s.classType} href={`/classes/${s.classType}/${s.date}`} className="block">
                                 {inner}
                               </Link>
                             ) : (

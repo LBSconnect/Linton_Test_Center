@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -12,10 +12,19 @@ import { CLASS_DEFINITIONS, formatClassTime, isValidClassType } from "@shared/cl
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-interface SessionCount {
+interface UpcomingSession {
+  date: string;
+  dayOfWeek: "Friday" | "Saturday";
+  startTime: string;
+  endTime: string;
   registrationCount: number;
   availableSpots: number;
-  isFull: boolean;
+}
+
+interface UpcomingResponse {
+  sessions: UpcomingSession[];
+  classType: string;
+  title: string;
 }
 
 function friendlyDate(dateStr: string) {
@@ -26,42 +35,54 @@ function friendlyDate(dateStr: string) {
 }
 
 export default function ClassRegistration() {
-  const { classType, date } = useParams<{ classType: string; date: string }>();
+  const { classType, date: dateParam } = useParams<{ classType: string; date?: string }>();
   const { toast } = useToast();
 
+  const [selectedDate, setSelectedDate] = useState<string>(dateParam ?? "");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
   const validType = classType && isValidClassType(classType);
   const classDef = validType ? CLASS_DEFINITIONS[classType] : null;
+  const isLI = classType === "life-insurance";
 
-  const { data: countData, isLoading: countLoading } = useQuery<SessionCount>({
-    queryKey: ["/api/classes/session-count", classType, date],
+  // Fetch upcoming available sessions for this class type
+  const { data: upcomingData, isLoading: sessionsLoading } = useQuery<UpcomingResponse>({
+    queryKey: ["/api/classes/upcoming-sessions", classType],
     queryFn: async () => {
-      const res = await fetch(`/api/classes/session-count?classType=${classType}&classDate=${date}`);
-      if (!res.ok) throw new Error("Failed to load session info");
+      const res = await fetch(`/api/classes/upcoming-sessions?classType=${classType}&weeks=10`);
+      if (!res.ok) throw new Error("Failed to load sessions");
       return res.json();
     },
-    enabled: !!validType && !!date,
-    refetchInterval: 30000, // refresh every 30s
+    enabled: !!validType,
   });
+
+  // Pre-select date from URL only once sessions are loaded, if that date is available
+  useEffect(() => {
+    if (!dateParam || !upcomingData) return;
+    const available = upcomingData.sessions.some(s => s.date === dateParam);
+    if (available) setSelectedDate(dateParam);
+    else setSelectedDate(""); // date from URL is full/past — don't pre-select
+  }, [dateParam, upcomingData]);
+
+  const selectedSession = upcomingData?.sessions.find(s => s.date === selectedDate);
 
   const registerMutation = useMutation({
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/classes/register", {
         classType,
-        classDate: date,
+        classDate: selectedDate,
         customerName: name,
         customerEmail: email,
         customerPhone: phone || undefined,
       });
-      return await res.json();
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Registration failed");
+      return json;
     },
     onSuccess: (data: { checkoutUrl?: string }) => {
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      }
+      if (data.checkoutUrl) window.location.href = data.checkoutUrl;
     },
     onError: (error: Error) => {
       toast({
@@ -73,12 +94,12 @@ export default function ClassRegistration() {
   });
 
   const handleSubmit = () => {
+    if (!selectedDate) {
+      toast({ title: "No date selected", description: "Please choose a session date.", variant: "destructive" });
+      return;
+    }
     if (!name || !email || !phone) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing Information", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
     registerMutation.mutate();
@@ -99,11 +120,6 @@ export default function ClassRegistration() {
     );
   }
 
-  const isFull = countData?.isFull ?? false;
-  const availableSpots = countData?.availableSpots ?? 20;
-  const isPastDate = date ? new Date(date) < new Date(new Date().toDateString()) : false;
-  const isLI = classType === "life-insurance";
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -117,7 +133,9 @@ export default function ClassRegistration() {
             </Button>
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-white max-w-2xl">{classDef.title}</h1>
-          <p className="text-white/80 mt-2">Register and pay online to secure your spot.</p>
+          <p className="text-white/80 mt-2">
+            {formatClassTime(classDef.startTime)} – {formatClassTime(classDef.endTime)} CT · $75 per session
+          </p>
         </div>
       </section>
 
@@ -125,60 +143,96 @@ export default function ClassRegistration() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
 
-            {/* Session details */}
+            {/* Left: session picker + details */}
             <div className="lg:col-span-2 space-y-4">
+
+              {/* Select a date */}
               <Card className="border-border/50">
-                <CardContent className="p-6 space-y-4">
-                  <div className={`w-12 h-12 rounded-md flex items-center justify-center ${isLI ? "bg-blue-100 dark:bg-blue-900/30" : "bg-orange-100 dark:bg-orange-900/30"}`}>
-                    <Users className={`w-6 h-6 ${isLI ? "text-blue-700" : "text-orange-600"}`} />
-                  </div>
-                  <h2 className="font-semibold text-lg leading-snug">{classDef.title}</h2>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 shrink-0" />
-                      <span>{date ? friendlyDate(date) : "—"}</span>
+                <CardContent className="p-5 space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#e85d40]" />
+                    Select a Date
+                  </h3>
+
+                  {sessionsLoading ? (
+                    <p className="text-sm text-muted-foreground">Loading available dates…</p>
+                  ) : !upcomingData?.sessions.length ? (
+                    <div className="flex items-start gap-2 text-sm text-destructive">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      <p>No upcoming sessions available. Please check back later.</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 shrink-0" />
-                      <span>{formatClassTime(classDef.startTime)} – {formatClassTime(classDef.endTime)} CT · {classDef.durationHours} hrs</span>
+                  ) : (
+                    <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {upcomingData.sessions.map(s => {
+                        const isSelected = selectedDate === s.date;
+                        return (
+                          <button
+                            key={s.date}
+                            onClick={() => setSelectedDate(s.date)}
+                            className={`w-full text-left rounded-md border px-3 py-2.5 text-sm transition-colors ${
+                              isSelected
+                                ? "border-[#1e3a6e] bg-[#1e3a6e]/5 dark:border-blue-400 dark:bg-blue-900/20"
+                                : "border-border hover:border-[#1e3a6e]/50 hover:bg-muted/30"
+                            }`}
+                          >
+                            <div className="font-medium">{friendlyDate(s.date)}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {formatClassTime(s.startTime)} – {formatClassTime(s.endTime)} CT
+                              <span className="ml-2 text-green-600 dark:text-green-400 font-medium">
+                                {s.availableSpots} spot{s.availableSpots !== 1 ? "s" : ""} left
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 shrink-0" />
-                      {countLoading
-                        ? <span>Checking availability…</span>
-                        : isFull
-                        ? <span className="text-destructive font-medium">Session Full</span>
-                        : <span>{availableSpots} spot{availableSpots !== 1 ? "s" : ""} remaining</span>
-                      }
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 shrink-0" />
-                      <span className="text-lg font-bold text-[#1e3a6e] dark:text-white">
-                        ${(classDef.priceAmount / 100).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Sessions are held onsite at LBS Test &amp; Exam Center, 616 FM 1960 Rd W Suite 575, Houston, TX 77090.</p>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Session details (shown once a date is selected) */}
+              {selectedSession && (
+                <Card className="border-border/50">
+                  <CardContent className="p-5 space-y-3">
+                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Session Details</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="w-4 h-4 shrink-0" />
+                        <span>{friendlyDate(selectedSession.date)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="w-4 h-4 shrink-0" />
+                        <span>{formatClassTime(selectedSession.startTime)} – {formatClassTime(selectedSession.endTime)} CT · 2 hrs</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Users className="w-4 h-4 shrink-0" />
+                        <span className="text-green-600 dark:text-green-400 font-medium">
+                          {selectedSession.availableSpots} spot{selectedSession.availableSpots !== 1 ? "s" : ""} remaining
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 shrink-0 text-muted-foreground" />
+                        <span className="text-lg font-bold text-[#1e3a6e] dark:text-white">
+                          ${(classDef.priceAmount / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-1">
+                      Onsite · 616 FM 1960 Rd W Suite 575, Houston, TX 77090
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            {/* Registration form */}
+            {/* Right: registration form */}
             <div className="lg:col-span-3">
               <Card className="border-border/50">
                 <CardContent className="p-6 space-y-5">
-                  {(isFull || isPastDate) ? (
-                    <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-lg text-destructive">
-                      <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-                      <div>
-                        <p className="font-semibold">{isPastDate ? "This session has passed" : "Session is full"}</p>
-                        <p className="text-sm mt-1">
-                          {isPastDate ? "Please select an upcoming session from the calendar." : "Please choose another date from the calendar."}
-                        </p>
-                        <Link href="/calendar">
-                          <Button size="sm" variant="outline" className="mt-3">View Calendar</Button>
-                        </Link>
-                      </div>
+                  {!selectedDate ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-2 text-muted-foreground">
+                      <Calendar className="w-10 h-10 opacity-30" />
+                      <p className="font-medium">Select an available date to continue</p>
                     </div>
                   ) : (
                     <>
@@ -219,6 +273,7 @@ export default function ClassRegistration() {
                 </CardContent>
               </Card>
             </div>
+
           </div>
         </div>
       </section>
