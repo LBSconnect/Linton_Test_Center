@@ -2,7 +2,6 @@ import {
   Monitor,
   Stamp,
   Camera,
-  Video,
   Award,
   GraduationCap,
 } from "lucide-react";
@@ -91,29 +90,6 @@ export const services: ServiceInfo[] = [
     priceLabel: "/set",
     icon: Camera,
     stripeProductName: "Passport Photos",
-  },
-  {
-    id: "proctoring",
-    slug: "remote-proctoring",
-    title: "Private Exam Testing",
-    shortTitle: "Proctoring",
-    description:
-      "Private proctoring room with camera, headset, and microphone for remote exams. Per hour rate.",
-    longDescription:
-      "Take your remote proctored exams in our professional, distraction-free environment. Each private proctoring room is equipped with a high-definition camera, professional headset, and microphone, ensuring you meet all testing requirements for your remote exam.",
-    features: [
-      "Private, quiet testing room",
-      "HD camera & professional headset",
-      "High-speed stable internet",
-      "Soundproofed environment",
-      "Compatible with all proctoring platforms",
-      "Technical support on standby",
-    ],
-    image: "/images/service-proctoring.png",
-    price: "$20",
-    priceLabel: "/hour",
-    icon: Video,
-    stripeProductName: "Private Exam Testing",
   },
   {
     id: "tutoring",
