@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams } from "wouter";
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -35,6 +35,14 @@ export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
   const service = getServiceBySlug(slug || "");
   const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // Group study sessions are booked through the Calendar page, not here
+  useEffect(() => {
+    if (service?.id === "group-classes") {
+      navigate("/calendar");
+    }
+  }, [service, navigate]);
 
   // Booking form state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
