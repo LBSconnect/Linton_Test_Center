@@ -214,6 +214,7 @@ export default function ServiceDetail() {
       appointmentDate: selectedTime,
       payNow: isTutoring ? true : !!price,
       notes: combinedNotes,
+      tutoringHours: isTutoring ? selectedHours : undefined,
     };
 
     bookingMutation.mutate(appointmentData);
