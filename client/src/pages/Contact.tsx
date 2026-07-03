@@ -179,7 +179,7 @@ export default function Contact() {
 
               <div className="space-y-5">
                 <a
-                  href="https://maps.google.com/?q=616+FM+1960+Road+West+Suite+575+Houston+TX+77090"
+                  href="https://maps.google.com/?q=616+FM+1960+Rd+W+Ste+101+Houston+TX+77090"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-start gap-4 p-4 rounded-md bg-muted/30 transition-colors hover:bg-muted/50"
@@ -191,11 +191,11 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold text-sm">Location</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      616 FM 1960 Road West
+                      616 FM 1960 Rd W
                       <br />
-                      Suite 575
+                      Ste 101
                       <br />
-                      Houston, Texas 77090
+                      Houston, Texas 77090-3048
                     </p>
                   </div>
                 </a>
@@ -249,7 +249,7 @@ export default function Contact() {
 
               <div className="rounded-md overflow-hidden border border-border/50 h-64">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.123456789!2d-95.4567890!3d29.9876543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s616+FM+1960+Rd+W+Suite+575+Houston+TX+77090!5e0!3m2!1sen!2sus!4v1234567890"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.123456789!2d-95.4567890!3d29.9876543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s616+FM+1960+Rd+W+Ste+101+Houston+TX+77090!5e0!3m2!1sen!2sus!4v1234567890"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

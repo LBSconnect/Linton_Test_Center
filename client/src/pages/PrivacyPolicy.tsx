@@ -213,8 +213,8 @@ export default function PrivacyPolicy() {
               <div className="bg-muted/30 rounded-lg p-6 space-y-2">
                 <p className="font-semibold text-[#1e3a6e] dark:text-white">Linton Business Solutions LLC</p>
                 <p className="text-muted-foreground">DBA: LBS Test & Exam Center</p>
-                <p className="text-muted-foreground">616 FM 1960 Road West, Suite 575</p>
-                <p className="text-muted-foreground">Houston, TX 77090</p>
+                <p className="text-muted-foreground">616 FM 1960 Rd W, Ste 101</p>
+                <p className="text-muted-foreground">Houston, TX 77090-3048</p>
                 <p className="text-muted-foreground">Phone: (281) 836-5357</p>
                 <p className="text-muted-foreground">Email: info@lbsconnect.net</p>
               </div>

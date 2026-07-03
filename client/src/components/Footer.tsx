@@ -81,7 +81,7 @@ export default function Footer() {
             </h4>
             <div className="space-y-3">
               <a
-                href="https://maps.google.com/?q=616+FM+1960+Road+West+Suite+575+Houston+TX+77090"
+                href="https://maps.google.com/?q=616+FM+1960+Rd+W+Ste+101+Houston+TX+77090"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-2.5 text-sm text-white/70 transition-colors hover:text-white"
@@ -90,8 +90,8 @@ export default function Footer() {
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-[#f07050]" />
                 <span>
                   616 FM 1960 Rd W<br />
-                  Suite 575<br />
-                  Houston, TX 77090
+                  Ste 101<br />
+                  Houston, TX 77090-3048
                 </span>
               </a>
               <a

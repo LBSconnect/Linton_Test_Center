@@ -2,7 +2,7 @@ import { sendEmail } from './smtpClient';
 
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 const BUSINESS_NAME = 'LBS Test & Exam Center';
-const BUSINESS_ADDRESS = '616 FM 1960 Road West, Suite 575, Houston, TX 77090';
+const BUSINESS_ADDRESS = '616 FM 1960 Rd W, Ste 101, Houston, TX 77090-3048';
 
 // Extracts "Exam: <name>" from the notes field and returns { exam, remainingNotes }
 function parseExamFromNotes(notes?: string): { exam: string | null; remainingNotes: string | null } {

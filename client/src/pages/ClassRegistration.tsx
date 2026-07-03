@@ -217,7 +217,7 @@ export default function ClassRegistration() {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground pt-1">
-                      Onsite · 616 FM 1960 Rd W Suite 575, Houston, TX 77090
+                      Onsite · 616 FM 1960 Rd W Ste 101, Houston, TX 77090-3048
                     </p>
                   </CardContent>
                 </Card>

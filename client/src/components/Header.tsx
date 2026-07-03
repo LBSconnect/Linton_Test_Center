@@ -41,7 +41,7 @@ export default function Header() {
           </div>
           <div className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5" />
-            <span>616 FM 1960 Rd W, Suite 575, Houston, TX 77090</span>
+            <span>616 FM 1960 Rd W, Ste 101, Houston, TX 77090-3048</span>
           </div>
         </div>
       </div>

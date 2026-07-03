@@ -271,9 +271,9 @@ export default function Home() {
                       <div>
                         <p className="font-medium text-sm">Address</p>
                         <p className="text-sm text-muted-foreground">
-                          616 FM 1960 Rd W, Suite 575
+                          616 FM 1960 Rd W, Ste 101
                           <br />
-                          Houston, TX 77090
+                          Houston, TX 77090-3048
                         </p>
                       </div>
                     </div>

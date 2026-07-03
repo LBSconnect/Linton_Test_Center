@@ -537,9 +537,9 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          616 FM 1960 Rd W, Suite 575
+                          616 FM 1960 Rd W, Ste 101
                           <br />
-                          Houston, TX 77090
+                          Houston, TX 77090-3048
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
