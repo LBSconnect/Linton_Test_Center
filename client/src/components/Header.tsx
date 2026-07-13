@@ -92,7 +92,7 @@ export default function Header() {
                 Exam Cram
               </Button>
             </a>
-            <Link href="/services">
+            <Link href="/book">
               <Button
                 size="sm"
                 className="ml-2 bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
@@ -151,7 +151,7 @@ export default function Header() {
                       Exam Cram
                     </Button>
                   </a>
-                  <Link href="/services">
+                  <Link href="/book">
                     <Button
                       className="w-full mt-3 bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
                       onClick={() => setMobileOpen(false)}
