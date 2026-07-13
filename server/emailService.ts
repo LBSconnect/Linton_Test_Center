@@ -311,6 +311,9 @@ export async function sendAppointmentCalendarInvite(data: {
       notes: data.notes,
     });
 
+    const startISO = appointmentDateTime.toISOString();
+    const endISO = new Date(appointmentDateTime.getTime() + durationMins * 60 * 1000).toISOString();
+
     await sendEmail({
       to: NOTIFICATION_EMAIL,
       subject: `New Appointment: ${data.serviceName} - ${data.customerName} on ${formattedDate}`,
@@ -340,7 +343,7 @@ export async function sendAppointmentCalendarInvite(data: {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Time:</td>
-                  <td style="padding: 8px 0;">${formattedTime}</td>
+                  <td style="padding: 8px 0;">${formattedTime} CT</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; color: #1e3a6e;">Price:</td>
@@ -354,12 +357,13 @@ export async function sendAppointmentCalendarInvite(data: {
               </table>
             </div>
             <p style="margin: 0; font-size: 14px; color: #6b7280;">
-              A calendar invite is attached to this email. Open the attachment to add this appointment to your calendar.
+              Open the attached .ics file to add this appointment to your calendar.
             </p>
           </div>
           <div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">
             LBS Test &amp; Exam Center | ${BUSINESS_ADDRESS}
           </div>
+          <span style="display:none;overflow:hidden;max-height:0">APPTSTART:${startISO}|APPTEND:${endISO}|APPTSERVICE:${data.serviceName}|APPTCUSTOMER:${data.customerName}</span>
         </div>
       `,
       attachments: [
