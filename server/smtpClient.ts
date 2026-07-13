@@ -131,67 +131,6 @@ export async function sendEmail(options: {
   }
 }
 
-// Directly create a calendar event on the business Outlook calendar via Graph API.
-// Requires Calendars.ReadWrite application permission on the Azure AD app registration.
-export async function createOutlookCalendarEvent(options: {
-  subject: string;
-  bodyHtml: string;
-  startDateTime: Date;
-  durationMinutes: number;
-  attendeeEmail?: string;
-  attendeeName?: string;
-}): Promise<boolean> {
-  const client = getGraphClient();
-  const calendarOwner = process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USER;
-
-  if (!client || !calendarOwner) {
-    console.warn('Graph client not configured — skipping calendar event creation');
-    return false;
-  }
-
-  const startDate = new Date(options.startDateTime);
-  const endDate = new Date(startDate.getTime() + options.durationMinutes * 60 * 1000);
-
-  const toUTCISO = (d: Date) => d.toISOString().replace('Z', '');
-
-  const event: any = {
-    subject: options.subject,
-    body: { contentType: 'HTML', content: options.bodyHtml },
-    start: { dateTime: toUTCISO(startDate), timeZone: 'UTC' },
-    end:   { dateTime: toUTCISO(endDate),   timeZone: 'UTC' },
-    location: { displayName: '616 FM 1960 Rd W, Ste 101, Houston, TX 77090-3048' },
-    isReminderOn: true,
-    reminderMinutesBeforeStart: 30,
-  };
-
-  if (options.attendeeEmail) {
-    event.attendees = [{
-      emailAddress: {
-        address: options.attendeeEmail,
-        name: options.attendeeName || options.attendeeEmail,
-      },
-      type: 'required',
-    }];
-  }
-
-  try {
-    await client.api(`/users/${calendarOwner}/events`).post(event);
-    console.log('Outlook calendar event created:', options.subject);
-    return true;
-  } catch (error: any) {
-    console.error('Failed to create Outlook calendar event:', error.message);
-    if (error.body) {
-      try {
-        const body = JSON.parse(error.body);
-        console.error('Graph API error:', body.error?.message || body);
-      } catch {
-        console.error('Graph API error body:', error.body);
-      }
-    }
-    return false;
-  }
-}
-
 // Legacy function for compatibility - no longer needed with Graph API
 export async function getEmailTransporter() {
   const client = getGraphClient();

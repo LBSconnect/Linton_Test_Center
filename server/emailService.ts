@@ -1,4 +1,4 @@
-import { sendEmail, createOutlookCalendarEvent } from './smtpClient';
+import { sendEmail } from './smtpClient';
 
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 const BUSINESS_NAME = 'LBS Test & Exam Center';
@@ -371,25 +371,6 @@ export async function sendAppointmentCalendarInvite(data: {
       ],
     });
     console.log('Calendar invite email sent to', NOTIFICATION_EMAIL);
-
-    // Also create the event directly on the Outlook calendar
-    const calendarBody = `
-      <p><strong>Service:</strong> ${data.serviceName}</p>
-      <p><strong>Customer:</strong> ${data.customerName}</p>
-      <p><strong>Email:</strong> ${data.customerEmail}</p>
-      ${data.customerPhone ? `<p><strong>Phone:</strong> ${data.customerPhone}</p>` : ''}
-      ${exam ? `<p><strong>Exam:</strong> ${exam}</p>` : ''}
-      ${remainingNotes ? `<p><strong>Notes:</strong> ${remainingNotes}</p>` : ''}
-      <p><strong>Payment:</strong> ${data.paymentStatus === 'paid' ? 'Paid Online' : 'Pay at Visit'}</p>
-    `;
-    createOutlookCalendarEvent({
-      subject: `${data.serviceName} — ${data.customerName}`,
-      bodyHtml: calendarBody,
-      startDateTime: new Date(data.appointmentDate),
-      durationMinutes: parseDurationFromNotes(data.notes),
-      attendeeEmail: data.customerEmail,
-      attendeeName: data.customerName,
-    });
   } catch (error: any) {
     console.error('Failed to send calendar invite email:', error.message);
   }
