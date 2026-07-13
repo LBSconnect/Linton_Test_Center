@@ -1,4 +1,4 @@
-import { sendEmail } from './smtpClient';
+import { sendEmail, createOutlookCalendarEvent } from './smtpClient';
 
 const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 const BUSINESS_NAME = 'LBS Test & Exam Center';
@@ -375,6 +375,24 @@ export async function sendAppointmentCalendarInvite(data: {
       ],
     });
     console.log('Calendar invite email sent to', NOTIFICATION_EMAIL);
+
+    // Create the event directly on the Outlook calendar (requires Calendars.ReadWrite on the Azure AD app)
+    createOutlookCalendarEvent({
+      subject: `${data.serviceName} — ${data.customerName}`,
+      bodyHtml: `
+        <p><strong>Service:</strong> ${data.serviceName}</p>
+        <p><strong>Customer:</strong> ${data.customerName}</p>
+        <p><strong>Email:</strong> ${data.customerEmail}</p>
+        ${data.customerPhone ? `<p><strong>Phone:</strong> ${data.customerPhone}</p>` : ''}
+        ${exam ? `<p><strong>Exam:</strong> ${exam}</p>` : ''}
+        ${remainingNotes ? `<p><strong>Notes:</strong> ${remainingNotes}</p>` : ''}
+        <p><strong>Payment:</strong> ${data.paymentStatus === 'paid' ? 'Paid Online' : 'Pay at Visit'}</p>
+      `,
+      startDateTime: appointmentDateTime,
+      durationMinutes: durationMins,
+      attendeeEmail: data.customerEmail,
+      attendeeName: data.customerName,
+    });
   } catch (error: any) {
     console.error('Failed to send calendar invite email:', error.message);
   }

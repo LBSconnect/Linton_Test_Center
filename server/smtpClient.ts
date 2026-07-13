@@ -135,6 +135,65 @@ export async function sendEmail(options: {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// Create a calendar event directly on the business Outlook calendar
+// Requires: Calendars.ReadWrite application permission on the Azure AD app
+// ---------------------------------------------------------------------------
+export async function createOutlookCalendarEvent(options: {
+  subject: string;
+  bodyHtml: string;
+  startDateTime: Date;
+  durationMinutes: number;
+  attendeeEmail?: string;
+  attendeeName?: string;
+}): Promise<boolean> {
+  const graphCli = getGraphClient();
+  const calendarOwner = process.env.MAIL_FROM_ADDRESS || process.env.SMTP_USER;
+
+  if (!graphCli || !calendarOwner) {
+    console.warn('Graph client not configured — skipping calendar event creation');
+    return false;
+  }
+
+  const start = new Date(options.startDateTime);
+  const end = new Date(start.getTime() + options.durationMinutes * 60 * 1000);
+  const toUTC = (d: Date) => d.toISOString().replace('Z', '');
+
+  const event: any = {
+    subject: options.subject,
+    body: { contentType: 'HTML', content: options.bodyHtml },
+    start: { dateTime: toUTC(start), timeZone: 'UTC' },
+    end:   { dateTime: toUTC(end),   timeZone: 'UTC' },
+    location: { displayName: '616 FM 1960 Rd W, Ste 101, Houston, TX 77090-3048' },
+    isReminderOn: true,
+    reminderMinutesBeforeStart: 30,
+  };
+
+  if (options.attendeeEmail) {
+    event.attendees = [{
+      emailAddress: { address: options.attendeeEmail, name: options.attendeeName || options.attendeeEmail },
+      type: 'required',
+    }];
+  }
+
+  try {
+    await graphCli.api(`/users/${calendarOwner}/events`).post(event);
+    console.log('Outlook calendar event created:', options.subject);
+    return true;
+  } catch (error: any) {
+    console.error('Failed to create Outlook calendar event:', error.message);
+    if (error.body) {
+      try {
+        const body = JSON.parse(error.body);
+        console.error('Graph API calendar error:', body.error?.message || body);
+      } catch {
+        console.error('Graph API calendar error body:', error.body);
+      }
+    }
+    return false;
+  }
+}
+
 // Legacy shim — kept for compatibility
 export async function getEmailTransporter() {
   return null;
