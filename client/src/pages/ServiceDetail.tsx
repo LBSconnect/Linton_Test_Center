@@ -68,6 +68,7 @@ export default function ServiceDetail() {
   ];
 
   const isCertiport = slug === "certification-exam-testing";
+  const isNotary = slug === "notary-service";
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
     data: Array<{
@@ -211,7 +212,7 @@ export default function ServiceDetail() {
       priceId: price?.id,
       priceAmount: price?.unit_amount,
       appointmentDate: selectedTime,
-      payNow: !!price,
+      payNow: isNotary ? false : !!price,
       notes: combinedNotes,
     };
 
@@ -235,7 +236,7 @@ export default function ServiceDetail() {
             <div className="bg-muted/50 rounded-lg p-4 text-left space-y-2">
               <p><span className="font-medium">Date:</span> {selectedDate?.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
               <p><span className="font-medium">Time:</span> {formatTime(selectedTime)}</p>
-              <p><span className="font-medium">Payment:</span> Paid Online</p>
+              <p><span className="font-medium">Payment:</span> {isNotary ? "Pay at office" : "Paid Online"}</p>
             </div>
             <Link href="/services">
               <Button className="mt-4">
@@ -330,16 +331,23 @@ export default function ServiceDetail() {
             <div className="space-y-6">
               <Card className="border-border/50">
                 <CardContent className="p-6 space-y-5">
-                  <div className="text-center space-y-1">
-                    <div className="text-3xl font-bold text-[#1e3a6e] dark:text-white">
-                      {price
-                        ? `$${(price.unit_amount / 100).toFixed(2)}`
-                        : service.price}
+                  {!isNotary && (
+                    <div className="text-center space-y-1">
+                      <div className="text-3xl font-bold text-[#1e3a6e] dark:text-white">
+                        {price
+                          ? `$${(price.unit_amount / 100).toFixed(2)}`
+                          : service.price}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {service.priceLabel}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {service.priceLabel}
+                  )}
+                  {isNotary && (
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">Payment collected in office</p>
                     </div>
-                  </div>
+                  )}
 
                   <div className="border-t border-border/50 pt-5">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
@@ -485,7 +493,7 @@ export default function ServiceDetail() {
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Booking...
                               </>
-                            ) : price ? (
+                            ) : price && !isNotary ? (
                               <>Book &amp; Pay ${(price.unit_amount / 100).toFixed(2)}</>
                             ) : (
                               "Book Appointment"
