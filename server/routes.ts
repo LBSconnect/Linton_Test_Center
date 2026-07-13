@@ -65,14 +65,38 @@ function isValidBusinessTime(date: Date): boolean {
   return ctHour >= 8 && ctHour <= 16;                  // Mon–Wed, Fri: last slot 4pm (closes 5pm)
 }
 
+// Build a UTC ISO string for a specific CT hour:minute on a given date
+function ctSlot(date: Date, ctHour: number, ctMinute: number = 0): string {
+  const offset = ctUtcOffset(date);
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth();
+  const d = date.getUTCDate();
+  const utcHour = ctHour + offset;
+  const dayOffset = utcHour >= 24 ? 1 : 0;
+  return new Date(Date.UTC(y, m, d + dayOffset, utcHour % 24, ctMinute, 0, 0)).toISOString();
+}
+
+// Boot camp slugs and their fixed Saturday slots
+const BOOT_CAMP_SLOTS: Record<string, { ctHour: number; ctMinute: number }> = {
+  'life-insurance-boot-camp': { ctHour: 8, ctMinute: 0 },
+  'property-casualty-boot-camp': { ctHour: 10, ctMinute: 30 },
+};
+
 // Generate available time slots for a given date (all in Central Time)
 // Last slot is 1hr before close so appointments end at closing time:
 // Mon–Wed, Fri: slots 8am–4pm (business closes 5pm) | Sat: slots 8am–3pm (closes 4pm) | Thu, Sun: closed
-function getAvailableTimeSlots(date: Date): string[] {
+function getAvailableTimeSlots(date: Date, serviceSlug?: string): string[] {
   const slots: string[] = [];
   const dow = date.getUTCDay();
 
   if (dow === 0 || dow === 4) return slots; // Sunday, Thursday — closed
+
+  // Boot camp services: return their specific fixed Saturday slot only
+  if (serviceSlug && BOOT_CAMP_SLOTS[serviceSlug]) {
+    if (dow !== 6) return slots; // Boot camps on Saturdays only
+    const { ctHour, ctMinute } = BOOT_CAMP_SLOTS[serviceSlug];
+    return [ctSlot(date, ctHour, ctMinute)];
+  }
 
   let startHour: number;
   let endHour: number;
@@ -235,7 +259,7 @@ export async function registerRoutes(
   // Get available time slots for a specific date
   app.get('/api/appointments/available-slots', async (req, res) => {
     try {
-      const { date } = req.query;
+      const { date, service } = req.query;
       if (!date || typeof date !== 'string') {
         return res.status(400).json({ error: 'Date parameter is required' });
       }
@@ -245,8 +269,10 @@ export async function registerRoutes(
         return res.status(400).json({ error: 'Invalid date format' });
       }
 
+      const serviceSlug = typeof service === 'string' ? service : undefined;
+
       // Get all possible slots for the day
-      const allSlots = getAvailableTimeSlots(requestedDate);
+      const allSlots = getAvailableTimeSlots(requestedDate, serviceSlug);
 
       // Get existing appointments for that day
       const startOfDay = new Date(requestedDate);

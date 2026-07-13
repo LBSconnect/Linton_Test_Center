@@ -47,10 +47,11 @@ export default function TermsOfUse() {
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
                 <li><strong>Certiport Exam Testing:</strong> Authorized testing center for Pearson VUE, Certiport, PMI, and other certification programs</li>
-                <li><strong>Private Exam Testing:</strong> Private proctoring rooms with equipment for remotely proctored exams</li>
-                <li><strong>Computer Workstation Rental:</strong> Fully equipped workstations with high-speed internet access</li>
+                <li><strong>Group Study Sessions:</strong> Instructor-led Friday & Saturday group prep sessions for Texas Life Insurance and P&C licensing exams</li>
                 <li><strong>Notary Services:</strong> Certified notary public services for documents and legal papers</li>
                 <li><strong>Passport Photos:</strong> Professional photos meeting government standards for passports and visas</li>
+                <li><strong>Texas Life Insurance Exam Boot Camp:</strong> Saturday morning intensive prep sessions (8:00 AM – 10:00 AM) for the Texas Life Insurance license exam</li>
+                <li><strong>Texas Property & Casualty Exam Boot Camp:</strong> Saturday morning intensive prep sessions (10:30 AM – 12:30 PM) for the Texas P&C insurance license exam</li>
               </ul>
             </div>
 

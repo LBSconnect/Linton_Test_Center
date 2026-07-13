@@ -102,10 +102,12 @@ export default function ServiceDetail() {
     slots: string[];
     daysOpen: string[];
   }>({
-    queryKey: ["/api/appointments/available-slots", selectedDate?.toISOString()],
+    queryKey: ["/api/appointments/available-slots", selectedDate?.toISOString(), service?.slug],
     queryFn: async () => {
       if (!selectedDate) return { slots: [], daysOpen: [] };
-      const res = await fetch(`/api/appointments/available-slots?date=${selectedDate.toISOString()}`);
+      const res = await fetch(
+        `/api/appointments/available-slots?date=${selectedDate.toISOString()}&service=${service?.slug ?? ""}`
+      );
       if (!res.ok) throw new Error("Failed to load time slots");
       return res.json();
     },
@@ -169,12 +171,14 @@ export default function ServiceDetail() {
 
   const price = matchingProduct?.prices?.[0];
 
-  // Disable Sundays, Thursdays, and past dates
+  // Disable days based on service type
   const disabledDays = (date: Date) => {
     const day = date.getDay();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return day === 0 || day === 4 || date < today; // Closed Sunday & Thursday
+    if (date < today) return true;
+    if (service?.saturdayOnly) return day !== 6; // Boot camps: Saturdays only
+    return day === 0 || day === 4; // Closed Sunday & Thursday for regular services
   };
 
   // Always display in Central Time (business timezone: Houston, TX)
@@ -378,7 +382,9 @@ export default function ServiceDetail() {
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Available Mon–Wed, Fri & Sat (closed Thu & Sun)
+                          {service?.saturdayOnly
+                            ? "Available Saturdays only"
+                            : "Available Mon–Wed, Fri & Sat (closed Thu & Sun)"}
                         </p>
                       </div>
 
@@ -415,9 +421,11 @@ export default function ServiceDetail() {
                               No available slots for this date.
                             </p>
                           )}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Mon–Wed & Fri: 8AM–4PM | Sat: 8AM–3PM
-                          </p>
+                          {!service?.saturdayOnly && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Mon–Wed & Fri: 8AM–4PM | Sat: 8AM–3PM
+                            </p>
+                          )}
                         </div>
                       )}
 

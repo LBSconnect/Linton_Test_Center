@@ -358,20 +358,23 @@ export default function Contact() {
                             <SelectValue placeholder="Select a service" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="workstation">
-                              Computer Workstation Rental
-                            </SelectItem>
                             <SelectItem value="notary">
                               Notary Service
                             </SelectItem>
                             <SelectItem value="passport">
                               Passport Photos
                             </SelectItem>
-                            <SelectItem value="proctoring">
-                              Private Exam Testing
-                            </SelectItem>
                             <SelectItem value="certification">
                               Certiport Exam Testing
+                            </SelectItem>
+                            <SelectItem value="group-classes">
+                              Group Study Sessions
+                            </SelectItem>
+                            <SelectItem value="life-insurance-bootcamp">
+                              Life Insurance Exam Boot Camp
+                            </SelectItem>
+                            <SelectItem value="property-casualty-bootcamp">
+                              Property & Casualty Exam Boot Camp
                             </SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>

@@ -48,7 +48,7 @@ export default function PrivacyPolicy() {
                 We may collect personal information that you voluntarily provide to us when you:
               </p>
               <ul className="list-disc pl-6 text-muted-foreground space-y-2">
-                <li>Schedule an appointment for testing, proctoring, notary, passport photos, or workstation rental</li>
+                <li>Schedule an appointment for testing, notary, passport photos, group study sessions, or boot camp sessions</li>
                 <li>Register for a certification exam through our testing center</li>
                 <li>Contact us through our website, phone, or email</li>
                 <li>Complete a transaction or make a payment</li>

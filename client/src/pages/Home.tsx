@@ -190,7 +190,7 @@ export default function Home() {
             </Card>
             {/* Reordered services: proctoring, certification first, then others */}
             {[...services].sort((a, b) => {
-              const order = ['proctoring', 'certification', 'workstation', 'notary', 'passport'];
+              const order = ['group-classes', 'certification', 'notary', 'passport', 'life-insurance-bootcamp', 'property-casualty-bootcamp'];
               return order.indexOf(a.id) - order.indexOf(b.id);
             }).map((service) => (
               <ServiceCard
@@ -325,7 +325,7 @@ export default function Home() {
           </h2>
           <p className="text-lg text-white/80 max-w-2xl mx-auto">
             Whether you need to take a certification exam, get documents
-            notarized, or use a professional workstation, we're here to help.
+            notarized, or prepare for your insurance licensing exam, we're here to help.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Link href="/services">

@@ -4,11 +4,11 @@ import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
 
 export default function Footer() {
   const serviceLinks = [
-    { href: "/services/computer-workstation-rental", label: "Computer Workstation Rental" },
     { href: "/services/notary-service", label: "Notary Service" },
     { href: "/services/passport-photos", label: "Passport Photos" },
-    { href: "/services/remote-proctoring", label: "Private Exam Testing" },
     { href: "/services/certification-exam-testing", label: "Certiport Exams" },
+    { href: "/services/life-insurance-boot-camp", label: "Life Insurance Boot Camp" },
+    { href: "/services/property-casualty-boot-camp", label: "P&C Exam Boot Camp" },
   ];
 
   return (

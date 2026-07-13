@@ -1,10 +1,9 @@
 import {
-  Monitor,
   Stamp,
   Camera,
   Award,
-  GraduationCap,
   Users,
+  BookOpen,
 } from "lucide-react";
 
 export interface ServiceInfo {
@@ -19,8 +18,9 @@ export interface ServiceInfo {
   image: string;
   price: string;
   priceLabel: string;
-  icon: typeof Monitor;
+  icon: typeof Stamp;
   stripeProductName: string;
+  saturdayOnly?: boolean;
 }
 
 export const services: ServiceInfo[] = [
@@ -72,53 +72,6 @@ export const services: ServiceInfo[] = [
     stripeProductName: "Certiport Exam Testing",
   },
   {
-    id: "tutoring",
-    slug: "tutoring",
-    link: "/calendar",
-    title: "Tutoring",
-    shortTitle: "Tutoring",
-    description:
-      "One-on-one tutoring sessions every Monday–Thursday, 4:30–5:30 PM. Register and pay online. $40 per session.",
-    longDescription:
-      "Our experienced tutors provide personalized one-on-one instruction tailored to your goals. Whether you need help with academic subjects, test preparation, or professional skill development, we offer focused 1-hour sessions Monday through Thursday at 4:30 PM. Book your spot on the calendar and pay online.",
-    features: [
-      "One-on-one personalized instruction",
-      "Academic & professional subjects",
-      "Test prep & exam readiness",
-      "Monday–Thursday at 4:30 PM",
-      "1-hour sessions · $40 each",
-      "Experienced, qualified tutors",
-    ],
-    image: "/images/service-tutoring.png",
-    price: "$40",
-    priceLabel: "/session",
-    icon: GraduationCap,
-    stripeProductName: "Tutoring",
-  },
-  {
-    id: "workstation",
-    slug: "computer-workstation-rental",
-    title: "Computer Workstation Rental",
-    shortTitle: "Workstation",
-    description:
-      "Fully equipped computer workstation with high-speed internet access. Per hour rate.",
-    longDescription:
-      "Need a professional computer workstation? Our fully equipped stations feature high-speed internet, comfortable ergonomic seating, and all the software you need. Whether you're working on a project, completing online coursework, or need a temporary workspace, we have you covered.",
-    features: [
-      "High-speed internet access",
-      "Dual monitor setup available",
-      "Comfortable ergonomic chair",
-      "Private workspace environment",
-      "Printing and scanning access",
-      "Technical support available",
-    ],
-    image: "/images/service-workstation.png",
-    price: "$20",
-    priceLabel: "/hour",
-    icon: Monitor,
-    stripeProductName: "Computer Workstation Rental",
-  },
-  {
     id: "notary",
     slug: "notary-service",
     title: "Notary Service",
@@ -136,7 +89,7 @@ export const services: ServiceInfo[] = [
       "Walk-ins welcome",
     ],
     image: "/images/service-notary.png",
-    price: "$10",
+    price: "",
     priceLabel: "/document",
     icon: Stamp,
     stripeProductName: "Notary Service",
@@ -163,6 +116,54 @@ export const services: ServiceInfo[] = [
     priceLabel: "/set",
     icon: Camera,
     stripeProductName: "Passport Photos",
+  },
+  {
+    id: "life-insurance-bootcamp",
+    slug: "life-insurance-boot-camp",
+    title: "Texas Life Insurance Exam Boot Camp",
+    shortTitle: "Life Insurance Boot Camp",
+    description:
+      "Saturday morning Boot Camp for the Texas Life Insurance license exam. 8:00 AM – 10:00 AM.",
+    longDescription:
+      "Prepare for your Texas Life Insurance license exam with our intensive Saturday morning Boot Camp. Our expert instructors guide you through the key concepts, practice questions, and test-taking strategies you need to pass on your first attempt. Sessions run 8:00 AM – 10:00 AM every Saturday.",
+    features: [
+      "Expert-led instruction",
+      "Texas Life Insurance exam focus",
+      "Practice questions & test strategies",
+      "Saturday mornings 8:00 AM – 10:00 AM",
+      "Small class sizes",
+      "Study materials provided",
+    ],
+    image: "/images/service-certification.png",
+    price: "$99",
+    priceLabel: "/session",
+    icon: BookOpen,
+    stripeProductName: "Texas Life Insurance Exam Boot Camp",
+    saturdayOnly: true,
+  },
+  {
+    id: "property-casualty-bootcamp",
+    slug: "property-casualty-boot-camp",
+    title: "Texas Property & Casualty Exam Boot Camp",
+    shortTitle: "P&C Boot Camp",
+    description:
+      "Saturday morning Boot Camp for the Texas Property & Casualty insurance license exam. 10:30 AM – 12:30 PM.",
+    longDescription:
+      "Prepare for your Texas Property & Casualty insurance license exam with our intensive Saturday morning Boot Camp. Our expert instructors cover all exam topics, provide practice questions, and share proven test-taking strategies to help you pass with confidence. Sessions run 10:30 AM – 12:30 PM every Saturday.",
+    features: [
+      "Expert-led instruction",
+      "Texas P&C insurance exam focus",
+      "Practice questions & test strategies",
+      "Saturday mornings 10:30 AM – 12:30 PM",
+      "Small class sizes",
+      "Study materials provided",
+    ],
+    image: "/images/service-certification.png",
+    price: "$99",
+    priceLabel: "/session",
+    icon: BookOpen,
+    stripeProductName: "Texas Property & Casualty Exam Boot Camp",
+    saturdayOnly: true,
   },
 ];
 
