@@ -3,11 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { insertContactSchema } from "@shared/schema";
-import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite, sendClassRegistrationNotification, sendClassRegistrationConfirmation } from "./emailService";
+import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
 import { sendEmail } from "./smtpClient";
 import { z } from "zod";
-import { CLASS_DEFINITIONS, CLASS_SCHEDULED_DAYS, MAX_CLASS_CAPACITY, getClassDatesForMonth, isValidClassType, formatClassTime } from "@shared/classes";
-import type { ClassType } from "@shared/classes";
 
 // Validation schema for appointment booking
 const bookAppointmentSchema = z.object({
@@ -24,7 +22,6 @@ const bookAppointmentSchema = z.object({
   }, "Invalid date format"),
   payNow: z.boolean().default(false),
   notes: z.string().optional(),
-  tutoringHours: z.number().int().min(2).max(6).optional(),
 });
 
 // Business is in Houston, TX — all hours are Central Time (America/Chicago)
@@ -367,11 +364,7 @@ export async function registerRoutes(
             : [{
                 price_data: {
                   currency: 'usd',
-                  product_data: {
-                    name: data.tutoringHours
-                      ? `${data.serviceName} (${data.tutoringHours} hours)`
-                      : data.serviceName,
-                  },
+                  product_data: { name: data.serviceName },
                   unit_amount: data.priceAmount!,
                 },
                 quantity: 1,
@@ -501,265 +494,6 @@ export async function registerRoutes(
     }
   });
 
-  // ── Group Study Classes ─────────────────────────────────────────────────────
-
-  // GET /api/classes/upcoming-sessions?classType=&weeks=10
-  app.get('/api/classes/upcoming-sessions', async (req, res) => {
-    try {
-      const { classType } = req.query;
-      const weeks = Math.min(parseInt(req.query.weeks as string) || 10, 26);
-
-      if (!classType || typeof classType !== 'string' || !isValidClassType(classType)) {
-        return res.status(400).json({ error: 'Valid classType is required' });
-      }
-
-      const classDef = CLASS_DEFINITIONS[classType as ClassType];
-      const scheduledDays = CLASS_SCHEDULED_DAYS[classType as ClassType];
-      const [endH, endM] = classDef.endTime.split(':').map(Number);
-
-      const now = new Date();
-      const today = new Date(now);
-      today.setHours(0, 0, 0, 0);
-      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const currentCTHour = utcToCTHour(now);
-      const currentUTCMin = now.getUTCMinutes();
-
-      const upcoming: any[] = [];
-      const cursor = new Date(today);
-      const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-      // Walk day by day for `weeks` weeks, collect days this class is scheduled
-      for (let d = 0; d < weeks * 7; d++) {
-        const dow = cursor.getDay();
-        if (scheduledDays.includes(dow)) {
-          const y = cursor.getFullYear();
-          const m = cursor.getMonth() + 1;
-          const day = cursor.getDate();
-          const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-          // Skip today's session if its end time has already passed in CT (hour+minute precise)
-          const sessionEnded = currentCTHour > endH || (currentCTHour === endH && currentUTCMin >= endM);
-          if (dateStr === todayDateStr && sessionEnded) {
-            cursor.setDate(cursor.getDate() + 1);
-            continue;
-          }
-
-          const regCount = await storage.getClassRegistrationCount(classType, dateStr);
-          if (regCount < classDef.capacity) {
-            upcoming.push({
-              date: dateStr,
-              dayOfWeek: DAY_NAMES[dow],
-              startTime: classDef.startTime,
-              endTime: classDef.endTime,
-              registrationCount: regCount,
-              availableSpots: classDef.capacity - regCount,
-            });
-          }
-        }
-        cursor.setDate(cursor.getDate() + 1);
-      }
-
-      res.json({ sessions: upcoming, classType, title: classDef.title });
-    } catch (error: any) {
-      console.error('Error fetching upcoming sessions:', error.message);
-      res.status(500).json({ error: 'Failed to fetch upcoming sessions' });
-    }
-  });
-
-  // GET /api/classes/sessions?year=YYYY&month=MM
-  app.get('/api/classes/sessions', async (req, res) => {
-    try {
-      const year = parseInt(req.query.year as string);
-      const month = parseInt(req.query.month as string);
-      if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-        return res.status(400).json({ error: 'Valid year and month (1-12) are required' });
-      }
-
-      const classDates = getClassDatesForMonth(year, month);
-      const sessions: any[] = [];
-
-      const nowForSessions = new Date();
-      const todayForSessions = new Date(nowForSessions);
-      todayForSessions.setHours(0, 0, 0, 0);
-      const todayStrForSessions = `${todayForSessions.getFullYear()}-${String(todayForSessions.getMonth() + 1).padStart(2, '0')}-${String(todayForSessions.getDate()).padStart(2, '0')}`;
-      const ctHourNow = utcToCTHour(nowForSessions);
-      const utcMinNow = nowForSessions.getUTCMinutes();
-
-      for (const { date, dayOfWeek } of classDates) {
-        // Determine the day of week for this date so we only add classes scheduled that day
-        const [dy, dm, dd] = date.split('-').map(Number);
-        const dow = new Date(dy, dm - 1, dd).getDay();
-
-        for (const [classType, def] of Object.entries(CLASS_DEFINITIONS)) {
-          if (!CLASS_SCHEDULED_DAYS[classType as ClassType].includes(dow)) continue;
-
-          const regCount = await storage.getClassRegistrationCount(classType, date);
-          const [endHour, endMin] = def.endTime.split(':').map(Number);
-          // Mark as past if date is before today, or today and the session end time has passed
-          const sessionEnded = ctHourNow > endHour || (ctHourNow === endHour && utcMinNow >= endMin);
-          const isPast = date < todayStrForSessions || (date === todayStrForSessions && sessionEnded);
-          const capacity = def.capacity;
-          sessions.push({
-            date,
-            dayOfWeek,
-            classType,
-            title: def.title,
-            shortTitle: def.shortTitle,
-            startTime: def.startTime,
-            endTime: def.endTime,
-            durationHours: def.durationHours,
-            priceAmount: def.priceAmount,
-            registrationCount: regCount,
-            availableSpots: Math.max(0, capacity - regCount),
-            isFull: regCount >= capacity,
-            isPast,
-          });
-        }
-      }
-
-      res.json({ sessions });
-    } catch (error: any) {
-      console.error('Error fetching class sessions:', error.message);
-      res.status(500).json({ error: 'Failed to fetch class sessions' });
-    }
-  });
-
-  // GET /api/classes/session-count?classType=&classDate=
-  app.get('/api/classes/session-count', async (req, res) => {
-    try {
-      const { classType, classDate } = req.query;
-      if (!classType || !classDate || typeof classType !== 'string' || typeof classDate !== 'string' || !isValidClassType(classType)) {
-        return res.status(400).json({ error: 'Valid classType and classDate are required' });
-      }
-      const classDef = CLASS_DEFINITIONS[classType as ClassType];
-      const regCount = await storage.getClassRegistrationCount(classType, classDate);
-      res.json({
-        registrationCount: regCount,
-        availableSpots: Math.max(0, classDef.capacity - regCount),
-        isFull: regCount >= classDef.capacity,
-      });
-    } catch (error: any) {
-      res.status(500).json({ error: 'Failed to fetch session count' });
-    }
-  });
-
-  // POST /api/classes/register
-  const classRegisterSchema = z.object({
-    classType: z.string().refine(isValidClassType, { message: 'Invalid class type' }),
-    classDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
-    customerName: z.string().min(2),
-    customerEmail: z.string().email(),
-    customerPhone: z.string().optional(),
-  });
-
-  app.post('/api/classes/register', async (req, res) => {
-    try {
-      const parsed = classRegisterSchema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: 'Invalid data', details: parsed.error.flatten() });
-      }
-
-      const { classType, classDate, customerName, customerEmail, customerPhone } = parsed.data;
-      const classDef = CLASS_DEFINITIONS[classType as ClassType];
-
-      // Check capacity against this class type's specific limit
-      const count = await storage.getClassRegistrationCount(classType, classDate);
-      if (count >= classDef.capacity) {
-        return res.status(409).json({ error: 'This session is full. Please select another date.' });
-      }
-
-      // Create pending registration
-      const registration = await storage.createClassRegistration({
-        classType,
-        classDate,
-        classTime: classDef.startTime,
-        customerName,
-        customerEmail,
-        customerPhone: customerPhone || null,
-        paymentStatus: 'unpaid',
-      });
-
-      // Create Stripe checkout session
-      const stripe = await getUncachableStripeClient();
-      const [year, monthStr, day] = classDate.split('-');
-      const friendlyDate = new Date(parseInt(year), parseInt(monthStr) - 1, parseInt(day))
-        .toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: classDef.title,
-              description: `${friendlyDate} · ${formatClassTime(classDef.startTime)} – ${formatClassTime(classDef.endTime)} CT`,
-            },
-            unit_amount: classDef.priceAmount,
-          },
-          quantity: 1,
-        }],
-        mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/checkout/success?registration_id=${registration.id}&source=class`,
-        cancel_url: `${req.protocol}://${req.get('host')}/calendar`,
-        metadata: { registration_id: registration.id, type: 'class_registration' },
-        customer_email: customerEmail,
-      });
-
-      await storage.updateClassRegistrationPayment(registration.id, 'unpaid', session.id!);
-
-      res.json({ checkoutUrl: session.url, registrationId: registration.id });
-    } catch (error: any) {
-      console.error('Class registration error:', error.message);
-      res.status(500).json({ error: 'Failed to register for class' });
-    }
-  });
-
-  // POST /api/classes/registrations/:id/payment-complete
-  app.post('/api/classes/registrations/:id/payment-complete', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const registration = await storage.getClassRegistration(id);
-      if (!registration) {
-        return res.status(404).json({ error: 'Registration not found' });
-      }
-      if (registration.paymentStatus === 'paid') {
-        return res.json({ success: true, registration });
-      }
-
-      const updated = await storage.updateClassRegistrationPayment(id, 'paid');
-      if (!updated) return res.status(500).json({ error: 'Failed to update registration' });
-
-      const classDef = CLASS_DEFINITIONS[updated.classType as keyof typeof CLASS_DEFINITIONS];
-
-      // Send emails
-      sendClassRegistrationNotification({
-        registrationId: updated.id,
-        classTitle: classDef.title,
-        classDate: updated.classDate,
-        classTime: updated.classTime,
-        customerName: updated.customerName,
-        customerEmail: updated.customerEmail,
-        customerPhone: updated.customerPhone ?? undefined,
-        priceAmount: classDef.priceAmount,
-      });
-
-      sendClassRegistrationConfirmation({
-        registrationId: updated.id,
-        classTitle: classDef.title,
-        classDate: updated.classDate,
-        classTime: updated.classTime,
-        endTime: classDef.endTime,
-        customerName: updated.customerName,
-        customerEmail: updated.customerEmail,
-        priceAmount: classDef.priceAmount,
-      });
-
-      res.json({ success: true, registration: updated });
-    } catch (error: any) {
-      console.error('Class payment complete error:', error.message);
-      res.status(500).json({ error: 'Failed to update payment' });
-    }
-  });
 
   // Test email endpoint — remove after confirming email works
   app.get('/api/test-email', async (req, res) => {

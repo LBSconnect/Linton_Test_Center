@@ -5,12 +5,6 @@ export async function seedStripeProducts() {
 
   const productsToCreate = [
     {
-      name: 'Computer Workstation Rental',
-      description: 'Fully equipped computer workstation with high-speed internet access. Per hour rate.',
-      metadata: { category: 'workstation', slug: 'computer-workstation-rental' },
-      priceAmount: 2000, // $20.00
-    },
-    {
       name: 'Notary Service',
       description: 'Certified notary public services for documents, affidavits, and legal papers. Per document rate.',
       metadata: { category: 'notary', slug: 'notary-service' },
@@ -21,18 +15,6 @@ export async function seedStripeProducts() {
       description: 'Professional passport and visa photos meeting all government standards. Includes 2 printed photos.',
       metadata: { category: 'passport', slug: 'passport-photos' },
       priceAmount: 2500, // $25.00
-    },
-    {
-      name: 'Private Exam Testing',
-      description: 'Private proctoring room with camera, headset, and microphone for remote exams. Per hour rate.',
-      metadata: { category: 'proctoring', slug: 'remote-proctoring' },
-      priceAmount: 2000, // $20.00
-    },
-    {
-      name: 'Tutoring',
-      description: 'One-on-one academic and professional tutoring. Sessions from 2–6 hours at $40/hr. Payment required at booking.',
-      metadata: { category: 'tutoring', slug: 'tutoring' },
-      priceAmount: 4000, // $40.00/hr base unit
     },
     {
       name: 'Certiport Exam Testing',

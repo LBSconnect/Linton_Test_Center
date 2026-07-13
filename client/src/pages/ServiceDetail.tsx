@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useLocation } from "wouter";
+import { useState } from "react";
+import { useParams } from "wouter";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -35,14 +35,6 @@ export default function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>();
   const service = getServiceBySlug(slug || "");
   const { toast } = useToast();
-  const [, navigate] = useLocation();
-
-  // These services are booked through the Calendar page, not through this detail page
-  useEffect(() => {
-    if (service?.id === "group-classes" || service?.id === "tutoring") {
-      navigate("/calendar");
-    }
-  }, [service, navigate]);
 
   // Booking form state
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -52,11 +44,7 @@ export default function ServiceDetail() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [notes, setNotes] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
-  const [selectedHours, setSelectedHours] = useState(2);
   const [bookingSuccess, setBookingSuccess] = useState(false);
-
-  const TUTORING_HOUR_OPTIONS = [2, 3, 4, 5, 6];
-  const isTutoring = slug === "tutoring";
 
   const CERTIPORT_EXAMS = [
     "Adobe Certified Professional",
@@ -212,21 +200,19 @@ export default function ServiceDetail() {
     }
 
     const examNote = isCertiport && selectedExam ? `Exam: ${selectedExam}` : "";
-    const durationNote = isTutoring ? `Duration: ${selectedHours} hours` : "";
-    const combinedNotes = [examNote, durationNote, notes].filter(Boolean).join("\n\n") || undefined;
+    const combinedNotes = [examNote, notes].filter(Boolean).join("\n\n") || undefined;
 
     const appointmentData = {
       customerName,
       customerEmail,
       customerPhone,
       serviceName: service.title,
-      serviceId: isTutoring ? undefined : matchingProduct?.id,
-      priceId: isTutoring ? undefined : price?.id,
-      priceAmount: isTutoring ? selectedHours * 4000 : price?.unit_amount,
+      serviceId: matchingProduct?.id,
+      priceId: price?.id,
+      priceAmount: price?.unit_amount,
       appointmentDate: selectedTime,
-      payNow: isTutoring ? true : !!price,
+      payNow: !!price,
       notes: combinedNotes,
-      tutoringHours: isTutoring ? selectedHours : undefined,
     };
 
     bookingMutation.mutate(appointmentData);
@@ -346,23 +332,19 @@ export default function ServiceDetail() {
                 <CardContent className="p-6 space-y-5">
                   <div className="text-center space-y-1">
                     <div className="text-3xl font-bold text-[#1e3a6e] dark:text-white">
-                      {isTutoring
-                        ? `$${(selectedHours * 40).toFixed(2)}`
-                        : price
+                      {price
                         ? `$${(price.unit_amount / 100).toFixed(2)}`
                         : service.price}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {isTutoring
-                        ? `${selectedHours} hr session · $40/hr`
-                        : service.priceLabel}
+                      {service.priceLabel}
                     </div>
                   </div>
 
                   <div className="border-t border-border/50 pt-5">
                     <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
                       <CalendarDays className="w-5 h-5 text-[#e85d40]" />
-                      {service.id === "group-classes" ? "Join a Session" : "Book an Appointment"}
+                      Book an Appointment
                     </h3>
 
                     <div className="space-y-4">
@@ -463,29 +445,6 @@ export default function ServiceDetail() {
                                 required
                               />
                             </div>
-                            {isTutoring && (
-                              <div>
-                                <Label className="text-sm font-medium mb-2 block">
-                                  Session Duration *
-                                </Label>
-                                <div className="grid grid-cols-5 gap-1.5">
-                                  {TUTORING_HOUR_OPTIONS.map((h) => (
-                                    <Button
-                                      key={h}
-                                      variant={selectedHours === h ? "default" : "outline"}
-                                      size="sm"
-                                      className={selectedHours === h ? "bg-[#1e3a6e]" : ""}
-                                      onClick={() => setSelectedHours(h)}
-                                    >
-                                      {h}h
-                                    </Button>
-                                  ))}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Total: ${selectedHours * 40}.00 · Paid at checkout
-                                </p>
-                              </div>
-                            )}
                             {isCertiport && (
                               <div>
                                 <Label htmlFor="exam" className="text-sm">Exam *</Label>
@@ -526,8 +485,6 @@ export default function ServiceDetail() {
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                 Booking...
                               </>
-                            ) : isTutoring ? (
-                              <>Book &amp; Pay ${selectedHours * 40}.00</>
                             ) : price ? (
                               <>Book &amp; Pay ${(price.unit_amount / 100).toFixed(2)}</>
                             ) : (

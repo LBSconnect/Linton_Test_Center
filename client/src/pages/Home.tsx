@@ -190,7 +190,7 @@ export default function Home() {
             </Card>
             {/* Reordered services: proctoring, certification first, then others */}
             {[...services].sort((a, b) => {
-              const order = ['group-classes', 'certification', 'notary', 'passport', 'life-insurance-bootcamp', 'property-casualty-bootcamp'];
+              const order = ['life-insurance-bootcamp', 'property-casualty-bootcamp', 'certification', 'notary', 'passport'];
               return order.indexOf(a.id) - order.indexOf(b.id);
             }).map((service) => (
               <ServiceCard

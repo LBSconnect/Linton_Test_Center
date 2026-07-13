@@ -367,9 +367,6 @@ export default function Contact() {
                             <SelectItem value="certification">
                               Certiport Exam Testing
                             </SelectItem>
-                            <SelectItem value="group-classes">
-                              Group Study Sessions
-                            </SelectItem>
                             <SelectItem value="life-insurance-bootcamp">
                               Life Insurance Exam Boot Camp
                             </SelectItem>

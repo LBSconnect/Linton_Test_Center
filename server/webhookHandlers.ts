@@ -1,7 +1,6 @@
 import { getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
-import { sendAppointmentConfirmation, sendAppointmentCalendarInvite, sendClassRegistrationNotification, sendClassRegistrationConfirmation } from './emailService';
-import { CLASS_DEFINITIONS } from '@shared/classes';
+import { sendAppointmentConfirmation, sendAppointmentCalendarInvite } from './emailService';
 import type Stripe from 'stripe';
 
 export class WebhookHandlers {
@@ -51,49 +50,6 @@ export class WebhookHandlers {
    */
   private static async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
     console.log('Processing checkout.session.completed for session:', session.id);
-
-    // Handle class registration payment
-    const registrationId = session.metadata?.registration_id;
-    if (registrationId && session.metadata?.type === 'class_registration') {
-      try {
-        // Idempotency: skip if already paid (checkout success page may have already processed it)
-        const existing = await storage.getClassRegistration(registrationId);
-        if (existing?.paymentStatus === 'paid') {
-          console.log(`Class registration ${registrationId} already paid — skipping webhook duplicate`);
-          return;
-        }
-        const reg = await storage.updateClassRegistrationPayment(registrationId, 'paid', session.id);
-        if (reg) {
-          const classDef = CLASS_DEFINITIONS[reg.classType as keyof typeof CLASS_DEFINITIONS];
-          if (classDef) {
-            sendClassRegistrationNotification({
-              registrationId: reg.id,
-              classTitle: classDef.title,
-              classDate: reg.classDate,
-              classTime: reg.classTime,
-              customerName: reg.customerName,
-              customerEmail: reg.customerEmail,
-              customerPhone: reg.customerPhone ?? undefined,
-              priceAmount: classDef.priceAmount,
-            });
-            sendClassRegistrationConfirmation({
-              registrationId: reg.id,
-              classTitle: classDef.title,
-              classDate: reg.classDate,
-              classTime: reg.classTime,
-              endTime: classDef.endTime,
-              customerName: reg.customerName,
-              customerEmail: reg.customerEmail,
-              priceAmount: classDef.priceAmount,
-            });
-          }
-          console.log(`Class registration ${registrationId} marked as paid`);
-        }
-      } catch (error: any) {
-        console.error('Error processing class registration payment:', error.message);
-      }
-      return;
-    }
 
     // Get appointment_id from session metadata (set during checkout creation)
     const appointmentId = session.metadata?.appointment_id;

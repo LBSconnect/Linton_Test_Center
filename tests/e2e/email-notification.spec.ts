@@ -165,40 +165,6 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
     expect(row.customer_email).toBe(email);
   });
 
-  test("Computer Workstation Rental — Friday 2 PM slot is stored correctly", async () => {
-    const fri = nextDayOfWeek(5);
-    const expectedSlot = slotISO(fri, 14); // 2 PM CT Friday
-    const email = `notify-workstation+${Date.now()}@e2e.test`;
-
-    const body = await createBooking({
-      customerName: "Workstation Tester",
-      customerEmail: email,
-      customerPhone: "(713) 555-1002",
-      serviceName: "Computer Workstation Rental",
-      appointmentDate: expectedSlot,
-      payNow: true,
-      notes: `${TEST_TAG}:email-workstation-fri`,
-    });
-
-    expect(body.success).toBe(true);
-    const appointmentId = body.appointment.id;
-
-    const fakeSession = buildFakeSession(appointmentId, email);
-    const { sendWebhookEvent } = await import("./helpers/webhook.js");
-    await sendWebhookEvent("checkout.session.completed", fakeSession);
-
-    const row = await waitForAppointmentStatus(
-      `cs_test_${appointmentId}`, "confirmed", "paid", { timeoutMs: 10_000 }
-    );
-
-    const storedDate = new Date(row.appointment_date);
-    const offset = isCDT(storedDate) ? 5 : 6;
-    const ctHour = (storedDate.getUTCHours() - offset + 24) % 24;
-
-    expect(storedDate.getTime()).toBe(new Date(expectedSlot).getTime());
-    expect(ctHour).toBe(14); // 2 PM CT — what appears in the email
-    expect(row.service_name).toBe("Computer Workstation Rental");
-  });
 
   test("Passport Photos — Wednesday 8 AM (first slot) is stored correctly", async () => {
     const wed = nextDayOfWeek(3);

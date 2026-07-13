@@ -2,7 +2,6 @@ import {
   Stamp,
   Camera,
   Award,
-  Users,
   BookOpen,
 } from "lucide-react";
 
@@ -25,30 +24,6 @@ export interface ServiceInfo {
 
 export const services: ServiceInfo[] = [
   {
-    id: "group-classes",
-    slug: "group-classes",
-    link: "/calendar",
-    title: "Group Study Sessions",
-    shortTitle: "Group Sessions",
-    description:
-      "Weekly Friday & Saturday group study sessions for Texas Life Insurance and Property & Casualty licensing exams. $75/session.",
-    longDescription:
-      "Join our instructor-led group study sessions held every Friday and Saturday. We offer two focused 2-hour sessions per day — one for Texas Life Insurance and one for Texas Property & Casualty licensing exam prep. All sessions are held onsite. Payment is required at registration.",
-    features: [
-      "Texas Life Insurance exam prep",
-      "Texas Property & Casualty exam prep",
-      "Every Friday & Saturday",
-      "Small group sessions (max 20)",
-      "Experienced instructors",
-      "Onsite at LBS Test & Exam Center",
-    ],
-    image: "/images/service-group-sessions.png",
-    price: "$75",
-    priceLabel: "/session",
-    icon: Users,
-    stripeProductName: "Group Study Sessions",
-  },
-  {
     id: "certification",
     slug: "certification-exam-testing",
     title: "Certiport Exam Testing",
@@ -70,52 +45,6 @@ export const services: ServiceInfo[] = [
     priceLabel: "/session",
     icon: Award,
     stripeProductName: "Certiport Exam Testing",
-  },
-  {
-    id: "notary",
-    slug: "notary-service",
-    title: "Notary Service",
-    shortTitle: "Notary",
-    description:
-      "Certified notary public services for documents, affidavits, and legal papers. Per document rate.",
-    longDescription:
-      "Our certified notary public is available to help you with all your notarization needs. From legal documents and affidavits to powers of attorney and real estate documents, we provide fast and professional notary services.",
-    features: [
-      "Certified Notary Public",
-      "Legal documents & affidavits",
-      "Powers of Attorney",
-      "Real estate documents",
-      "Same-day service available",
-      "Walk-ins welcome",
-    ],
-    image: "/images/service-notary.png",
-    price: "",
-    priceLabel: "/document",
-    icon: Stamp,
-    stripeProductName: "Notary Service",
-  },
-  {
-    id: "passport",
-    slug: "passport-photos",
-    title: "Passport Photos",
-    shortTitle: "Passport Photos",
-    description:
-      "Professional passport and visa photos meeting all government standards. Includes 2 printed photos.",
-    longDescription:
-      "Get professional passport and visa photos that meet all U.S. Department of State and international government standards. Our photos are taken with professional equipment and lighting to ensure they are accepted on the first submission.",
-    features: [
-      "Meets U.S. State Department standards",
-      "International visa photo formats",
-      "Professional lighting & equipment",
-      "Includes 2 printed photos",
-      "Digital copy available",
-      "No appointment needed",
-    ],
-    image: "/images/service-passport.png",
-    price: "$25",
-    priceLabel: "/set",
-    icon: Camera,
-    stripeProductName: "Passport Photos",
   },
   {
     id: "life-insurance-bootcamp",
@@ -164,6 +93,52 @@ export const services: ServiceInfo[] = [
     icon: BookOpen,
     stripeProductName: "Texas Property & Casualty Exam Boot Camp",
     saturdayOnly: true,
+  },
+  {
+    id: "notary",
+    slug: "notary-service",
+    title: "Notary Service",
+    shortTitle: "Notary",
+    description:
+      "Certified notary public services for documents, affidavits, and legal papers. Per document rate.",
+    longDescription:
+      "Our certified notary public is available to help you with all your notarization needs. From legal documents and affidavits to powers of attorney and real estate documents, we provide fast and professional notary services.",
+    features: [
+      "Certified Notary Public",
+      "Legal documents & affidavits",
+      "Powers of Attorney",
+      "Real estate documents",
+      "Same-day service available",
+      "Walk-ins welcome",
+    ],
+    image: "/images/service-notary.png",
+    price: "",
+    priceLabel: "/document",
+    icon: Stamp,
+    stripeProductName: "Notary Service",
+  },
+  {
+    id: "passport",
+    slug: "passport-photos",
+    title: "Passport Photos",
+    shortTitle: "Passport Photos",
+    description:
+      "Professional passport and visa photos meeting all government standards. Includes 2 printed photos.",
+    longDescription:
+      "Get professional passport and visa photos that meet all U.S. Department of State and international government standards. Our photos are taken with professional equipment and lighting to ensure they are accepted on the first submission.",
+    features: [
+      "Meets U.S. State Department standards",
+      "International visa photo formats",
+      "Professional lighting & equipment",
+      "Includes 2 printed photos",
+      "Digital copy available",
+      "No appointment needed",
+    ],
+    image: "/images/service-passport.png",
+    price: "$25",
+    priceLabel: "/set",
+    icon: Camera,
+    stripeProductName: "Passport Photos",
   },
 ];
 

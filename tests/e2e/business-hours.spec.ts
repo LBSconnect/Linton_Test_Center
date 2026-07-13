@@ -271,10 +271,8 @@ test.describe("Friday — 8 AM to 5 PM (last slot 4 PM)", () => {
 
 test.describe("All services return correct slots", () => {
   const services = [
-    "computer-workstation-rental",
     "notary-service",
     "passport-photos",
-    "remote-proctoring",
     "certification-exam-testing",
   ];
 

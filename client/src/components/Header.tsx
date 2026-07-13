@@ -8,7 +8,6 @@ import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
-  { href: "/calendar", label: "Calendar" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
 ];
