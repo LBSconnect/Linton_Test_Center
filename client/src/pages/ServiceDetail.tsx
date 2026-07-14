@@ -167,7 +167,7 @@ export default function ServiceDetail() {
     today.setHours(0, 0, 0, 0);
     if (date < today) return true;
     if (service?.saturdayOnly) return day !== 6; // Boot camps: Saturdays only
-    return day === 0 || day === 4; // Closed Sunday & Thursday for regular services
+    return day === 0; // Closed Sunday
   };
 
   // Always display in Central Time (business timezone: Houston, TX)
@@ -374,7 +374,7 @@ export default function ServiceDetail() {
                         <p className="text-xs text-muted-foreground mt-1">
                           {service?.saturdayOnly
                             ? "Available Saturdays only"
-                            : "Available Mon–Wed, Fri & Sat (closed Thu & Sun)"}
+                            : "Available Mon–Sat (closed Sun)"}
                         </p>
                       </div>
 
@@ -413,7 +413,7 @@ export default function ServiceDetail() {
                           )}
                           {!service?.saturdayOnly && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              Mon–Wed & Fri: 8AM–4PM | Sat: 8AM–3PM
+                              Mon–Fri: 8AM–4PM | Sat: 8AM–3PM
                             </p>
                           )}
                         </div>
@@ -522,11 +522,11 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <Clock className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          Mon, Tue, Wed & Fri: 8 AM - 5 PM
+                          Mon – Fri: 8 AM - 5 PM
                           <br />
                           Sat: 8 AM - 4 PM
                           <br />
-                          Closed Thu & Sun
+                          Closed Sun
                         </span>
                       </div>
                     </div>

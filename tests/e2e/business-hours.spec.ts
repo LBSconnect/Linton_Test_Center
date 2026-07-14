@@ -3,10 +3,9 @@
  *
  * Verifies the booking calendar and API enforce correct business hours:
  *
- *   Monday, Tuesday, Wednesday, Friday  —  8 AM – 5 PM CT (slots 8 AM – 4 PM)
- *   Saturday                            —  8 AM – 4 PM CT (slots 8 AM – 3 PM)
- *   Thursday                            —  CLOSED (no slots)
- *   Sunday                              —  CLOSED (no slots)
+ *   Monday – Friday  —  8 AM – 5 PM CT (slots 8 AM – 4 PM)
+ *   Saturday         —  8 AM – 4 PM CT (slots 8 AM – 3 PM)
+ *   Sunday           —  CLOSED (no slots)
  *
  * Tests run at the API level (no browser needed) so they are fast and
  * deterministic regardless of which day of the week today happens to be.
@@ -98,27 +97,19 @@ async function postBooking(payload: object): Promise<Response> {
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
-test.describe("Thursday — closed all day", () => {
-  test("returns zero slots for next Thursday", async () => {
+test.describe("Thursday — open (same hours as Monday)", () => {
+  test("returns 9 slots for next Thursday", async () => {
     const thu = nextDayOfWeek(4); // dow 4 = Thursday
     const slots = await fetchSlots(thu.toISOString());
-    expect(slots).toHaveLength(0);
+    expect(slots).toHaveLength(9);
   });
 
-  test("rejects a direct API booking on Thursday with 400", async () => {
+  test("last slot is 4 PM CT on Thursday", async () => {
     const thu = nextDayOfWeek(4);
-    const res = await postBooking({
-      customerName: "Test Thursday",
-      customerEmail: `thu+${Date.now()}@e2e.test`,
-      customerPhone: "(713) 555-0001",
-      serviceName: "Notary Service",
-      appointmentDate: slotISO(thu, 10), // 10 AM CT Thursday
-      payNow: true,
-      notes: `${TEST_TAG}:thu-reject`,
-    });
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toMatch(/invalid appointment time/i);
+    const slots = await fetchSlots(thu.toISOString());
+    expect(slots.length).toBeGreaterThan(0);
+    const lastCTHour = slotToCTHour(slots[slots.length - 1], thu);
+    expect(lastCTHour).toBe(16);
   });
 });
 
@@ -287,25 +278,21 @@ test.describe("All services return correct slots", () => {
       expect(Math.max(...ctHours)).toBe(16);
     });
 
-    test(`${slug}: calendar page disables Thursday`, async ({ page }) => {
+    test(`${slug}: calendar page does not disable Thursday`, async ({ page }) => {
       await page.goto(`/services/${slug}`);
       await page.waitForSelector("table");
 
-      // Find all Thursday cells in the calendar — they should be disabled
-      // The shadcn calendar marks disabled dates with aria-disabled="true"
-      // We verify no Thursday button is clickable
+      // Thursday should now be enabled — verify no Thursday cell is disabled
       const thu = nextDayOfWeek(4);
       const thuDay = thu.getUTCDate();
 
-      // Locate the day button for next Thursday by its aria-label or displayed number
       const thuBtn = page.locator(
-        `button[name="day"][aria-disabled="true"]`
+        `button[name="day"]`
       ).filter({ hasText: String(thuDay) }).first();
 
-      // The button may not be visible if we're on the wrong month; skip if not found
       const visible = await thuBtn.isVisible().catch(() => false);
       if (visible) {
-        await expect(thuBtn).toBeDisabled();
+        await expect(thuBtn).not.toBeDisabled();
       }
     });
   }
