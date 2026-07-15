@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -250,11 +251,49 @@ export default function ServiceDetail() {
     );
   }
 
+  const serviceSchema = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": service.title,
+    "description": service.longDescription,
+    "url": `https://www.lbs4.com/services/${service.slug}`,
+    "provider": {
+      "@type": "LocalBusiness",
+      "@id": "https://www.lbs4.com/#business",
+      "name": "LBS Test & Exam Center",
+      "telephone": "+12818365357",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "616 FM 1960 Rd W, Ste 101",
+        "addressLocality": "Houston",
+        "addressRegion": "TX",
+        "postalCode": "77090-3048",
+        "addressCountry": "US"
+      }
+    },
+    "areaServed": { "@type": "City", "name": "Houston", "addressRegion": "TX" },
+    ...(service.price ? {
+      "offers": {
+        "@type": "Offer",
+        "price": service.price.replace("$", ""),
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "url": `https://www.lbs4.com/services/${service.slug}`
+      }
+    } : {})
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title={`${service.title} in Houston TX`}
+        canonical={`/services/${service.slug}`}
+        description={`${service.longDescription.slice(0, 155)}…`}
+        schema={serviceSchema}
+      />
       <Header />
 
-      <section className="relative py-20 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]">
+      <section className="relative py-14 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-15"
           style={{ backgroundImage: `url(${service.image})` }}
@@ -522,9 +561,9 @@ export default function ServiceDetail() {
                       <div className="flex items-start gap-2">
                         <Clock className="w-4 h-4 mt-0.5 shrink-0 text-[#e85d40]" />
                         <span>
-                          Mon – Fri: 8 AM - 5 PM
+                          Mon – Fri: 8 AM – 5 PM
                           <br />
-                          Sat: 8 AM - 4 PM
+                          Sat: 8 AM – 4 PM
                           <br />
                           Closed Sun
                         </span>

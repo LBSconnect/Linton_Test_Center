@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -150,9 +151,14 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Contact LBS Test & Exam Center Houston TX | (281) 836-5357"
+        canonical="/contact"
+        description="Contact LBS Test & Exam Center at 616 FM 1960 Rd W, Ste 101, Houston, TX 77090. Call (281) 836-5357 or email info@lbsconnect.net. Open Mon–Fri 8 AM–5 PM, Sat 8 AM–4 PM."
+      />
       <Header />
 
-      <section className="relative py-20 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]" data-testid="section-contact-hero">
+      <section className="relative py-12 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]" data-testid="section-contact-hero">
         <div className="absolute inset-0 bg-[url('/images/hero-testing-center.png')] bg-cover bg-center opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="text-contact-title">
@@ -165,7 +171,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="py-16 bg-background" data-testid="section-contact-content">
+      <section className="py-12 bg-background" data-testid="section-contact-content">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             <div className="space-y-8">
@@ -239,8 +245,8 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold text-sm">Business Hours</h3>
                     <div className="text-sm text-muted-foreground mt-1 space-y-1">
-                      <p>Monday – Friday: 8:00 AM - 5:00 PM</p>
-                      <p>Saturday: 8:00 AM - 4:00 PM</p>
+                      <p>Monday – Friday: 8:00 AM – 5:00 PM</p>
+                      <p>Saturday: 8:00 AM – 4:00 PM</p>
                       <p>Sunday: Closed</p>
                     </div>
                   </div>
@@ -249,7 +255,7 @@ export default function Contact() {
 
               <div className="rounded-md overflow-hidden border border-border/50 h-64">
                 <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3456.123456789!2d-95.4567890!3d29.9876543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s616+FM+1960+Rd+W+Ste+101+Houston+TX+77090!5e0!3m2!1sen!2sus!4v1234567890"
+                  src="https://maps.google.com/maps?q=616+FM+1960+Rd+W+%23101%2C+Houston%2C+TX+77090&output=embed"
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}

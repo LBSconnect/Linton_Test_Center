@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import ServiceCard from "@/components/ServiceCard";
 import { services } from "@/lib/services";
 import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
@@ -20,6 +21,10 @@ import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        canonical="/"
+        description="Authorized Pearson VUE & Certiport testing center in Houston, TX. Texas Real Estate exam, Insurance license exam prep, boot camps, private exam proctoring, notary services & passport photos at 616 FM 1960 Rd W, Ste 101. Call (281) 836-5357."
+      />
       <Header />
 
       <section className="relative min-h-[520px] md:min-h-[600px] flex items-center" data-testid="section-hero">
@@ -80,7 +85,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-background" data-testid="section-trust-bar">
+      <section className="py-10 bg-background" data-testid="section-trust-bar">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {[
@@ -121,9 +126,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 bg-muted/30" data-testid="section-services-preview">
+      <section className="py-14 bg-muted/30" data-testid="section-services-preview">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-3">
             <h2
               className="text-3xl md:text-4xl font-bold"
               data-testid="text-services-heading"
@@ -208,7 +213,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 bg-background" data-testid="section-why-choose">
+      <section className="py-14 bg-background" data-testid="section-why-choose">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -294,9 +299,9 @@ export default function Home() {
                       <div>
                         <p className="font-medium text-sm">Hours</p>
                         <p className="text-sm text-muted-foreground">
-                          Mon – Fri: 8:00 AM - 5:00 PM
+                          Mon – Fri: 8:00 AM – 5:00 PM
                           <br />
-                          Sat: 8:00 AM - 4:00 PM
+                          Sat: 8:00 AM – 4:00 PM
                           <br />
                           Closed Sun
                         </p>
@@ -318,7 +323,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e]" data-testid="section-cta">
+      <section className="py-12 bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e]" data-testid="section-cta">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold text-white">
             Ready to Get Started?

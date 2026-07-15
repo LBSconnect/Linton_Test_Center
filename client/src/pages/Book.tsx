@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { services } from "@/lib/services";
@@ -8,9 +9,14 @@ import { CalendarCheck, ArrowRight, ExternalLink, Phone } from "lucide-react";
 export default function Book() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Book an Appointment | LBS Test & Exam Center Houston TX"
+        canonical="/book"
+        description="Book a testing appointment, notary service, passport photos, or insurance exam boot camp at LBS Test & Exam Center in Houston, TX. Online scheduling available 24/7. Call (281) 836-5357."
+      />
       <Header />
 
-      <section className="relative py-16 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]">
+      <section className="relative py-12 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]">
         <div className="absolute inset-0 bg-[url('/images/hero-testing-center.png')] bg-cover bg-center opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-4">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm text-white/90">

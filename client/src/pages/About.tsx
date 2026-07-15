@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
@@ -16,9 +17,14 @@ import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
 export default function About() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="About LBS Test & Exam Center | Linton Business Solutions Houston TX"
+        canonical="/about"
+        description="LBS Test & Exam Center is a division of Linton Business Solutions LLC, an authorized Pearson VUE & Certiport testing center serving Houston, TX. Professional testing environment, certified staff, and business services in one convenient location."
+      />
       <Header />
 
-      <section className="relative py-20 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]" data-testid="section-about-hero">
+      <section className="relative py-12 bg-gradient-to-br from-[#1a2d52] to-[#2a4f8e]" data-testid="section-about-hero">
         <div className="absolute inset-0 bg-[url('/images/hero-testing-center.png')] bg-cover bg-center opacity-10" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold text-white" data-testid="text-about-title">
@@ -31,7 +37,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="py-20 bg-background" data-testid="section-about-story">
+      <section className="py-14 bg-background" data-testid="section-about-story">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -85,9 +91,9 @@ export default function About() {
         </div>
       </section>
 
-      <section className="py-20 bg-muted/30" data-testid="section-about-values">
+      <section className="py-14 bg-muted/30" data-testid="section-about-values">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-3">
             <h2 className="text-3xl font-bold">Our Values</h2>
             <p className="text-muted-foreground">
               Everything we do is guided by our commitment to excellence and
@@ -131,9 +137,9 @@ export default function About() {
         </div>
       </section>
 
-      <section className="py-20 bg-background" data-testid="section-about-authorizations">
+      <section className="py-14 bg-background" data-testid="section-about-authorizations">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-3">
             <h2 className="text-3xl font-bold">Authorizations & Partnerships</h2>
             <p className="text-muted-foreground">
               We are proud to be authorized by leading testing organizations.
@@ -168,7 +174,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e]">
+      <section className="py-12 bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e]">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-6">
           <h2 className="text-3xl font-bold text-white">
             Ready to Experience the Difference?
