@@ -11,12 +11,12 @@ const plans = [
     tier: "bronze",
     name: "Bronze",
     price: "$250",
-    acts: 20,
+    acts: 15,
     admins: 1,
     badge: null,
     color: "#cd7f32",
     features: [
-      "Up to 20 notarial acts per month",
+      "Up to 15 notarial acts per month",
       "Online appointment scheduling",
       "Priority appointment access",
       "Monthly activity statement",
@@ -29,12 +29,12 @@ const plans = [
     tier: "silver",
     name: "Silver",
     price: "$400",
-    acts: 50,
+    acts: 25,
     admins: 3,
     badge: "Most Popular",
     color: "#1e3a6e",
     features: [
-      "Up to 50 notarial acts per month",
+      "Up to 25 notarial acts per month",
       "Dedicated booking link for employees",
       "Priority scheduling",
       "Secure document handling",
@@ -94,7 +94,7 @@ export default function CorporatePrograms() {
     <>
       <SEO
         title="Corporate Notary Plans — Bronze, Silver, Gold | LBS Houston"
-        description="Compare LBS corporate notary subscription plans. Bronze $250/mo (20 acts), Silver $400/mo (50 acts), Gold $750/mo (100 acts). Serving Houston TX businesses."
+        description="Compare LBS corporate notary subscription plans. Bronze $250/mo (15 acts), Silver $400/mo (25 acts), Gold $750/mo (100 acts). Serving Houston TX businesses."
         canonical="/corporate/programs"
       />
       <Header />

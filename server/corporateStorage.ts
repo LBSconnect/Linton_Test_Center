@@ -47,10 +47,10 @@ export async function seedCorporatePlans(): Promise<void> {
       name: "Bronze",
       tier: "bronze",
       monthlyPriceCents: 25000,
-      maxActs: 20,
+      maxActs: 15,
       maxAdmins: 1,
       features: [
-        "Up to 20 notarial acts per month",
+        "Up to 15 notarial acts per month",
         "Online appointment scheduling",
         "Priority appointment access",
         "Monthly activity statement",
@@ -63,10 +63,10 @@ export async function seedCorporatePlans(): Promise<void> {
       name: "Silver",
       tier: "silver",
       monthlyPriceCents: 40000,
-      maxActs: 50,
+      maxActs: 25,
       maxAdmins: 3,
       features: [
-        "Up to 50 notarial acts per month",
+        "Up to 25 notarial acts per month",
         "Dedicated booking link for employees",
         "Priority scheduling",
         "Secure document handling",
@@ -568,6 +568,17 @@ export async function runCorporateMigrations(): Promise<void> {
       ip_address VARCHAR(45),
       created_at TIMESTAMP DEFAULT NOW()
     );
+  `);
+
+  // Keep plan act limits in sync with product decisions
+  await pg.query(`
+    UPDATE corporate_plans SET max_acts = 15,
+      features = '["Up to 15 notarial acts per month","Online appointment scheduling","Priority appointment access","Monthly activity statement","1 company administrator","Email confirmations","Secure office environment"]'::jsonb
+    WHERE tier = 'bronze';
+
+    UPDATE corporate_plans SET max_acts = 25,
+      features = '["Up to 25 notarial acts per month","Dedicated booking link for employees","Priority scheduling","Secure document handling","Scan-to-email (authorized staff only)","Monthly utilization report","3 company administrators","Email confirmations & reminders"]'::jsonb
+    WHERE tier = 'silver';
   `);
 
   console.log("Corporate migrations complete");
