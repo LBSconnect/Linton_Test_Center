@@ -17,7 +17,6 @@ import {
   LogOut,
   ChevronRight,
   ArrowLeft,
-  ExternalLink,
   Mail,
   Phone,
   CreditCard,
@@ -207,35 +206,20 @@ function AccountDetail({
 }) {
   const [approveNotes, setApproveNotes] = useState(account.adminNotes || "");
   const [rejectReason, setRejectReason] = useState("");
-  const [stripeUrl, setStripeUrl] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [creatingLink, setCreatingLink] = useState(false);
-
-  async function createStripeLink() {
-    setCreatingLink(true);
-    try {
-      const { checkoutUrl } = await api(
-        `/api/admin/corporate/accounts/${account.id}/stripe-checkout`,
-        { method: "POST" }
-      );
-      setStripeUrl(checkoutUrl);
-      setMsg({ type: "success", text: "Stripe checkout link created." });
-    } catch (err: any) {
-      setMsg({ type: "error", text: err.message });
-    } finally {
-      setCreatingLink(false);
-    }
-  }
 
   async function approve() {
     setLoading("approve");
     try {
-      await api(`/api/admin/corporate/accounts/${account.id}/approve`, {
+      const result = await api(`/api/admin/corporate/accounts/${account.id}/approve`, {
         method: "PUT",
-        body: JSON.stringify({ adminNotes: approveNotes, stripeCheckoutUrl: stripeUrl || undefined }),
+        body: JSON.stringify({ adminNotes: approveNotes }),
       });
-      setMsg({ type: "success", text: "Account approved. Approval email sent." });
+      const linkNote = result.stripeCheckoutUrl
+        ? " Stripe payment link generated and emailed to the company."
+        : " Note: Stripe not configured — no payment link was sent.";
+      setMsg({ type: "success", text: `Account approved.${linkNote}` });
       onRefresh();
     } catch (err: any) {
       setMsg({ type: "error", text: err.message });
@@ -381,28 +365,11 @@ function AccountDetail({
           {/* Approve flow */}
           <div className="space-y-3 p-4 bg-green-50 rounded-xl border border-green-100">
             <p className="text-sm font-medium text-green-800">Approve Enrollment</p>
+            <p className="text-xs text-green-700">
+              A Stripe payment link will be generated automatically and included in the approval email sent to {account.primaryContactEmail}.
+            </p>
             <div className="space-y-2">
-              <Label className="text-xs">Stripe Checkout URL (optional — generate first)</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={stripeUrl}
-                  onChange={(e) => setStripeUrl(e.target.value)}
-                  placeholder="https://checkout.stripe.com/..."
-                  className="text-xs"
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={createStripeLink}
-                  disabled={creatingLink}
-                  className="shrink-0"
-                >
-                  {creatingLink ? "…" : "Generate"}
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs">Admin Notes (optional)</Label>
+              <Label className="text-xs">Admin Notes (optional — internal only)</Label>
               <Textarea
                 value={approveNotes}
                 onChange={(e) => setApproveNotes(e.target.value)}
@@ -416,7 +383,7 @@ function AccountDetail({
               className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
             >
               <CheckCircle2 className="w-4 h-4" />
-              {loading === "approve" ? "Approving…" : "Approve & Send Email"}
+              {loading === "approve" ? "Approving & sending email…" : "Approve & Send Payment Link"}
             </Button>
           </div>
 
@@ -445,29 +412,14 @@ function AccountDetail({
         </div>
       )}
 
-      {/* Approved — generate Stripe link */}
+      {/* Approved — awaiting payment */}
       {account.status === "approved" && !account.stripeSubscriptionId && (
-        <div className="bg-white rounded-xl border border-border/50 p-5 space-y-3">
+        <div className="bg-white rounded-xl border border-amber-200 p-5 space-y-2">
           <h3 className="font-semibold text-[#0d1b35]">Awaiting Payment</h3>
           <p className="text-sm text-muted-foreground">
-            This account is approved but not yet active. Generate a Stripe checkout link to send to the client.
+            Approval email with Stripe payment link has been sent to{" "}
+            <strong>{account.primaryContactEmail}</strong>. Account will activate automatically once payment is complete.
           </p>
-          <div className="flex gap-2">
-            <Input
-              value={stripeUrl}
-              onChange={(e) => setStripeUrl(e.target.value)}
-              placeholder="Paste or generate Stripe URL"
-              className="text-xs"
-            />
-            <Button variant="outline" size="sm" onClick={createStripeLink} disabled={creatingLink} className="shrink-0">
-              {creatingLink ? "…" : "Generate"}
-            </Button>
-          </div>
-          {stripeUrl && (
-            <a href={stripeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
-              <ExternalLink className="w-3.5 h-3.5" /> Open Checkout Link
-            </a>
-          )}
         </div>
       )}
     </div>

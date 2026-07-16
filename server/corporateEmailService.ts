@@ -159,7 +159,7 @@ export async function sendEnrollmentNotificationToAdmin(
     </div>` : ""}
 
     <div style="margin-top:20px;text-align:center;">
-      <a href="${SITE_URL}/admin#account-${account.id}" style="display:inline-block;background:#1e3a6e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">Review in Admin Dashboard</a>
+      <a href="${SITE_URL}/admin/corporate" style="display:inline-block;background:#1e3a6e;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">Review in Admin Dashboard</a>
     </div>
   `;
 

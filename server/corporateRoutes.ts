@@ -151,19 +151,48 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
       const id = parseInt(req.params.id as string, 10);
       if (isNaN(id)) return res.status(400).json({ error: "Invalid account ID" });
 
-      const { adminNotes, stripeCheckoutUrl } = req.body as {
-        adminNotes?: string;
-        stripeCheckoutUrl?: string;
-      };
+      const { adminNotes } = req.body as { adminNotes?: string };
+
+      const accountBefore = await getCorporateAccount(id);
+      if (!accountBefore) return res.status(404).json({ error: "Account not found" });
+
+      // Auto-generate Stripe checkout link
+      let stripeCheckoutUrl: string | undefined;
+      try {
+        const stripe = await getUncachableStripeClient().catch(() => null);
+        if (stripe) {
+          const priceIds: Record<string, string> = {
+            bronze: process.env.STRIPE_CORPORATE_BRONZE_PRICE_ID || "",
+            silver: process.env.STRIPE_CORPORATE_SILVER_PRICE_ID || "",
+            gold:   process.env.STRIPE_CORPORATE_GOLD_PRICE_ID   || "",
+          };
+          const priceId = priceIds[accountBefore.planTier || ""];
+          if (priceId) {
+            const baseUrl = process.env.BASE_URL || "https://www.lbs4.com";
+            const session = await stripe.checkout.sessions.create({
+              mode: "subscription",
+              customer_email: accountBefore.primaryContactEmail,
+              client_reference_id: String(accountBefore.id),
+              line_items: [{ price: priceId, quantity: 1 }],
+              metadata: { corporateAccountId: String(accountBefore.id), accountCode: accountBefore.accountCode },
+              success_url: `${baseUrl}/corporate/activated?account=${accountBefore.accountCode}`,
+              cancel_url: `${baseUrl}/corporate/enroll`,
+            });
+            stripeCheckoutUrl = session.url ?? undefined;
+            await logAudit("account", String(id), "stripe_checkout_created", "admin", { sessionId: session.id });
+          }
+        }
+      } catch (stripeErr) {
+        console.error("Stripe checkout auto-generate failed:", stripeErr);
+        // Non-fatal — approve without Stripe link if Stripe isn't configured
+      }
 
       const account = await approveCorporateAccount(id, adminNotes, stripeCheckoutUrl);
       if (!account) return res.status(404).json({ error: "Account not found" });
 
-      if (stripeCheckoutUrl) {
-        await sendApprovalEmail(account, stripeCheckoutUrl).catch(console.error);
-      }
+      await sendApprovalEmail(account, stripeCheckoutUrl || "").catch(console.error);
 
-      return res.json({ success: true, account });
+      return res.json({ success: true, account, stripeCheckoutUrl });
     } catch (err) {
       console.error("Approve error:", err);
       return res.status(500).json({ error: "Failed to approve account" });

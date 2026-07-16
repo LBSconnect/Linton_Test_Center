@@ -42,6 +42,7 @@ export default function Footer() {
               {[
                 { href: "/", label: "Home" },
                 { href: "/services", label: "Our Services" },
+                { href: "/corporate", label: "Corporate Notary" },
                 { href: "/about", label: "About Us" },
                 { href: "/contact", label: "Contact" },
               ].map((link) => (

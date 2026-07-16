@@ -32,7 +32,7 @@ const plans = [
     acts: 50,
     admins: 3,
     badge: "Most Popular",
-    color: "#a8a9ad",
+    color: "#1e3a6e",
     features: [
       "Up to 50 notarial acts per month",
       "Dedicated booking link for employees",
@@ -120,7 +120,7 @@ export default function CorporatePrograms() {
             <div
               key={plan.tier}
               className={`relative rounded-2xl bg-white border-2 shadow-sm overflow-hidden transition-shadow hover:shadow-lg ${
-                plan.badge === "Most Popular" ? "border-[#a8a9ad]" : "border-border/50"
+                plan.badge === "Most Popular" ? "border-[#1e3a6e]" : "border-border/50"
               }`}
             >
               {plan.badge && (
