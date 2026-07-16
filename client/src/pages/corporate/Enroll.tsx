@@ -62,6 +62,7 @@ interface FormData {
   agreedToCertificateSelection: boolean;
   agreedToNoConfidentialDocs: boolean;
   agreedToTexasFees: boolean;
+  agreedToOverageCharges: boolean;
   agreedToTerms: boolean;
 }
 
@@ -88,6 +89,7 @@ const INITIAL: FormData = {
   agreedToCertificateSelection: false,
   agreedToNoConfidentialDocs: false,
   agreedToTexasFees: false,
+  agreedToOverageCharges: false,
   agreedToTerms: false,
 };
 
@@ -102,8 +104,8 @@ const STEPS = [
 ];
 
 const PLANS = [
-  { tier: "bronze" as PlanTier, name: "Bronze", price: "$250/mo", acts: 20, admins: 1, color: "#cd7f32" },
-  { tier: "silver" as PlanTier, name: "Silver", price: "$400/mo", acts: 50, admins: 3, color: "#a8a9ad" },
+  { tier: "bronze" as PlanTier, name: "Bronze", price: "$250/mo", acts: 15, admins: 1, color: "#cd7f32" },
+  { tier: "silver" as PlanTier, name: "Silver", price: "$400/mo", acts: 25, admins: 3, color: "#a8a9ad" },
   { tier: "gold" as PlanTier, name: "Gold", price: "$750/mo", acts: 100, admins: 5, color: "#c9a84c" },
 ];
 
@@ -207,6 +209,7 @@ export default function CorporateEnroll() {
       if (!form.agreedToCertificateSelection) e.agreedToCertificateSelection = "Required";
       if (!form.agreedToNoConfidentialDocs) e.agreedToNoConfidentialDocs = "Required";
       if (!form.agreedToTexasFees) e.agreedToTexasFees = "Required";
+      if (!form.agreedToOverageCharges) e.agreedToOverageCharges = "Required";
       if (!form.agreedToTerms) e.agreedToTerms = "Required";
     }
 
@@ -685,6 +688,30 @@ export default function CorporateEnroll() {
                     the plan limit will be billed at statutory rates.
                   </Checkbox>
                   {errors.agreedToTexasFees && <p className="text-red-500 text-xs -mt-3">{errors.agreedToTexasFees}</p>}
+
+                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+                    <p className="text-sm font-semibold text-amber-900">Overage Charges Disclosure</p>
+                    <p className="text-sm text-amber-800 leading-relaxed">
+                      If your company's monthly notarial acts exceed your plan's included limit, overage
+                      charges will apply at the following rates:
+                    </p>
+                    <ul className="text-sm text-amber-800 space-y-1 pl-4 list-disc">
+                      <li><strong>$10.00</strong> per document for each act beyond the plan limit</li>
+                      <li><strong>$1.00</strong> per additional stamp required beyond the first (e.g., 3 stamps = $2.00 extra)</li>
+                    </ul>
+                    <p className="text-xs text-amber-700">
+                      Overage charges are tracked monthly and will appear on your invoice. Your administrator
+                      will be notified when usage approaches the plan limit.
+                    </p>
+                    <Checkbox
+                      checked={form.agreedToOverageCharges}
+                      onChange={(v) => set("agreedToOverageCharges", v)}
+                    >
+                      I understand and agree to the overage charge rates described above, and authorize
+                      LBS to bill my company for any acts exceeding the monthly plan limit.
+                    </Checkbox>
+                    {errors.agreedToOverageCharges && <p className="text-red-500 text-xs">{errors.agreedToOverageCharges}</p>}
+                  </div>
 
                   <Checkbox
                     checked={form.agreedToTerms}

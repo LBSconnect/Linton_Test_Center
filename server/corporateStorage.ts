@@ -142,6 +142,7 @@ export async function createCorporateAccount(
       agreedToCertificateSelection: data.agreedToCertificateSelection,
       agreedToNoConfidentialDocs: data.agreedToNoConfidentialDocs,
       agreedToTexasFees: data.agreedToTexasFees,
+      agreedToOverageCharges: data.agreedToOverageCharges,
       agreedToTerms: data.agreedToTerms,
       agreedAt: new Date(),
       specialRequirements: data.specialRequirements,
@@ -600,10 +601,13 @@ export async function runCorporateMigrations(): Promise<void> {
     );
   `);
 
-  // Add overage charge column if not present (safe on existing deployments)
+  // Add columns if not present (safe on existing deployments)
   await pg.query(`
     ALTER TABLE corporate_usage_tracking
     ADD COLUMN IF NOT EXISTS overage_charge_cents INTEGER NOT NULL DEFAULT 0;
+
+    ALTER TABLE corporate_accounts
+    ADD COLUMN IF NOT EXISTS agreed_to_overage_charges BOOLEAN NOT NULL DEFAULT false;
   `);
 
   // Keep plan act limits in sync with product decisions

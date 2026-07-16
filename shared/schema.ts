@@ -92,6 +92,7 @@ export const corporateAccounts = pgTable("corporate_accounts", {
   agreedToCertificateSelection: boolean("agreed_to_certificate_selection").default(false),
   agreedToNoConfidentialDocs: boolean("agreed_to_no_confidential_docs").default(false),
   agreedToTexasFees: boolean("agreed_to_texas_fees").default(false),
+  agreedToOverageCharges: boolean("agreed_to_overage_charges").default(false),
   agreedToTerms: boolean("agreed_to_terms").default(false),
   agreedAt: timestamp("agreed_at"),
   specialRequirements: text("special_requirements"),
@@ -195,6 +196,7 @@ export const insertCorporateAccountSchema = z.object({
   agreedToCertificateSelection: z.boolean(),
   agreedToNoConfidentialDocs: z.boolean(),
   agreedToTexasFees: z.boolean(),
+  agreedToOverageCharges: z.boolean(),
   agreedToTerms: z.boolean(),
   specialRequirements: z.string().optional(),
 });
