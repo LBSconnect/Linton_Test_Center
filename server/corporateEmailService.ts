@@ -197,8 +197,22 @@ export async function sendApprovalEmail(
     <p style="color:#374151;font-size:14px;line-height:1.7;">To activate your corporate account, please complete the secure payment setup below. Your subscription will begin immediately upon payment confirmation.</p>
 
     <div style="text-align:center;margin:28px 0;">
-      <a href="${stripeCheckoutUrl}" style="display:inline-block;background:linear-gradient(135deg,#1e3a6e,#2a4f8e);color:#fff;padding:16px 40px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;">Activate Account — ${planPrice}</a>
-      <p style="margin:10px 0 0;color:#94a3b8;font-size:12px;">Powered by Stripe &bull; Encrypted &bull; Cancel anytime</p>
+      <!-- Email-safe button: table approach for Outlook compatibility -->
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+        <tr>
+          <td align="center" bgcolor="#1e3a6e" style="border-radius:8px;">
+            <a href="${stripeCheckoutUrl}" target="_blank" style="display:inline-block;background-color:#1e3a6e;color:#ffffff;padding:16px 40px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;font-family:'Segoe UI',Arial,sans-serif;border:2px solid #1e3a6e;">
+              Activate Account — ${planPrice}
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:12px 0 0;color:#94a3b8;font-size:12px;">Powered by Stripe &bull; Encrypted &bull; Cancel anytime</p>
+    </div>
+
+    <div style="margin-top:4px;padding:14px 18px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+      <p style="margin:0 0 4px;color:#374151;font-size:13px;font-weight:600;">Can't click the button? Copy and paste this link:</p>
+      <p style="margin:0;word-break:break-all;"><a href="${stripeCheckoutUrl}" style="color:#1e3a6e;font-size:12px;">${stripeCheckoutUrl}</a></p>
     </div>
 
     <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-top:24px;">
