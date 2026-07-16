@@ -131,7 +131,7 @@ function AppointmentsTab() {
       const overageCents: number = result.overageChargeCents ?? 0;
       const overageNote = overageCents > 0
         ? ` Overage charge applied: $${(overageCents / 100).toFixed(2)} ($10/doc + $1/additional stamp).`
-        : " No overage — within plan limit.";
+        : " No overage. Within plan limit.";
       setMsg({ id: appt.id, type: "success", text: `Marked complete. Usage logged.${overageNote}` });
       load();
     } catch (err: any) {
@@ -227,8 +227,8 @@ function AppointmentsTab() {
                       )}
 
                       <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm bg-[#f8f9fb] rounded-xl p-4">
-                        <div><dt className="text-xs text-muted-foreground">ID Type</dt><dd>{appt.idType || "—"}</dd></div>
-                        <div><dt className="text-xs text-muted-foreground">Phone</dt><dd>{appt.employeePhone || "—"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">ID Type</dt><dd>{appt.idType || "N/A"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Phone</dt><dd>{appt.employeePhone || "N/A"}</dd></div>
                         <div><dt className="text-xs text-muted-foreground">Witnesses</dt><dd>{appt.needWitnesses ? "Yes" : "No"}</dd></div>
                         <div><dt className="text-xs text-muted-foreground">Printing</dt><dd>{appt.needPrinting ? "Yes" : "No"}</dd></div>
                         <div><dt className="text-xs text-muted-foreground">Scan-to-Email</dt><dd>{appt.needScanEmail ? "Yes" : "No"}</dd></div>
@@ -484,7 +484,7 @@ function UsagePanel({ accountId, planTier }: { accountId: number; planTier: stri
 
           {!isOver && usage && (
             <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-              Within plan limit — no overage charges this month
+              Within plan limit. No overage charges this month.
             </p>
           )}
         </div>
@@ -518,7 +518,7 @@ function AccountDetail({
       });
       const linkNote = result.stripeCheckoutUrl
         ? " Stripe payment link generated and emailed to the company."
-        : " Note: Stripe not configured — no payment link was sent.";
+        : " Note: Stripe not configured. No payment link was sent.";
       setMsg({ type: "success", text: `Account approved.${linkNote}` });
       onRefresh();
     } catch (err: any) {
@@ -580,12 +580,12 @@ function AccountDetail({
           </h3>
           <dl className="space-y-2 text-sm">
             <div><dt className="text-muted-foreground">Company</dt><dd className="font-medium">{account.companyName}</dd></div>
-            <div><dt className="text-muted-foreground">Size</dt><dd>{account.companySize || "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Size</dt><dd>{account.companySize || "N/A"}</dd></div>
             <div><dt className="text-muted-foreground">Plan</dt><dd className="capitalize font-medium text-[#0d1b35]">{account.planTier}</dd></div>
-            <div><dt className="text-muted-foreground">Billing</dt><dd className="capitalize">{account.billingMethod || "—"}</dd></div>
-            <div><dt className="text-muted-foreground">Est. Monthly Acts</dt><dd>{account.estimatedMonthlyVolume ?? "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Billing</dt><dd className="capitalize">{account.billingMethod || "N/A"}</dd></div>
+            <div><dt className="text-muted-foreground">Est. Monthly Acts</dt><dd>{account.estimatedMonthlyVolume ?? "N/A"}</dd></div>
             <div><dt className="text-muted-foreground">Scan-to-Email</dt><dd>{account.needsScanToEmail ? "Yes" : "No"}</dd></div>
-            <div><dt className="text-muted-foreground">Enrolled</dt><dd>{account.enrolledAt ? new Date(account.enrolledAt).toLocaleDateString() : "—"}</dd></div>
+            <div><dt className="text-muted-foreground">Enrolled</dt><dd>{account.enrolledAt ? new Date(account.enrolledAt).toLocaleDateString() : "N/A"}</dd></div>
           </dl>
         </div>
 
@@ -623,7 +623,7 @@ function AccountDetail({
               <ul className="space-y-1">
                 {account.authorizedUsers.map((u, i) => (
                   <li key={i} className="text-sm">
-                    {u.name} — <a href={`mailto:${u.email}`} className="text-blue-600 hover:underline">{u.email}</a>
+                    {u.name}: <a href={`mailto:${u.email}`} className="text-blue-600 hover:underline">{u.email}</a>
                   </li>
                 ))}
               </ul>
@@ -669,7 +669,7 @@ function AccountDetail({
               A Stripe payment link will be generated automatically and included in the approval email sent to {account.primaryContactEmail}.
             </p>
             <div className="space-y-2">
-              <Label className="text-xs">Admin Notes (optional — internal only)</Label>
+              <Label className="text-xs">Admin Notes (optional, internal only)</Label>
               <Textarea
                 value={approveNotes}
                 onChange={(e) => setApproveNotes(e.target.value)}
@@ -715,7 +715,7 @@ function AccountDetail({
       {/* Force Activate — testing bypass */}
       {(account.status === "pending" || account.status === "approved") && (
         <div className="bg-white rounded-xl border border-purple-200 p-5 space-y-3">
-          <h3 className="font-semibold text-purple-900 text-sm">Testing Only — Bypass Payment</h3>
+          <h3 className="font-semibold text-purple-900 text-sm">Testing Only. Bypass Payment</h3>
           <p className="text-xs text-muted-foreground">
             Force this account to <strong>Active</strong> without Stripe payment. Use only for testing the booking workflow.
           </p>
@@ -973,7 +973,7 @@ export default function CorporateAdmin() {
                       </Badge>
                       <StatusBadge status={acct.status} />
                       <span className="text-xs text-muted-foreground hidden sm:block">
-                        {acct.enrolledAt ? new Date(acct.enrolledAt).toLocaleDateString() : "—"}
+                        {acct.enrolledAt ? new Date(acct.enrolledAt).toLocaleDateString() : "N/A"}
                       </span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </div>

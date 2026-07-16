@@ -22,7 +22,7 @@ const benefits = [
   {
     icon: CalendarCheck,
     title: "Priority Scheduling",
-    description: "Reserved appointment windows and dedicated booking links for your employees — no waiting in queues.",
+    description: "Reserved appointment windows and dedicated booking links for your employees, with no waiting in queues.",
   },
   {
     icon: ShieldCheck,
@@ -47,7 +47,7 @@ const benefits = [
   {
     icon: Clock,
     title: "Predictable Billing",
-    description: "Flat monthly subscription with overage billing at statutory rates — no surprises.",
+    description: "Flat monthly subscription with overage billing at statutory rates. No surprises.",
   },
 ];
 
@@ -79,7 +79,7 @@ export default function CorporateLanding() {
     <>
       <SEO
         title="LBS Enterprise Corporate Notary Services Houston TX"
-        description="Dedicated corporate notary services for Houston businesses. Monthly subscription plans — Bronze, Silver, Gold. Priority scheduling, account management, scan-to-email."
+        description="Dedicated corporate notary services for Houston businesses. Monthly subscription plans: Bronze, Silver, Gold. Priority scheduling, account management, scan-to-email."
         canonical="/corporate"
       />
       <Header />
@@ -96,7 +96,7 @@ export default function CorporateLanding() {
           </h1>
           <p className="text-lg text-white/75 max-w-2xl mx-auto leading-relaxed">
             Monthly subscription plans that give your team reliable, priority access to a Texas-licensed
-            notary — no scheduling hassle, no per-appointment surprises.
+            notary. No scheduling hassle and no per-appointment surprises.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <Link href="/corporate/programs">
@@ -191,7 +191,7 @@ export default function CorporateLanding() {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <h2 className="text-3xl font-bold text-[#0d1b35]">Plans Starting at $250/month</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Choose the tier that fits your notarial volume — Bronze, Silver, or Gold.
+            Choose the tier that fits your notarial volume: Bronze, Silver, or Gold.
             All plans include online scheduling, email confirmations, and monthly statements.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

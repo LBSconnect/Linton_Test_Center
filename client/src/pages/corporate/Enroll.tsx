@@ -295,7 +295,7 @@ export default function CorporateEnroll() {
   return (
     <>
       <SEO
-        title="Enroll — Corporate Notary Services | LBS Houston"
+        title="Enroll: Corporate Notary Services | LBS Houston"
         description="Enroll your Houston company in LBS Corporate Notary Services. Choose a plan, provide your company details, and get started in minutes."
         canonical="/corporate/enroll"
         noIndex

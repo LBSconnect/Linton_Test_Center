@@ -66,7 +66,7 @@ export default function Book() {
                 </div>
                 <div>
                   <p className="font-semibold leading-tight">Exam Cram (MyEasyPass)</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">Online practice tests for Texas licensing exams — register at myeasypass.net</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">Online practice tests for Texas licensing exams. Register at myeasypass.net</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">

@@ -87,7 +87,7 @@ export async function sendEnrollmentConfirmation(account: CorporateAccount): Pro
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Company:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${account.companyName}</td></tr>
         <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Account Code:</td><td style="color:#0d1b35;font-size:14px;padding:4px 0;font-weight:700;font-family:monospace;">${account.accountCode}</td></tr>
-        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Selected Plan:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${planName} — ${planPrice}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Selected Plan:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${planName}: ${planPrice}</td></tr>
         <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Status:</td><td style="padding:4px 0;"><span style="background:#fef3c7;color:#92400e;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;">Pending Review</span></td></tr>
       </table>
     </div>
@@ -110,7 +110,7 @@ export async function sendEnrollmentConfirmation(account: CorporateAccount): Pro
 
   return sendEmail({
     to: account.primaryContactEmail,
-    subject: `LBS Corporate Notary — Enrollment Received (${account.accountCode})`,
+    subject: `LBS Corporate Notary: Enrollment Received (${account.accountCode})`,
     html: emailWrapper(content),
   });
 }
@@ -130,26 +130,26 @@ export async function sendEnrollmentNotificationToAdmin(
     <p style="margin:0 0 24px;color:#64748b;font-size:14px;">A new company has submitted a corporate notary services enrollment. Review and approve or reject below.</p>
 
     <div style="background:#fff7ed;border-radius:8px;padding:20px 24px;margin-bottom:20px;border-left:4px solid #c9a84c;">
-      <div style="color:#92400e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">⚡ Action Required — Pending Approval</div>
+      <div style="color:#92400e;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px;">Action Required. Pending Approval</div>
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;width:40%;">Account Code:</td><td style="font-size:14px;padding:5px 0;font-family:monospace;font-weight:700;color:#0d1b35;">${account.accountCode}</td></tr>
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Company:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.companyName}</td></tr>
-        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:5px 0;color:#374151;"><strong>${planName}</strong> — ${planPrice}</td></tr>
+        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:5px 0;color:#374151;"><strong>${planName}</strong>: ${planPrice}</td></tr>
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Address:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.businessAddress}, ${account.city}, ${account.state} ${account.zip}</td></tr>
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Contact:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.primaryContactName}</td></tr>
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Email:</td><td style="font-size:14px;padding:5px 0;"><a href="mailto:${account.primaryContactEmail}" style="color:#1e3a6e;">${account.primaryContactEmail}</a></td></tr>
-        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Phone:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.primaryContactPhone || "—"}</td></tr>
-        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Company Size:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.companySize || "—"}</td></tr>
-        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Est. Monthly Vol:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.estimatedMonthlyVolume || "—"} acts</td></tr>
+        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Phone:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.primaryContactPhone || "N/A"}</td></tr>
+        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Company Size:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.companySize || "N/A"}</td></tr>
+        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Est. Monthly Vol:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.estimatedMonthlyVolume || "N/A"} acts</td></tr>
         <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Scan-to-Email:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.needsScanToEmail ? "Yes" : "No"}</td></tr>
-        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Billing Method:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.billingMethod || "—"}</td></tr>
+        <tr><td style="font-size:14px;padding:5px 0;font-weight:600;color:#374151;">Billing Method:</td><td style="font-size:14px;padding:5px 0;color:#374151;">${account.billingMethod || "N/A"}</td></tr>
       </table>
     </div>
 
     ${users.length > 0 ? `
     <div style="background:#f8fafc;border-radius:8px;padding:16px 24px;margin-bottom:20px;">
       <div style="font-size:13px;font-weight:700;color:#0d1b35;margin-bottom:10px;">Authorized Users (${users.length})</div>
-      ${users.map((u: any) => `<div style="font-size:13px;color:#374151;padding:3px 0;">${u.name} — <a href="mailto:${u.email}" style="color:#1e3a6e;">${u.email}</a></div>`).join("")}
+      ${users.map((u: any) => `<div style="font-size:13px;color:#374151;padding:3px 0;">${u.name}: <a href="mailto:${u.email}" style="color:#1e3a6e;">${u.email}</a></div>`).join("")}
     </div>` : ""}
 
     ${account.specialRequirements ? `
@@ -165,7 +165,7 @@ export async function sendEnrollmentNotificationToAdmin(
 
   return sendEmail({
     to: adminEmail,
-    subject: `[ACTION REQUIRED] New Corporate Enrollment — ${account.companyName} (${account.accountCode})`,
+    subject: `[ACTION REQUIRED] New Corporate Enrollment: ${account.companyName} (${account.accountCode})`,
     html: emailWrapper(content),
   });
 }
@@ -189,7 +189,7 @@ export async function sendApprovalEmail(
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;width:40%;">Company:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${account.companyName}</td></tr>
         <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Account Code:</td><td style="font-size:14px;padding:4px 0;font-family:monospace;font-weight:700;color:#0d1b35;">${account.accountCode}</td></tr>
-        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${planName} — ${planPrice}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${planName}: ${planPrice}</td></tr>
       </table>
     </div>
 
@@ -202,7 +202,7 @@ export async function sendApprovalEmail(
         <tr>
           <td align="center" bgcolor="#1e3a6e" style="border-radius:8px;">
             <a href="${stripeCheckoutUrl}" target="_blank" style="display:inline-block;background-color:#1e3a6e;color:#ffffff;padding:16px 40px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;font-family:'Segoe UI',Arial,sans-serif;border:2px solid #1e3a6e;">
-              Activate Account — ${planPrice}
+              Activate Account: ${planPrice}
             </a>
           </td>
         </tr>
@@ -228,7 +228,7 @@ export async function sendApprovalEmail(
 
   return sendEmail({
     to: account.primaryContactEmail,
-    subject: `Corporate Account Approved — Complete Activation (${account.accountCode})`,
+    subject: `Corporate Account Approved. Complete Activation (${account.accountCode})`,
     html: emailWrapper(content),
   });
 }
@@ -250,7 +250,7 @@ export async function sendActivationEmail(account: CorporateAccount): Promise<bo
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;width:40%;">Company:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${account.companyName}</td></tr>
         <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Account Code:</td><td style="font-size:14px;padding:4px 0;font-family:monospace;font-weight:700;color:#0d1b35;">${account.accountCode}</td></tr>
-        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${planName} — ${planPrice}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${planName}: ${planPrice}</td></tr>
       </table>
     </div>
 
@@ -289,7 +289,7 @@ export async function sendActivationEmail(account: CorporateAccount): Promise<bo
 
   return sendEmail({
     to: account.primaryContactEmail,
-    subject: `Your Corporate Notary Account Is Active — ${account.accountCode}`,
+    subject: `Your Corporate Notary Account Is Active: ${account.accountCode}`,
     html: emailWrapper(content),
   });
 }
@@ -316,7 +316,7 @@ export async function sendRejectionEmail(
 
   return sendEmail({
     to: account.primaryContactEmail,
-    subject: "LBS Corporate Notary — Application Update",
+    subject: "LBS Corporate Notary: Application Update",
     html: emailWrapper(content),
   });
 }
@@ -381,7 +381,7 @@ export async function sendCorporateBookingConfirmation(
 
   return sendEmail({
     to: appt.employeeEmail,
-    subject: `Notary Appointment Confirmed — ${formattedDate} at ${formattedTime} CT (${appt.appointmentCode})`,
+    subject: `Notary Appointment Confirmed: ${formattedDate} at ${formattedTime} CT (${appt.appointmentCode})`,
     html: emailWrapper(content),
   });
 }
@@ -432,13 +432,13 @@ export async function sendCorporateBookingNotificationToAdmin(
 
   await sendEmail({
     to: adminEmail,
-    subject: `[CORP APPT] ${account.companyName} — ${appt.employeeName} on ${formattedDate} at ${formattedTime} CT`,
+    subject: `[CORP APPT] ${account.companyName}: ${appt.employeeName} on ${formattedDate} at ${formattedTime} CT`,
     html: emailWrapper(bodyHtml),
   });
 
   // Outlook calendar event (fire-and-forget)
   createOutlookCalendarEvent({
-    subject: `[Corporate Notary] ${account.companyName} — ${appt.employeeName}`,
+    subject: `[Corporate Notary] ${account.companyName}: ${appt.employeeName}`,
     bodyHtml,
     startDateTime: dt,
     durationMinutes: Math.max(30, (appt.numDocuments || 1) * 15),

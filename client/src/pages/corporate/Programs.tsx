@@ -93,7 +93,7 @@ export default function CorporatePrograms() {
   return (
     <>
       <SEO
-        title="Corporate Notary Plans — Bronze, Silver, Gold | LBS Houston"
+        title="Corporate Notary Plans: Bronze, Silver, Gold | LBS Houston"
         description="Compare LBS corporate notary subscription plans. Bronze $250/mo (15 acts), Silver $400/mo (25 acts), Gold $750/mo (100 acts). Serving Houston TX businesses."
         canonical="/corporate/programs"
       />
@@ -164,7 +164,7 @@ export default function CorporatePrograms() {
                     style={{ backgroundColor: plan.tier === "gold" ? plan.color : undefined }}
                     variant={plan.tier !== "gold" ? "default" : undefined}
                   >
-                    Enroll — {plan.name}
+                    Enroll: {plan.name}
                     <ArrowRight className="ml-2 w-4 h-4" />
                   </Button>
                 </Link>

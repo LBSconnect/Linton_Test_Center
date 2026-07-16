@@ -53,7 +53,7 @@ export default function About() {
                 providing a world-class testing environment and essential
                 business services. We understand that taking a certification
                 exam or completing important business tasks requires focus,
-                comfort, and professional support — and that's exactly what we
+                comfort, and professional support. That's exactly what we
                 deliver.
               </p>
               <p className="text-muted-foreground leading-relaxed">

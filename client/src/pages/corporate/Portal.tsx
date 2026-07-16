@@ -122,7 +122,7 @@ function PlanBadge({ tier }: { tier: string | null }) {
     gold: { label: "Gold", cls: "bg-yellow-100 text-yellow-800 border-yellow-300" },
   };
   const key = tier ?? "";
-  const c = cfg[key] ?? { label: tier ?? "—", cls: "bg-gray-100 text-gray-600 border-gray-200" };
+  const c = cfg[key] ?? { label: tier ?? "N/A", cls: "bg-gray-100 text-gray-600 border-gray-200" };
   return (
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${c.cls}`}
@@ -381,7 +381,7 @@ function Dashboard({ account, onLogout, onUnauth }: DashboardProps) {
                   <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="font-semibold text-red-700">
-                      Overage Charges: ${(usage.overageChargeCents / 100).toFixed(2)} — $10/doc +
+                      Overage Charges: ${(usage.overageChargeCents / 100).toFixed(2)}. Rate: $10/doc +
                       $1/additional stamp
                     </p>
                   </div>
@@ -471,7 +471,7 @@ function Dashboard({ account, onLogout, onUnauth }: DashboardProps) {
                           <div className="text-xs text-muted-foreground">{fmtTime} CT</div>
                         </td>
                         <td className="px-6 py-4">{appt.numDocuments}</td>
-                        <td className="px-6 py-4">{appt.estimatedCertificates ?? "—"}</td>
+                        <td className="px-6 py-4">{appt.estimatedCertificates ?? "N/A"}</td>
                         <td className="px-6 py-4">
                           <ApptStatusBadge status={appt.status} />
                         </td>
