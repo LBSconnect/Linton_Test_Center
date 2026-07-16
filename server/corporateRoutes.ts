@@ -24,6 +24,7 @@ import {
   sendEnrollmentNotificationToAdmin,
   sendApprovalEmail,
   sendRejectionEmail,
+  sendActivationEmail,
   sendCorporateBookingConfirmation,
   sendCorporateBookingNotificationToAdmin,
 } from "./corporateEmailService";
@@ -312,7 +313,6 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
         const session = event.data.object;
         const accountId = parseInt(session.client_reference_id || session.metadata?.corporateAccountId, 10);
         if (!isNaN(accountId)) {
-          const { updateCorporateAccountStripe } = await import("./corporateStorage");
           await updateCorporateAccountStripe(
             accountId,
             session.customer as string,
@@ -322,6 +322,8 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
             stripeCustomer: session.customer,
             stripeSubscription: session.subscription,
           });
+          const activated = await getCorporateAccount(accountId);
+          if (activated) sendActivationEmail(activated).catch(console.error);
         }
       }
 
@@ -403,6 +405,8 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
       await logAudit("account", String(id), "force_activated", "admin", { note: "Manual activation — payment bypassed for testing" });
 
       const updated = await getCorporateAccount(id);
+      if (updated) sendActivationEmail(updated).catch(console.error);
+
       return res.json({ success: true, account: updated });
     } catch (err) {
       console.error("Force activate error:", err);

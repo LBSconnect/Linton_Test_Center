@@ -233,6 +233,67 @@ export async function sendApprovalEmail(
   });
 }
 
+// ─── Activation Email → Company ──────────────────────────────────────────────
+export async function sendActivationEmail(account: CorporateAccount): Promise<boolean> {
+  const planName = PLAN_NAMES[account.planTier || ""] || "Selected Plan";
+  const planPrice = PLAN_PRICES[account.planTier || ""] || "";
+  const bookingUrl = `${SITE_URL}/corporate/book?account=${account.accountCode}`;
+
+  const content = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="display:inline-block;width:56px;height:56px;background:#d1fae5;border-radius:50%;line-height:56px;font-size:28px;text-align:center;margin-bottom:12px;">🎉</div>
+      <h2 style="margin:0 0 6px;color:#0d1b35;font-size:24px;font-weight:700;">Your Account Is Active!</h2>
+      <p style="margin:0;color:#64748b;font-size:15px;">Your LBS Enterprise Corporate Notary account is ready to use</p>
+    </div>
+
+    <div style="background:#f0f4ff;border-radius:8px;padding:20px 24px;margin-bottom:24px;border-left:4px solid #c9a84c;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;width:40%;">Company:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${account.companyName}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Account Code:</td><td style="font-size:14px;padding:4px 0;font-family:monospace;font-weight:700;color:#0d1b35;">${account.accountCode}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${planName} — ${planPrice}</td></tr>
+      </table>
+    </div>
+
+    <h3 style="color:#0d1b35;font-size:16px;margin:0 0 8px;">Ready to Book</h3>
+    <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 24px;">Your employees can now schedule notary appointments using your corporate account code. Share the link below with anyone on your team who needs notary services.</p>
+
+    <div style="text-align:center;margin:28px 0;">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto;">
+        <tr>
+          <td align="center" bgcolor="#c9a84c" style="border-radius:8px;">
+            <a href="${bookingUrl}" target="_blank" style="display:inline-block;background-color:#c9a84c;color:#0d1b35;padding:16px 40px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:700;font-family:'Segoe UI',Arial,sans-serif;border:2px solid #c9a84c;">
+              Book a Notary Appointment
+            </a>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:10px 0 0;color:#94a3b8;font-size:12px;">Or copy this link to share with your team</p>
+    </div>
+
+    <div style="padding:14px 18px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;margin-bottom:24px;">
+      <p style="margin:0 0 4px;color:#374151;font-size:13px;font-weight:600;">Booking link:</p>
+      <p style="margin:0;word-break:break-all;"><a href="${bookingUrl}" style="color:#1e3a6e;font-size:12px;">${bookingUrl}</a></p>
+    </div>
+
+    <div style="background:#f8fafc;border-radius:8px;padding:20px;margin-top:4px;">
+      <h4 style="margin:0 0 10px;color:#0d1b35;font-size:14px;">How It Works</h4>
+      <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px;line-height:2;">
+        <li>Employee visits the booking link above</li>
+        <li>Enters account code <strong style="font-family:monospace;">${account.accountCode}</strong></li>
+        <li>Selects date, time, and appointment details</li>
+        <li>Receives email confirmation with appointment code</li>
+        <li>Arrives at our office with unsigned documents and valid photo ID</li>
+      </ul>
+    </div>
+  `;
+
+  return sendEmail({
+    to: account.primaryContactEmail,
+    subject: `Your Corporate Notary Account Is Active — ${account.accountCode}`,
+    html: emailWrapper(content),
+  });
+}
+
 // ─── Rejection Email → Company ────────────────────────────────────────────────
 export async function sendRejectionEmail(
   account: CorporateAccount
