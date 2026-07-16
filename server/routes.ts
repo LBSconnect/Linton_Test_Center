@@ -5,6 +5,7 @@ import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClie
 import { insertContactSchema } from "@shared/schema";
 import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
 import { sendEmail } from "./smtpClient";
+import { registerCorporateRoutes } from "./corporateRoutes";
 import { z } from "zod";
 
 // Validation schema for appointment booking
@@ -531,6 +532,9 @@ export async function registerRoutes(
       res.status(500).json({ success: false, error: error.message });
     }
   });
+
+  // Corporate Notary Division routes
+  await registerCorporateRoutes(app);
 
   return httpServer;
 }

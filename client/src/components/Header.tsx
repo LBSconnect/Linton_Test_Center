@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, X, Phone, Mail, MapPin } from "lucide-react";
+import { Menu, Phone, Mail, MapPin, ChevronDown, Building2 } from "lucide-react";
 import logoImg from "@assets/Linton_Business_Solutions.gif_1771618422350.jpg";
+
+const CORPORATE_ENABLED = import.meta.env.VITE_CORPORATE_ENABLED === "true";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -12,9 +14,27 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
+const corporateLinks = [
+  { href: "/corporate", label: "Overview" },
+  { href: "/corporate/programs", label: "Plans & Pricing" },
+  { href: "/corporate/enroll", label: "Enroll Now" },
+];
+
 export default function Header() {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [corpOpen, setCorpOpen] = useState(false);
+  const corpRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (corpRef.current && !corpRef.current.contains(e.target as Node)) {
+        setCorpOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50">
@@ -82,6 +102,38 @@ export default function Header() {
                 </Button>
               </Link>
             ))}
+
+            {/* Corporate dropdown — feature gated */}
+            {CORPORATE_ENABLED && (
+              <div className="relative" ref={corpRef}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground gap-1"
+                  onClick={() => setCorpOpen((o) => !o)}
+                  data-testid="link-nav-corporate"
+                >
+                  <Building2 className="w-3.5 h-3.5" />
+                  Corporate
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${corpOpen ? "rotate-180" : ""}`} />
+                </Button>
+                {corpOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-border/50 rounded-xl shadow-lg py-1 z-50">
+                    {corporateLinks.map((link) => (
+                      <Link key={link.href} href={link.href}>
+                        <span
+                          className="block px-4 py-2.5 text-sm text-foreground hover:bg-[#f8f9fb] cursor-pointer transition-colors"
+                          onClick={() => setCorpOpen(false)}
+                        >
+                          {link.label}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
               <Button
                 variant="ghost"
@@ -137,6 +189,26 @@ export default function Header() {
                       </Button>
                     </Link>
                   ))}
+                  {CORPORATE_ENABLED && (
+                    <>
+                      <div className="pt-2 pb-1 px-1">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                          <Building2 className="w-3 h-3" /> Corporate
+                        </p>
+                      </div>
+                      {corporateLinks.map((link) => (
+                        <Link key={link.href} href={link.href}>
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start text-sm pl-4"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {link.label}
+                          </Button>
+                        </Link>
+                      ))}
+                    </>
+                  )}
                   <a
                     href="https://www.myeasypass.net"
                     target="_blank"

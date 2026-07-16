@@ -14,6 +14,11 @@ import CheckoutCancel from "@/pages/CheckoutCancel";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsOfUse from "@/pages/TermsOfUse";
 import Book from "@/pages/Book";
+import CorporateLanding from "@/pages/corporate/Landing";
+import CorporatePrograms from "@/pages/corporate/Programs";
+import CorporateEnroll from "@/pages/corporate/Enroll";
+import CorporateActivated from "@/pages/corporate/Activated";
+import CorporateAdmin from "@/pages/admin/CorporateAdmin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,16 +27,21 @@ function Router() {
       <Analytics />
       <Switch>
         <Route path="/" component={Home} />
-      <Route path="/services" component={Services} />
-      <Route path="/services/:slug" component={ServiceDetail} />
-      <Route path="/about" component={About} />
-      <Route path="/contact" component={Contact} />
-      <Route path="/checkout/success" component={CheckoutSuccess} />
-      <Route path="/checkout/cancel" component={CheckoutCancel} />
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
-      <Route path="/terms-of-use" component={TermsOfUse} />
-      <Route path="/book" component={Book} />
-      <Route component={NotFound} />
+        <Route path="/services" component={Services} />
+        <Route path="/services/:slug" component={ServiceDetail} />
+        <Route path="/about" component={About} />
+        <Route path="/contact" component={Contact} />
+        <Route path="/checkout/success" component={CheckoutSuccess} />
+        <Route path="/checkout/cancel" component={CheckoutCancel} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-use" component={TermsOfUse} />
+        <Route path="/book" component={Book} />
+        <Route path="/corporate" component={CorporateLanding} />
+        <Route path="/corporate/programs" component={CorporatePrograms} />
+        <Route path="/corporate/enroll" component={CorporateEnroll} />
+        <Route path="/corporate/activated" component={CorporateActivated} />
+        <Route path="/admin/corporate" component={CorporateAdmin} />
+        <Route component={NotFound} />
       </Switch>
     </>
   );
