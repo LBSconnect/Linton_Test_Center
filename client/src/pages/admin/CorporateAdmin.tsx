@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
   CalendarCheck,
   CalendarX,
   FileCheck,
+  Home,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -779,6 +781,15 @@ export default function CorporateAdmin() {
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white hover:bg-white/10 gap-1.5"
+              >
+                <Home className="w-4 h-4" /> Main Site
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="sm"
