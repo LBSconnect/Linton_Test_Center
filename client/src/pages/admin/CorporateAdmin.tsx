@@ -624,6 +624,36 @@ function AccountDetail({
         </div>
       )}
 
+      {/* Force Activate — testing bypass */}
+      {(account.status === "pending" || account.status === "approved") && (
+        <div className="bg-white rounded-xl border border-purple-200 p-5 space-y-3">
+          <h3 className="font-semibold text-purple-900 text-sm">Testing Only — Bypass Payment</h3>
+          <p className="text-xs text-muted-foreground">
+            Force this account to <strong>Active</strong> without Stripe payment. Use only for testing the booking workflow.
+          </p>
+          <Button
+            size="sm"
+            className="bg-purple-700 hover:bg-purple-800 text-white gap-1.5"
+            disabled={loading === "force-activate"}
+            onClick={async () => {
+              setLoading("force-activate");
+              try {
+                await api(`/api/admin/corporate/accounts/${account.id}/force-activate`, { method: "PUT" });
+                setMsg({ type: "success", text: "Account force-activated. Employees can now book appointments." });
+                onRefresh();
+              } catch (err: any) {
+                setMsg({ type: "error", text: err.message });
+              } finally {
+                setLoading(null);
+              }
+            }}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            {loading === "force-activate" ? "Activating…" : "Force Activate (Skip Payment)"}
+          </Button>
+        </div>
+      )}
+
       {/* Approved — awaiting payment */}
       {account.status === "approved" && !account.stripeSubscriptionId && (
         <div className="bg-white rounded-xl border border-amber-200 p-5 space-y-3">

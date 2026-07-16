@@ -7,6 +7,7 @@ import {
   getCorporateAccountByCode,
   approveCorporateAccount,
   rejectCorporateAccount,
+  updateCorporateAccountStripe,
   getCorporateDashboardStats,
   listCorporatePlans,
   listCorporateAppointments,
@@ -385,6 +386,27 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
     } catch (err) {
       console.error("Resend approval error:", err);
       return res.status(500).json({ error: "Failed to resend approval email" });
+    }
+  });
+
+  // ── Admin: Force-Activate Account (bypass payment, for testing) ─────────────
+
+  app.put("/api/admin/corporate/accounts/:id/force-activate", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid account ID" });
+
+      const account = await getCorporateAccount(id);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+
+      await updateCorporateAccountStripe(id, "MANUAL-TEST", "MANUAL-TEST-ACTIVE");
+      await logAudit("account", String(id), "force_activated", "admin", { note: "Manual activation — payment bypassed for testing" });
+
+      const updated = await getCorporateAccount(id);
+      return res.json({ success: true, account: updated });
+    } catch (err) {
+      console.error("Force activate error:", err);
+      return res.status(500).json({ error: "Failed to activate account" });
     }
   });
 
