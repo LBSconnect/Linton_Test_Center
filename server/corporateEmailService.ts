@@ -1,5 +1,5 @@
-import { sendEmail } from "./smtpClient";
-import type { CorporateAccount } from "@shared/schema";
+import { sendEmail, createOutlookCalendarEvent } from "./smtpClient";
+import type { CorporateAccount, CorporateAppointment } from "@shared/schema";
 
 const PLAN_PRICES: Record<string, string> = {
   bronze: "$250/month",
@@ -244,4 +244,130 @@ export async function sendRejectionEmail(
     subject: "LBS Corporate Notary — Application Update",
     html: emailWrapper(content),
   });
+}
+
+// ─── Appointment Confirmation → Employee ──────────────────────────────────────
+export async function sendCorporateBookingConfirmation(
+  appt: CorporateAppointment,
+  account: CorporateAccount
+): Promise<boolean> {
+  const dt = new Date(appt.appointmentDatetime);
+  const formattedDate = dt.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
+  const formattedTime = dt.toLocaleTimeString("en-US", {
+    timeZone: "America/Chicago",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  });
+
+  const content = `
+    <h2 style="margin:0 0 6px;color:#0d1b35;font-size:24px;font-weight:700;">Appointment Confirmed</h2>
+    <p style="margin:0 0 24px;color:#64748b;font-size:14px;">Your notary appointment has been scheduled. Please arrive a few minutes early with a valid government-issued photo ID.</p>
+
+    <div style="background:#f0f4ff;border-radius:8px;padding:20px 24px;margin-bottom:24px;border-left:4px solid #c9a84c;">
+      <div style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Appointment Details</div>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;width:45%;">Confirmation Code:</td><td style="color:#0d1b35;font-size:14px;padding:4px 0;font-family:monospace;font-weight:700;">${appt.appointmentCode}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Date:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${formattedDate}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Time:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${formattedTime} CT</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Employee:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${appt.employeeName}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Company:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${account.companyName}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Account:</td><td style="color:#0d1b35;font-size:14px;padding:4px 0;font-family:monospace;">${account.accountCode}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Signers:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${appt.numSigners}</td></tr>
+        <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Documents:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${appt.numDocuments}</td></tr>
+        ${appt.idType ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">ID Type:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${appt.idType}</td></tr>` : ""}
+        ${appt.needWitnesses ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Witnesses:</td><td style="color:#374151;font-size:14px;padding:4px 0;">Requested</td></tr>` : ""}
+        ${appt.needScanEmail ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Scan-to-Email:</td><td style="color:#374151;font-size:14px;padding:4px 0;">Requested</td></tr>` : ""}
+      </table>
+    </div>
+
+    <div style="background:#f8fafc;border-radius:8px;padding:18px 20px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#0d1b35;">What to Bring</p>
+      <ul style="margin:0;padding-left:20px;color:#374151;font-size:14px;line-height:2;">
+        <li>Valid government-issued photo ID for all signers</li>
+        <li>All documents requiring notarization (unsigned)</li>
+        ${appt.needPrinting ? "<li>Document files (we will print for you)</li>" : ""}
+        ${appt.needScanEmail ? "<li>Documents to be scanned and emailed</li>" : ""}
+      </ul>
+    </div>
+
+    <div style="background:#fff7ed;border-radius:8px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #f59e0b;">
+      <p style="margin:0;color:#92400e;font-size:13px;"><strong>Important:</strong> Texas law requires that signers appear in person and not sign documents before arriving. Bring all unsigned documents.</p>
+    </div>
+
+    <div style="padding:16px 20px;background:#f0f4ff;border-radius:8px;">
+      <p style="margin:0;color:#1e3a6e;font-size:13px;">
+        <strong>Location:</strong> ${LBS_ADDRESS}<br />
+        <strong>Phone:</strong> ${LBS_PHONE} &nbsp;|&nbsp; <strong>Email:</strong> <a href="mailto:${LBS_EMAIL}" style="color:#1e3a6e;">${LBS_EMAIL}</a>
+      </p>
+    </div>
+  `;
+
+  return sendEmail({
+    to: appt.employeeEmail,
+    subject: `Notary Appointment Confirmed — ${formattedDate} at ${formattedTime} CT (${appt.appointmentCode})`,
+    html: emailWrapper(content),
+  });
+}
+
+// ─── Appointment Notification → LBS Admin (with calendar invite) ──────────────
+export async function sendCorporateBookingNotificationToAdmin(
+  appt: CorporateAppointment,
+  account: CorporateAccount
+): Promise<void> {
+  const adminEmail = process.env.NOTIFICATION_EMAIL || process.env.MAIL_FROM_ADDRESS || LBS_EMAIL;
+  const dt = new Date(appt.appointmentDatetime);
+  const formattedDate = dt.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+  });
+  const formattedTime = dt.toLocaleTimeString("en-US", {
+    timeZone: "America/Chicago",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  });
+
+  const bodyHtml = `
+    <h2 style="margin:0 0 6px;color:#0d1b35;font-size:20px;font-weight:700;">New Corporate Appointment</h2>
+    <p style="margin:0 0 20px;color:#64748b;font-size:14px;">A corporate employee has booked a notary appointment.</p>
+
+    <div style="background:#fff7ed;border-radius:8px;padding:20px 24px;margin-bottom:20px;border-left:4px solid #c9a84c;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;width:42%;">Confirmation Code:</td><td style="font-size:14px;padding:4px 0;font-family:monospace;font-weight:700;color:#0d1b35;">${appt.appointmentCode}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Date &amp; Time:</td><td style="font-size:14px;padding:4px 0;color:#374151;font-weight:600;">${formattedDate} at ${formattedTime} CT</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Employee:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${appt.employeeName}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Employee Email:</td><td style="font-size:14px;padding:4px 0;"><a href="mailto:${appt.employeeEmail}" style="color:#1e3a6e;">${appt.employeeEmail}</a></td></tr>
+        ${appt.employeePhone ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Phone:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${appt.employeePhone}</td></tr>` : ""}
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Company:</td><td style="font-size:14px;padding:4px 0;font-weight:600;color:#0d1b35;">${account.companyName}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Account Code:</td><td style="font-size:14px;padding:4px 0;font-family:monospace;color:#0d1b35;">${account.accountCode}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Plan:</td><td style="font-size:14px;padding:4px 0;color:#374151;text-transform:capitalize;">${account.planTier}</td></tr>
+        <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Signers / Docs:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${appt.numSigners} signer(s) / ${appt.numDocuments} document(s)</td></tr>
+        ${appt.idType ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">ID Type:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${appt.idType}</td></tr>` : ""}
+        ${appt.needWitnesses ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Witnesses:</td><td style="font-size:14px;padding:4px 0;color:#d97706;font-weight:600;">Requested</td></tr>` : ""}
+        ${appt.needPrinting ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Printing:</td><td style="font-size:14px;padding:4px 0;color:#d97706;font-weight:600;">Requested</td></tr>` : ""}
+        ${appt.needScanEmail ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Scan-to-Email:</td><td style="font-size:14px;padding:4px 0;color:#d97706;font-weight:600;">Requested</td></tr>` : ""}
+        ${appt.specialInstructions ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Instructions:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${appt.specialInstructions}</td></tr>` : ""}
+      </table>
+    </div>
+
+    <div style="text-align:center;">
+      <a href="${SITE_URL}/admin/corporate" style="display:inline-block;background:#1e3a6e;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">View in Admin Dashboard</a>
+    </div>
+  `;
+
+  await sendEmail({
+    to: adminEmail,
+    subject: `[CORP APPT] ${account.companyName} — ${appt.employeeName} on ${formattedDate} at ${formattedTime} CT`,
+    html: emailWrapper(bodyHtml),
+  });
+
+  // Outlook calendar event (fire-and-forget)
+  createOutlookCalendarEvent({
+    subject: `[Corporate Notary] ${account.companyName} — ${appt.employeeName}`,
+    bodyHtml,
+    startDateTime: dt,
+    durationMinutes: Math.max(30, (appt.numDocuments || 1) * 15),
+    attendeeEmail: appt.employeeEmail,
+    attendeeName: appt.employeeName,
+  }).catch(console.error);
 }

@@ -18,6 +18,7 @@ import CorporateLanding from "@/pages/corporate/Landing";
 import CorporatePrograms from "@/pages/corporate/Programs";
 import CorporateEnroll from "@/pages/corporate/Enroll";
 import CorporateActivated from "@/pages/corporate/Activated";
+import CorporateBook from "@/pages/corporate/Book";
 import CorporateAdmin from "@/pages/admin/CorporateAdmin";
 import NotFound from "@/pages/not-found";
 
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/corporate/programs" component={CorporatePrograms} />
         <Route path="/corporate/enroll" component={CorporateEnroll} />
         <Route path="/corporate/activated" component={CorporateActivated} />
+        <Route path="/corporate/book" component={CorporateBook} />
         <Route path="/admin/corporate" component={CorporateAdmin} />
         <Route component={NotFound} />
       </Switch>

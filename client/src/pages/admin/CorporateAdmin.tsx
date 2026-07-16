@@ -20,6 +20,9 @@ import {
   Mail,
   Phone,
   CreditCard,
+  CalendarCheck,
+  CalendarX,
+  FileCheck,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -53,6 +56,215 @@ interface Stats {
   pendingEnrollments: number;
   activeAccounts: number;
   monthlyRevenueDollars: number;
+}
+
+interface Appointment {
+  id: string;
+  appointmentCode: string;
+  accountId: number;
+  employeeName: string;
+  employeeEmail: string;
+  employeePhone: string | null;
+  appointmentDatetime: string;
+  numSigners: number;
+  numDocuments: number;
+  idType: string | null;
+  needWitnesses: boolean;
+  needPrinting: boolean;
+  needScanEmail: boolean;
+  specialInstructions: string | null;
+  status: string;
+  adminNotes: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+// ─── Appointment Status Badge ─────────────────────────────────────────────────
+
+function ApptStatusBadge({ status }: { status: string }) {
+  const cfg: Record<string, { label: string; cls: string }> = {
+    scheduled: { label: "Scheduled", cls: "bg-blue-100 text-blue-700 border-blue-200" },
+    completed: { label: "Completed", cls: "bg-green-100 text-green-700 border-green-200" },
+    cancelled: { label: "Cancelled", cls: "bg-red-100 text-red-700 border-red-200" },
+    no_show: { label: "No Show", cls: "bg-gray-100 text-gray-600 border-gray-200" },
+  };
+  const c = cfg[status] || { label: status, cls: "bg-gray-100 text-gray-600 border-gray-200" };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${c.cls}`}>
+      {c.label}
+    </span>
+  );
+}
+
+// ─── Appointments Tab ─────────────────────────────────────────────────────────
+
+function AppointmentsTab() {
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState("all");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ id: string; type: "success" | "error"; text: string } | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api("/api/admin/corporate/appointments");
+      setAppointments(Array.isArray(data) ? data : []);
+    } catch {
+      // silently fail — parent handles auth errors
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function complete(appt: Appointment) {
+    setActionLoading(appt.id);
+    try {
+      await api(`/api/admin/corporate/appointments/${appt.id}/complete`, { method: "PUT" });
+      setMsg({ id: appt.id, type: "success", text: "Marked complete. Usage logged." });
+      load();
+    } catch (err: any) {
+      setMsg({ id: appt.id, type: "error", text: err.message });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  async function cancel(appt: Appointment) {
+    setActionLoading(appt.id + "-cancel");
+    try {
+      await api(`/api/admin/corporate/appointments/${appt.id}/cancel`, { method: "PUT" });
+      setMsg({ id: appt.id, type: "success", text: "Appointment cancelled." });
+      load();
+    } catch (err: any) {
+      setMsg({ id: appt.id, type: "error", text: err.message });
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
+  const filtered = filter === "all" ? appointments : appointments.filter((a) => a.status === filter);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white rounded-xl border border-border/50 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+          <h2 className="font-semibold text-[#0d1b35]">All Appointments</h2>
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              {["all", "scheduled", "completed", "cancelled"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-colors ${
+                    filter === s ? "bg-[#0d1b35] text-white" : "text-muted-foreground hover:bg-[#f8f9fb]"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={load}
+              className="p-1.5 rounded-lg text-muted-foreground hover:bg-[#f8f9fb] transition-colors"
+              title="Refresh"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-muted-foreground text-sm">
+            {loading ? "Loading…" : "No appointments found"}
+          </div>
+        ) : (
+          <ul className="divide-y divide-border/50">
+            {filtered.map((appt) => {
+              const dt = new Date(appt.appointmentDatetime);
+              const fmtDate = dt.toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" });
+              const fmtTime = dt.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", hour12: true });
+              const isExpanded = expandedId === appt.id;
+              const thisMsg = msg?.id === appt.id ? msg : null;
+
+              return (
+                <li key={appt.id} className="px-5 py-4">
+                  <div
+                    className="flex items-start gap-4 cursor-pointer"
+                    onClick={() => setExpandedId(isExpanded ? null : appt.id)}
+                  >
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-[#0d1b35] text-sm">{appt.employeeName}</span>
+                        <ApptStatusBadge status={appt.status} />
+                        <span className="text-xs font-mono text-muted-foreground">{appt.appointmentCode}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {fmtDate} at {fmtTime} CT · {appt.numSigners} signer{appt.numSigners !== 1 ? "s" : ""} · {appt.numDocuments} doc{appt.numDocuments !== 1 ? "s" : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{appt.employeeEmail}</p>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 text-muted-foreground shrink-0 mt-0.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                  </div>
+
+                  {isExpanded && (
+                    <div className="mt-4 space-y-3">
+                      {thisMsg && (
+                        <div className={`p-3 rounded-lg text-xs ${thisMsg.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+                          {thisMsg.text}
+                        </div>
+                      )}
+
+                      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 text-sm bg-[#f8f9fb] rounded-xl p-4">
+                        <div><dt className="text-xs text-muted-foreground">ID Type</dt><dd>{appt.idType || "—"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Phone</dt><dd>{appt.employeePhone || "—"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Witnesses</dt><dd>{appt.needWitnesses ? "Yes" : "No"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Printing</dt><dd>{appt.needPrinting ? "Yes" : "No"}</dd></div>
+                        <div><dt className="text-xs text-muted-foreground">Scan-to-Email</dt><dd>{appt.needScanEmail ? "Yes" : "No"}</dd></div>
+                        {appt.specialInstructions && (
+                          <div className="col-span-2 sm:col-span-3">
+                            <dt className="text-xs text-muted-foreground">Special Instructions</dt>
+                            <dd className="whitespace-pre-wrap text-xs mt-0.5">{appt.specialInstructions}</dd>
+                          </div>
+                        )}
+                      </dl>
+
+                      {appt.status === "scheduled" && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white gap-1.5"
+                            disabled={actionLoading === appt.id}
+                            onClick={() => complete(appt)}
+                          >
+                            <FileCheck className="w-3.5 h-3.5" />
+                            {actionLoading === appt.id ? "Saving…" : "Mark Complete"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50 gap-1.5"
+                            disabled={actionLoading === appt.id + "-cancel"}
+                            onClick={() => cancel(appt)}
+                          >
+                            <CalendarX className="w-3.5 h-3.5" />
+                            {actionLoading === appt.id + "-cancel" ? "Cancelling…" : "Cancel"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Auth ──────────────────────────────────────────────────────────────────────
@@ -414,12 +626,32 @@ function AccountDetail({
 
       {/* Approved — awaiting payment */}
       {account.status === "approved" && !account.stripeSubscriptionId && (
-        <div className="bg-white rounded-xl border border-amber-200 p-5 space-y-2">
+        <div className="bg-white rounded-xl border border-amber-200 p-5 space-y-3">
           <h3 className="font-semibold text-[#0d1b35]">Awaiting Payment</h3>
           <p className="text-sm text-muted-foreground">
             Approval email with Stripe payment link has been sent to{" "}
-            <strong>{account.primaryContactEmail}</strong>. Account will activate automatically once payment is complete.
+            <strong>{account.primaryContactEmail}</strong>. Account activates automatically once payment is complete.
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-amber-300 text-amber-700 hover:bg-amber-50"
+            disabled={loading === "resend"}
+            onClick={async () => {
+              setLoading("resend");
+              try {
+                await api(`/api/admin/corporate/accounts/${account.id}/resend-approval`, { method: "POST" });
+                setMsg({ type: "success", text: "Approval email with fresh payment link resent." });
+              } catch (err: any) {
+                setMsg({ type: "error", text: err.message });
+              } finally {
+                setLoading(null);
+              }
+            }}
+          >
+            <Mail className="w-4 h-4" />
+            {loading === "resend" ? "Sending…" : "Resend Payment Link"}
+          </Button>
         </div>
       )}
     </div>
@@ -436,6 +668,7 @@ export default function CorporateAdmin() {
   const [selected, setSelected] = useState<Account | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mainTab, setMainTab] = useState<"enrollments" | "appointments">("enrollments");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -548,58 +781,81 @@ export default function CorporateAdmin() {
           </div>
         )}
 
-        {/* Account Table */}
-        <div className="bg-white rounded-xl border border-border/50 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
-            <h2 className="font-semibold text-[#0d1b35]">Enrollments</h2>
-            <div className="flex gap-1">
-              {["all", "pending", "approved", "active", "rejected"].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setFilter(s)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-colors ${
-                    filter === s ? "bg-[#0d1b35] text-white" : "text-muted-foreground hover:bg-[#f8f9fb]"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {filteredAccounts.length === 0 ? (
-            <div className="py-16 text-center text-muted-foreground text-sm">
-              {loading ? "Loading…" : "No accounts found"}
-            </div>
-          ) : (
-            <ul className="divide-y divide-border/50">
-              {filteredAccounts.map((acct) => (
-                <li
-                  key={acct.id}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-[#f8f9fb] cursor-pointer transition-colors"
-                  onClick={() => setSelected(acct)}
-                >
-                  <div className="flex-1 min-w-0 space-y-0.5">
-                    <p className="font-medium text-[#0d1b35] truncate">{acct.companyName}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {acct.primaryContactName} · {acct.primaryContactEmail}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Badge className="text-xs capitalize bg-[#0d1b35]/10 text-[#0d1b35] hover:bg-[#0d1b35]/10">
-                      {acct.planTier}
-                    </Badge>
-                    <StatusBadge status={acct.status} />
-                    <span className="text-xs text-muted-foreground hidden sm:block">
-                      {acct.enrolledAt ? new Date(acct.enrolledAt).toLocaleDateString() : "—"}
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+        {/* Main Tab Switcher */}
+        <div className="flex gap-1 border-b border-border/50">
+          {(["enrollments", "appointments"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setMainTab(tab)}
+              className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors ${
+                mainTab === tab
+                  ? "border-[#0d1b35] text-[#0d1b35]"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {tab === "enrollments" ? <Building2 className="w-4 h-4" /> : <CalendarCheck className="w-4 h-4" />}
+              {tab}
+            </button>
+          ))}
         </div>
+
+        {/* Enrollments Tab */}
+        {mainTab === "enrollments" && (
+          <div className="bg-white rounded-xl border border-border/50 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+              <h2 className="font-semibold text-[#0d1b35]">Enrollments</h2>
+              <div className="flex gap-1">
+                {["all", "pending", "approved", "active", "rejected"].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setFilter(s)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition-colors ${
+                      filter === s ? "bg-[#0d1b35] text-white" : "text-muted-foreground hover:bg-[#f8f9fb]"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {filteredAccounts.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground text-sm">
+                {loading ? "Loading…" : "No accounts found"}
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/50">
+                {filteredAccounts.map((acct) => (
+                  <li
+                    key={acct.id}
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-[#f8f9fb] cursor-pointer transition-colors"
+                    onClick={() => setSelected(acct)}
+                  >
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      <p className="font-medium text-[#0d1b35] truncate">{acct.companyName}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {acct.primaryContactName} · {acct.primaryContactEmail}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Badge className="text-xs capitalize bg-[#0d1b35]/10 text-[#0d1b35] hover:bg-[#0d1b35]/10">
+                        {acct.planTier}
+                      </Badge>
+                      <StatusBadge status={acct.status} />
+                      <span className="text-xs text-muted-foreground hidden sm:block">
+                        {acct.enrolledAt ? new Date(acct.enrolledAt).toLocaleDateString() : "—"}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Appointments Tab */}
+        {mainTab === "appointments" && <AppointmentsTab />}
       </div>
     </div>
   );

@@ -31,7 +31,7 @@ export default function CorporateActivated() {
             </div>
           )}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/book">
+            <Link href={accountCode ? `/corporate/book?account=${accountCode}` : "/corporate/book"}>
               <Button className="bg-[#0d1b35] hover:bg-[#1a2d52] text-white px-8">
                 Book First Appointment
               </Button>

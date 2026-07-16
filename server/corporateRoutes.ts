@@ -4,10 +4,17 @@ import {
   createCorporateAccount,
   listCorporateAccounts,
   getCorporateAccount,
+  getCorporateAccountByCode,
   approveCorporateAccount,
   rejectCorporateAccount,
   getCorporateDashboardStats,
   listCorporatePlans,
+  listCorporateAppointments,
+  createCorporateAppointment,
+  getCorporateAppointment,
+  updateCorporateAppointmentStatus,
+  incrementCorporateUsage,
+  getCorporateUsage,
   runCorporateMigrations,
   logAudit,
 } from "./corporateStorage";
@@ -16,8 +23,10 @@ import {
   sendEnrollmentNotificationToAdmin,
   sendApprovalEmail,
   sendRejectionEmail,
+  sendCorporateBookingConfirmation,
+  sendCorporateBookingNotificationToAdmin,
 } from "./corporateEmailService";
-import { insertCorporateAccountSchema } from "@shared/schema";
+import { insertCorporateAccountSchema, insertCorporateAppointmentSchema } from "@shared/schema";
 import { getUncachableStripeClient } from "./stripeClient";
 import { z } from "zod";
 
@@ -319,6 +328,201 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
     } catch (err) {
       console.error("Stripe webhook error:", err);
       return res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
+
+  // ── Admin: Resend Approval Email (for already-approved accounts) ───────────
+
+  app.post("/api/admin/corporate/accounts/:id/resend-approval", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid account ID" });
+
+      const account = await getCorporateAccount(id);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (!["approved", "pending"].includes(account.status)) {
+        return res.status(400).json({ error: `Account is ${account.status} — only pending/approved accounts can receive an approval email` });
+      }
+
+      // Generate fresh Stripe checkout link
+      let stripeCheckoutUrl: string | undefined;
+      try {
+        const stripe = await getUncachableStripeClient().catch(() => null);
+        if (stripe) {
+          const priceIds: Record<string, string> = {
+            bronze: process.env.STRIPE_CORPORATE_BRONZE_PRICE_ID || "",
+            silver: process.env.STRIPE_CORPORATE_SILVER_PRICE_ID || "",
+            gold:   process.env.STRIPE_CORPORATE_GOLD_PRICE_ID   || "",
+          };
+          const priceId = priceIds[account.planTier || ""];
+          if (priceId) {
+            const baseUrl = process.env.BASE_URL || "https://www.lbs4.com";
+            const session = await stripe.checkout.sessions.create({
+              mode: "subscription",
+              customer_email: account.primaryContactEmail,
+              client_reference_id: String(account.id),
+              line_items: [{ price: priceId, quantity: 1 }],
+              metadata: { corporateAccountId: String(account.id), accountCode: account.accountCode },
+              success_url: `${baseUrl}/corporate/activated?account=${account.accountCode}`,
+              cancel_url: `${baseUrl}/corporate/enroll`,
+            });
+            stripeCheckoutUrl = session.url ?? undefined;
+          }
+        }
+      } catch (stripeErr) {
+        console.error("Stripe error on resend:", stripeErr);
+      }
+
+      // Ensure account is marked approved
+      if (account.status === "pending") {
+        await approveCorporateAccount(id, account.adminNotes || undefined, stripeCheckoutUrl);
+      }
+
+      await sendApprovalEmail(account, stripeCheckoutUrl || "").catch(console.error);
+      await logAudit("account", String(id), "approval_email_resent", "admin", { stripeCheckoutUrl });
+
+      return res.json({ success: true, stripeCheckoutUrl });
+    } catch (err) {
+      console.error("Resend approval error:", err);
+      return res.status(500).json({ error: "Failed to resend approval email" });
+    }
+  });
+
+  // ── Public: Verify Account Code ─────────────────────────────────────────────
+
+  app.get("/api/corporate/account/:code", async (req: Request, res: Response) => {
+    try {
+      const code = (req.params.code as string).toUpperCase();
+      const account = await getCorporateAccountByCode(code);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.status !== "active") {
+        return res.status(403).json({
+          error: account.status === "pending"
+            ? "This account is pending approval. Please wait for your activation email."
+            : account.status === "approved"
+            ? "This account has been approved but payment has not been completed yet."
+            : "This account is not currently active. Please contact LBS.",
+          status: account.status,
+        });
+      }
+      // Return only what the booking form needs — no sensitive billing data
+      return res.json({
+        id: account.id,
+        accountCode: account.accountCode,
+        companyName: account.companyName,
+        planTier: account.planTier,
+        needsScanToEmail: account.needsScanToEmail,
+      });
+    } catch (err) {
+      console.error("Account lookup error:", err);
+      return res.status(500).json({ error: "Failed to verify account" });
+    }
+  });
+
+  // ── Public: Book Corporate Appointment ──────────────────────────────────────
+
+  app.post("/api/corporate/appointments", async (req: Request, res: Response) => {
+    try {
+      const data = insertCorporateAppointmentSchema.parse(req.body);
+
+      // Verify account is active
+      const account = await getCorporateAccountByCode(data.accountCode);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      if (account.status !== "active") {
+        return res.status(403).json({ error: "Account is not active. Please complete payment first." });
+      }
+
+      const appointment = await createCorporateAppointment({ ...data, accountId: account.id });
+
+      // Fire-and-forget emails + calendar invite
+      Promise.all([
+        sendCorporateBookingConfirmation(appointment, account).catch(console.error),
+        sendCorporateBookingNotificationToAdmin(appointment, account).catch(console.error),
+      ]);
+
+      return res.status(201).json({
+        appointmentCode: appointment.appointmentCode,
+        appointmentDatetime: appointment.appointmentDatetime,
+        status: appointment.status,
+      });
+    } catch (err: any) {
+      if (err?.name === "ZodError") {
+        return res.status(400).json({ error: "Validation failed", issues: err.issues });
+      }
+      console.error("Corporate booking error:", err);
+      return res.status(500).json({ error: "Failed to book appointment. Please try again." });
+    }
+  });
+
+  // ── Admin: List All Appointments ────────────────────────────────────────────
+
+  app.get("/api/admin/corporate/appointments", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = req.query.accountId ? parseInt(req.query.accountId as string, 10) : undefined;
+      const appointments = await listCorporateAppointments(accountId);
+      return res.json(appointments);
+    } catch (err) {
+      console.error("List appointments error:", err);
+      return res.status(500).json({ error: "Failed to load appointments" });
+    }
+  });
+
+  // ── Admin: Complete Appointment (tracks usage) ──────────────────────────────
+
+  app.put("/api/admin/corporate/appointments/:id/complete", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      const { adminNotes, actsPerformed } = req.body as { adminNotes?: string; actsPerformed?: number };
+
+      const appt = await getCorporateAppointment(id);
+      if (!appt) return res.status(404).json({ error: "Appointment not found" });
+      if (appt.status === "completed") return res.status(400).json({ error: "Already completed" });
+
+      const updated = await updateCorporateAppointmentStatus(id, "completed", adminNotes);
+
+      // Track usage — default 1 act unless specified
+      const account = await getCorporateAccount(appt.accountId);
+      if (account) {
+        const planLimits: Record<string, number> = { bronze: 20, silver: 50, gold: 100 };
+        const included = planLimits[account.planTier || ""] || 20;
+        await incrementCorporateUsage(appt.accountId, included, actsPerformed ?? 1);
+      }
+
+      return res.json({ success: true, appointment: updated });
+    } catch (err) {
+      console.error("Complete appointment error:", err);
+      return res.status(500).json({ error: "Failed to complete appointment" });
+    }
+  });
+
+  // ── Admin: Cancel Appointment ───────────────────────────────────────────────
+
+  app.put("/api/admin/corporate/appointments/:id/cancel", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id as string;
+      const { adminNotes } = req.body as { adminNotes?: string };
+      const updated = await updateCorporateAppointmentStatus(id, "cancelled", adminNotes);
+      if (!updated) return res.status(404).json({ error: "Appointment not found" });
+      return res.json({ success: true, appointment: updated });
+    } catch (err) {
+      console.error("Cancel appointment error:", err);
+      return res.status(500).json({ error: "Failed to cancel appointment" });
+    }
+  });
+
+  // ── Admin: Usage for an Account ─────────────────────────────────────────────
+
+  app.get("/api/admin/corporate/accounts/:id/usage", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid account ID" });
+      const monthYear = req.query.monthYear as string | undefined;
+      const usage = await getCorporateUsage(id, monthYear);
+      const appointments = await listCorporateAppointments(id);
+      return res.json({ usage, appointments });
+    } catch (err) {
+      console.error("Usage error:", err);
+      return res.status(500).json({ error: "Failed to load usage" });
     }
   });
 }

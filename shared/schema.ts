@@ -153,6 +153,25 @@ export const corporateAuditLog = pgTable("corporate_audit_log", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Corporate appointment Zod schema
+export const insertCorporateAppointmentSchema = z.object({
+  accountCode: z.string().min(1),
+  employeeName: z.string().min(2),
+  employeeEmail: z.string().email(),
+  employeePhone: z.string().optional(),
+  appointmentDatetime: z.string().refine((v) => !isNaN(new Date(v).getTime()), "Invalid date"),
+  numSigners: z.number().int().min(1).max(10).default(1),
+  numDocuments: z.number().int().min(1).max(50).default(1),
+  estimatedCertificates: z.number().int().optional(),
+  idType: z.string().optional(),
+  needWitnesses: z.boolean().default(false),
+  needPrinting: z.boolean().default(false),
+  needScanEmail: z.boolean().default(false),
+  specialInstructions: z.string().optional(),
+});
+
+export type InsertCorporateAppointment = z.infer<typeof insertCorporateAppointmentSchema>;
+
 // Zod schemas
 export const insertCorporateAccountSchema = z.object({
   companyName: z.string().min(2),

@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import {
   corporateAccounts,
   corporatePlans,
@@ -8,6 +8,7 @@ import {
   corporateUsageTracking,
   corporateAuditLog,
   type InsertCorporateAccount,
+  type InsertCorporateAppointment,
   type CorporateAccount,
   type CorporatePlan,
   type CorporateAppointment,
@@ -240,7 +241,64 @@ export async function updateCorporateAccountStripe(
     .where(eq(corporateAccounts.id, id));
 }
 
+// ─── Account by Code ──────────────────────────────────────────────────────────
+export async function getCorporateAccountByCode(code: string): Promise<CorporateAccount | null> {
+  const database = getDb();
+  const rows = await database
+    .select()
+    .from(corporateAccounts)
+    .where(eq(corporateAccounts.accountCode, code.toUpperCase()));
+  return rows[0] || null;
+}
+
 // ─── Appointments ─────────────────────────────────────────────────────────────
+export function generateAppointmentCode(accountCode: string): string {
+  const now = new Date();
+  const mmdd = String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0");
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  // e.g. LBS-000001-0716-4823
+  const acctNum = accountCode.replace("LBS-ACCT-", "");
+  return `LBS-${acctNum}-${mmdd}-${rand}`;
+}
+
+export async function createCorporateAppointment(
+  data: InsertCorporateAppointment & { accountId: number }
+): Promise<CorporateAppointment> {
+  const database = getDb();
+  const appointmentCode = generateAppointmentCode(
+    (await getCorporateAccount(data.accountId))?.accountCode || "000000"
+  );
+
+  const inserted = await database
+    .insert(corporateAppointments)
+    .values({
+      accountId: data.accountId,
+      appointmentCode,
+      employeeName: data.employeeName,
+      employeeEmail: data.employeeEmail,
+      employeePhone: data.employeePhone,
+      appointmentDatetime: new Date(data.appointmentDatetime),
+      numSigners: data.numSigners ?? 1,
+      numDocuments: data.numDocuments ?? 1,
+      estimatedCertificates: data.estimatedCertificates,
+      idType: data.idType,
+      needWitnesses: data.needWitnesses ?? false,
+      needPrinting: data.needPrinting ?? false,
+      needScanEmail: data.needScanEmail ?? false,
+      specialInstructions: data.specialInstructions,
+      status: "scheduled",
+    } as any)
+    .returning();
+
+  await logAudit("appointment", inserted[0].id, "appointment_booked", data.employeeEmail, {
+    accountId: data.accountId,
+    appointmentCode,
+    datetime: data.appointmentDatetime,
+  });
+
+  return inserted[0];
+}
+
 export async function listCorporateAppointments(
   accountId?: number
 ): Promise<CorporateAppointment[]> {
@@ -256,6 +314,103 @@ export async function listCorporateAppointments(
     .select()
     .from(corporateAppointments)
     .orderBy(desc(corporateAppointments.appointmentDatetime));
+}
+
+export async function getCorporateAppointment(id: string): Promise<CorporateAppointment | null> {
+  const database = getDb();
+  const rows = await database
+    .select()
+    .from(corporateAppointments)
+    .where(eq(corporateAppointments.id, id));
+  return rows[0] || null;
+}
+
+export async function updateCorporateAppointmentStatus(
+  id: string,
+  status: "scheduled" | "completed" | "cancelled",
+  adminNotes?: string,
+  outlookEventId?: string
+): Promise<CorporateAppointment | null> {
+  const database = getDb();
+  const updated = await database
+    .update(corporateAppointments)
+    .set({
+      status,
+      ...(status === "completed" ? { completedAt: new Date() } : {}),
+      ...(adminNotes !== undefined ? { adminNotes } : {}),
+      ...(outlookEventId !== undefined ? { outlookEventId } : {}),
+    } as any)
+    .where(eq(corporateAppointments.id, id))
+    .returning();
+  await logAudit("appointment", id, `appointment_${status}`, "admin", { adminNotes });
+  return updated[0] || null;
+}
+
+// ─── Usage Tracking ───────────────────────────────────────────────────────────
+export async function incrementCorporateUsage(
+  accountId: number,
+  actsIncluded: number,
+  actsToAdd: number = 1
+): Promise<void> {
+  const database = getDb();
+  const now = new Date();
+  const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  // Try upsert — if row for this month exists, increment; otherwise create
+  const existing = await database
+    .select()
+    .from(corporateUsageTracking)
+    .where(
+      and(
+        eq(corporateUsageTracking.accountId, accountId),
+        eq(corporateUsageTracking.monthYear, monthYear)
+      )
+    );
+
+  if (existing.length > 0) {
+    const row = existing[0];
+    const newUsed = row.actsUsed + actsToAdd;
+    const overage = Math.max(0, newUsed - row.actsIncluded);
+    await database
+      .update(corporateUsageTracking)
+      .set({ actsUsed: newUsed, overageActs: overage, updatedAt: new Date() } as any)
+      .where(eq(corporateUsageTracking.id, row.id));
+  } else {
+    await database
+      .insert(corporateUsageTracking)
+      .values({
+        accountId,
+        monthYear,
+        actsUsed: actsToAdd,
+        actsIncluded,
+        overageActs: actsToAdd > actsIncluded ? actsToAdd - actsIncluded : 0,
+        billingPeriodStart: new Date(now.getFullYear(), now.getMonth(), 1),
+        billingPeriodEnd: new Date(now.getFullYear(), now.getMonth() + 1, 0),
+      } as any);
+  }
+}
+
+export async function getCorporateUsage(
+  accountId: number,
+  monthYear?: string
+): Promise<{ monthYear: string; actsUsed: number; actsIncluded: number; overageActs: number } | null> {
+  const database = getDb();
+  const now = new Date();
+  const target = monthYear || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const rows = await database
+    .select()
+    .from(corporateUsageTracking)
+    .where(
+      and(
+        eq(corporateUsageTracking.accountId, accountId),
+        eq(corporateUsageTracking.monthYear, target)
+      )
+    );
+
+  return rows[0]
+    ? { monthYear: rows[0].monthYear, actsUsed: rows[0].actsUsed, actsIncluded: rows[0].actsIncluded, overageActs: rows[0].overageActs }
+    : null;
 }
 
 // ─── Audit Log ────────────────────────────────────────────────────────────────
