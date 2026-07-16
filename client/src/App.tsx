@@ -20,6 +20,7 @@ import CorporateEnroll from "@/pages/corporate/Enroll";
 import CorporateActivated from "@/pages/corporate/Activated";
 import CorporateBook from "@/pages/corporate/Book";
 import CorporateAdmin from "@/pages/admin/CorporateAdmin";
+import CorporatePortal from "@/pages/corporate/Portal";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -43,6 +44,7 @@ function Router() {
         <Route path="/corporate/activated" component={CorporateActivated} />
         <Route path="/corporate/book" component={CorporateBook} />
         <Route path="/admin/corporate" component={CorporateAdmin} />
+        <Route path="/corporate/portal" component={CorporatePortal} />
         <Route component={NotFound} />
       </Switch>
     </>

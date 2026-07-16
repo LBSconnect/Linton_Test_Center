@@ -37,6 +37,24 @@ const JWT_SECRET = process.env.JWT_SECRET || ADMIN_SECRET;
 
 // ─── Auth Middleware ──────────────────────────────────────────────────────────
 
+function requirePortalToken(req: Request, res: Response, next: NextFunction) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ error: "Missing Authorization header" });
+
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : auth;
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as { role: string; accountId: number; accountCode: string };
+    if (payload.role !== "corporate-portal") {
+      return res.status(401).json({ error: "Invalid token role" });
+    }
+    (req as any).portalAccountId = payload.accountId;
+    return next();
+  } catch {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+
 function requireAdminToken(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: "Missing Authorization header" });
@@ -556,6 +574,94 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
       return res.json({ usage, appointments });
     } catch (err) {
       console.error("Usage error:", err);
+      return res.status(500).json({ error: "Failed to load usage" });
+    }
+  });
+
+  // ── Customer Portal: Login ────────────────────────────────────────────────────
+
+  app.post("/api/corporate/portal/login", async (req: Request, res: Response) => {
+    try {
+      const { accountCode, email } = req.body as { accountCode?: string; email?: string };
+      if (!accountCode || !email) {
+        return res.status(400).json({ error: "accountCode and email are required" });
+      }
+
+      const account = await getCorporateAccountByCode(accountCode.toUpperCase());
+      if (!account) return res.status(404).json({ error: "Account not found" });
+
+      if (account.status !== "active") {
+        return res.status(403).json({ error: "Account is not active. Please contact LBS." });
+      }
+
+      if (email.toLowerCase() !== account.primaryContactEmail.toLowerCase()) {
+        return res.status(401).json({ error: "Email does not match account records" });
+      }
+
+      const token = jwt.sign(
+        { role: "corporate-portal", accountId: account.id, accountCode: account.accountCode },
+        JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.json({
+        token,
+        account: {
+          accountCode: account.accountCode,
+          companyName: account.companyName,
+          planTier: account.planTier,
+          status: account.status,
+        },
+      });
+    } catch (err) {
+      console.error("Portal login error:", err);
+      return res.status(500).json({ error: "Login failed. Please try again." });
+    }
+  });
+
+  // ── Customer Portal: Appointments ─────────────────────────────────────────────
+
+  app.get("/api/corporate/portal/appointments", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const month = req.query.month as string | undefined;
+
+      let appointments = await listCorporateAppointments(accountId);
+
+      if (month) {
+        const [year, mon] = month.split("-").map(Number);
+        appointments = appointments.filter((appt) => {
+          const dt = appt.appointmentDatetime;
+          return dt.getFullYear() === year && dt.getMonth() + 1 === mon;
+        });
+      }
+
+      return res.json(appointments);
+    } catch (err) {
+      console.error("Portal appointments error:", err);
+      return res.status(500).json({ error: "Failed to load appointments" });
+    }
+  });
+
+  // ── Customer Portal: Usage ────────────────────────────────────────────────────
+
+  app.get("/api/corporate/portal/usage", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const month = req.query.month as string | undefined;
+
+      const [usage, account] = await Promise.all([
+        getCorporateUsage(accountId, month),
+        getCorporateAccount(accountId),
+      ]);
+
+      const planLimits: Record<string, number> = { bronze: 15, silver: 25, gold: 100 };
+      const planTier = account?.planTier ?? "bronze";
+      const actsIncluded = planLimits[planTier] ?? 15;
+
+      return res.json({ usage, planTier, actsIncluded });
+    } catch (err) {
+      console.error("Portal usage error:", err);
       return res.status(500).json({ error: "Failed to load usage" });
     }
   });

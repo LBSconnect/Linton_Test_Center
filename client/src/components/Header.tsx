@@ -15,6 +15,7 @@ const navLinks = [
 ];
 
 const corporateLinks = [
+  { href: "/corporate/portal", label: "Client Portal" },
   { href: "/corporate", label: "Overview" },
   { href: "/corporate/programs", label: "Plans & Pricing" },
   { href: "/corporate/enroll", label: "Enroll Now" },
