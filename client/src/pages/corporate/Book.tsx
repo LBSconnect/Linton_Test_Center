@@ -89,6 +89,7 @@ export default function CorporateBook() {
     employeePhone: "",
     numSigners: "1",
     numDocuments: "1",
+    estimatedCertificates: "",
     idType: "",
     needWitnesses: false,
     needPrinting: false,
@@ -187,6 +188,7 @@ export default function CorporateBook() {
           appointmentDatetime: selectedTime,
           numSigners: parseInt(form.numSigners, 10),
           numDocuments: parseInt(form.numDocuments, 10),
+          estimatedCertificates: form.estimatedCertificates ? parseInt(form.estimatedCertificates, 10) : undefined,
           idType: form.idType,
           needWitnesses: form.needWitnesses,
           needPrinting: form.needPrinting,
@@ -242,7 +244,7 @@ export default function CorporateBook() {
               <strong>Reminder:</strong> Bring all documents <em>unsigned</em> and a valid government-issued photo ID for all signers.
             </div>
             <Button
-              onClick={() => { setStep(0); setResult(null); setDate(""); setSelectedTime(""); setForm({ employeeName: "", employeeEmail: "", employeePhone: "", numSigners: "1", numDocuments: "1", idType: "", needWitnesses: false, needPrinting: false, needScanEmail: false, specialInstructions: "" }); }}
+              onClick={() => { setStep(0); setResult(null); setDate(""); setSelectedTime(""); setForm({ employeeName: "", employeeEmail: "", employeePhone: "", numSigners: "1", numDocuments: "1", estimatedCertificates: "", idType: "", needWitnesses: false, needPrinting: false, needScanEmail: false, specialInstructions: "" }); }}
               variant="outline"
               className="w-full"
             >
@@ -416,6 +418,16 @@ export default function CorporateBook() {
                       >
                         {[1,2,3,4,5,6,7,8,9,10,15,20,25,30].map(n => <option key={n} value={n}>{n}</option>)}
                       </select>
+                    </Field>
+                    <Field label="Total Stamps Required">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={form.estimatedCertificates}
+                        onChange={(e) => set("estimatedCertificates", e.target.value)}
+                        placeholder="e.g. 4"
+                        className="w-full"
+                      />
                     </Field>
                   </div>
 
