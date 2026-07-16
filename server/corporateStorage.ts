@@ -350,13 +350,19 @@ export async function updateCorporateAppointmentStatus(
 export async function incrementCorporateUsage(
   accountId: number,
   actsIncluded: number,
-  actsToAdd: number = 1
-): Promise<void> {
+  actsToAdd: number = 1,
+  numDocuments: number = 1,
+  estimatedCertificates: number = 0
+): Promise<{ overageChargeCents: number }> {
   const database = getDb();
   const now = new Date();
   const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-  // Try upsert — if row for this month exists, increment; otherwise create
+  // Overage charge per appointment: $10/doc + $1 per stamp beyond the first
+  function calcOverageCharge(docs: number, stamps: number): number {
+    return docs * 1000 + Math.max(0, stamps - 1) * 100; // in cents
+  }
+
   const existing = await database
     .select()
     .from(corporateUsageTracking)
@@ -367,15 +373,30 @@ export async function incrementCorporateUsage(
       )
     );
 
+  let overageChargeCents = 0;
+
   if (existing.length > 0) {
     const row = existing[0];
     const newUsed = row.actsUsed + actsToAdd;
-    const overage = Math.max(0, newUsed - row.actsIncluded);
+    const overageActs = Math.max(0, newUsed - row.actsIncluded);
+    // Charge applies when this act exceeds the plan limit
+    if (newUsed > row.actsIncluded) {
+      overageChargeCents = calcOverageCharge(numDocuments, estimatedCertificates);
+    }
+    const newOverageCharge = (row as any).overageChargeCents ?? 0;
     await database
       .update(corporateUsageTracking)
-      .set({ actsUsed: newUsed, overageActs: overage, updatedAt: new Date() } as any)
+      .set({
+        actsUsed: newUsed,
+        overageActs,
+        overageChargeCents: newOverageCharge + overageChargeCents,
+        updatedAt: new Date(),
+      } as any)
       .where(eq(corporateUsageTracking.id, row.id));
   } else {
+    if (actsToAdd > actsIncluded) {
+      overageChargeCents = calcOverageCharge(numDocuments, estimatedCertificates);
+    }
     await database
       .insert(corporateUsageTracking)
       .values({
@@ -383,17 +404,20 @@ export async function incrementCorporateUsage(
         monthYear,
         actsUsed: actsToAdd,
         actsIncluded,
-        overageActs: actsToAdd > actsIncluded ? actsToAdd - actsIncluded : 0,
+        overageActs: Math.max(0, actsToAdd - actsIncluded),
+        overageChargeCents,
         billingPeriodStart: new Date(now.getFullYear(), now.getMonth(), 1),
         billingPeriodEnd: new Date(now.getFullYear(), now.getMonth() + 1, 0),
       } as any);
   }
+
+  return { overageChargeCents };
 }
 
 export async function getCorporateUsage(
   accountId: number,
   monthYear?: string
-): Promise<{ monthYear: string; actsUsed: number; actsIncluded: number; overageActs: number } | null> {
+): Promise<{ monthYear: string; actsUsed: number; actsIncluded: number; overageActs: number; overageChargeCents: number } | null> {
   const database = getDb();
   const now = new Date();
   const target = monthYear || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -409,7 +433,13 @@ export async function getCorporateUsage(
     );
 
   return rows[0]
-    ? { monthYear: rows[0].monthYear, actsUsed: rows[0].actsUsed, actsIncluded: rows[0].actsIncluded, overageActs: rows[0].overageActs }
+    ? {
+        monthYear: rows[0].monthYear,
+        actsUsed: rows[0].actsUsed,
+        actsIncluded: rows[0].actsIncluded,
+        overageActs: rows[0].overageActs,
+        overageChargeCents: (rows[0] as any).overageChargeCents ?? 0,
+      }
     : null;
 }
 
@@ -568,6 +598,12 @@ export async function runCorporateMigrations(): Promise<void> {
       ip_address VARCHAR(45),
       created_at TIMESTAMP DEFAULT NOW()
     );
+  `);
+
+  // Add overage charge column if not present (safe on existing deployments)
+  await pg.query(`
+    ALTER TABLE corporate_usage_tracking
+    ADD COLUMN IF NOT EXISTS overage_charge_cents INTEGER NOT NULL DEFAULT 0;
   `);
 
   // Keep plan act limits in sync with product decisions

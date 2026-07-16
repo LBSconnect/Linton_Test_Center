@@ -506,15 +506,23 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
 
       const updated = await updateCorporateAppointmentStatus(id, "completed", adminNotes);
 
-      // Track usage — default 1 act unless specified
+      // Track usage and calculate overage charges
       const account = await getCorporateAccount(appt.accountId);
+      let overageChargeCents = 0;
       if (account) {
-        const planLimits: Record<string, number> = { bronze: 20, silver: 50, gold: 100 };
-        const included = planLimits[account.planTier || ""] || 20;
-        await incrementCorporateUsage(appt.accountId, included, actsPerformed ?? 1);
+        const planLimits: Record<string, number> = { bronze: 15, silver: 25, gold: 100 };
+        const included = planLimits[account.planTier || ""] || 15;
+        const result = await incrementCorporateUsage(
+          appt.accountId,
+          included,
+          actsPerformed ?? 1,
+          appt.numDocuments ?? 1,
+          appt.estimatedCertificates ?? 0
+        );
+        overageChargeCents = result.overageChargeCents;
       }
 
-      return res.json({ success: true, appointment: updated });
+      return res.json({ success: true, appointment: updated, overageChargeCents });
     } catch (err) {
       console.error("Complete appointment error:", err);
       return res.status(500).json({ error: "Failed to complete appointment" });

@@ -25,6 +25,8 @@ import {
   CalendarX,
   FileCheck,
   Home,
+  BarChart3,
+  AlertTriangle,
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -125,8 +127,12 @@ function AppointmentsTab() {
   async function complete(appt: Appointment) {
     setActionLoading(appt.id);
     try {
-      await api(`/api/admin/corporate/appointments/${appt.id}/complete`, { method: "PUT" });
-      setMsg({ id: appt.id, type: "success", text: "Marked complete. Usage logged." });
+      const result = await api(`/api/admin/corporate/appointments/${appt.id}/complete`, { method: "PUT" });
+      const overageCents: number = result.overageChargeCents ?? 0;
+      const overageNote = overageCents > 0
+        ? ` Overage charge applied: $${(overageCents / 100).toFixed(2)} ($10/doc + $1/additional stamp).`
+        : " No overage — within plan limit.";
+      setMsg({ id: appt.id, type: "success", text: `Marked complete. Usage logged.${overageNote}` });
       load();
     } catch (err: any) {
       setMsg({ id: appt.id, type: "error", text: err.message });
@@ -407,6 +413,86 @@ function StatCard({
   );
 }
 
+// ─── Usage Panel ──────────────────────────────────────────────────────────────
+
+interface UsageData {
+  monthYear: string;
+  actsUsed: number;
+  actsIncluded: number;
+  overageActs: number;
+  overageChargeCents: number;
+}
+
+function UsagePanel({ accountId, planTier }: { accountId: number; planTier: string | null }) {
+  const [usage, setUsage] = useState<UsageData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api(`/api/admin/corporate/accounts/${accountId}/usage`)
+      .then((d) => setUsage(d.usage))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [accountId]);
+
+  const planLimits: Record<string, number> = { bronze: 15, silver: 25, gold: 100 };
+  const limit = planLimits[planTier || ""] || 15;
+  const used = usage?.actsUsed ?? 0;
+  const pct = Math.min(100, Math.round((used / limit) * 100));
+  const isOver = used > limit;
+
+  return (
+    <div className="bg-white rounded-xl border border-border/50 p-5 space-y-4">
+      <h3 className="font-semibold text-[#0d1b35] flex items-center gap-2">
+        <BarChart3 className="w-4 h-4" /> Monthly Usage
+        {usage && <span className="text-xs text-muted-foreground font-normal ml-auto">{usage.monthYear}</span>}
+      </h3>
+
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <div className="space-y-3">
+          <div className="flex items-end justify-between text-sm">
+            <span className="text-muted-foreground">Notarial acts this month</span>
+            <span className={`font-bold text-lg ${isOver ? "text-red-600" : "text-[#0d1b35]"}`}>
+              {used} / {limit}
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-2.5 rounded-full bg-[#f0f4ff] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${isOver ? "bg-red-500" : pct >= 80 ? "bg-amber-500" : "bg-green-500"}`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+
+          <div className="flex gap-4 text-xs text-muted-foreground">
+            <span>{limit - Math.min(used, limit)} acts remaining</span>
+            {isOver && <span className="text-red-600 font-medium">{used - limit} overage act{used - limit !== 1 ? "s" : ""}</span>}
+          </div>
+
+          {usage && usage.overageChargeCents > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-semibold text-red-700">Overage Charges This Month</p>
+                <p className="text-red-600 text-xl font-bold">${(usage.overageChargeCents / 100).toFixed(2)}</p>
+                <p className="text-red-500 text-xs mt-0.5">$10 per document + $1 per additional stamp beyond plan limit</p>
+              </div>
+            </div>
+          )}
+
+          {!isOver && usage && (
+            <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              Within plan limit — no overage charges this month
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Account Detail ────────────────────────────────────────────────────────────
 
 function AccountDetail({
@@ -655,6 +741,9 @@ function AccountDetail({
           </Button>
         </div>
       )}
+
+      {/* Monthly Usage — active accounts */}
+      {account.status === "active" && <UsagePanel accountId={account.id} planTier={account.planTier} />}
 
       {/* Approved — awaiting payment */}
       {account.status === "approved" && !account.stripeSubscriptionId && (
