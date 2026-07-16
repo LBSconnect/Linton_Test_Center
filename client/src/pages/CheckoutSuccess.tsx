@@ -1,14 +1,16 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { CheckCircle2, ArrowRight, Phone } from "lucide-react";
+import { CheckCircle2, ArrowRight, Phone, Star } from "lucide-react";
 
 export default function CheckoutSuccess() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO title="Payment Successful" canonical="/checkout/success" noIndex />
       <Header />
 
       <section className="flex-1 flex items-center justify-center py-20 px-6">
@@ -26,9 +28,22 @@ export default function CheckoutSuccess() {
               contact us.
             </p>
             <div className="space-y-3 pt-2">
+              <a
+                href="https://g.page/r/lbs-test-exam-center/review"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button
+                  className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
+                >
+                  <Star className="w-4 h-4 mr-2" />
+                  Leave Us a Google Review
+                </Button>
+              </a>
               <Link href="/">
                 <Button
-                  className="w-full bg-[#1e3a6e] text-white"
+                  variant="outline"
+                  className="w-full"
                   data-testid="button-back-home"
                 >
                   Return to Home
@@ -38,7 +53,7 @@ export default function CheckoutSuccess() {
               <a href="tel:2818365357">
                 <Button
                   variant="outline"
-                  className="w-full mt-2"
+                  className="w-full"
                   data-testid="button-call-support"
                 >
                   <Phone className="w-4 h-4 mr-2" />

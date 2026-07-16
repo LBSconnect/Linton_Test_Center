@@ -5,6 +5,7 @@ import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClie
 import { insertContactSchema } from "@shared/schema";
 import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
 import { sendEmail } from "./smtpClient";
+import { registerCorporateRoutes } from "./corporateRoutes";
 import { z } from "zod";
 
 // Validation schema for appointment booking
@@ -57,9 +58,8 @@ function isValidBusinessTime(date: Date): boolean {
   const ctHour = utcToCTHour(date);
 
   if (dow === 0) return false;                          // Sunday: closed
-  if (dow === 4) return false;                          // Thursday: closed
   if (dow === 6) return ctHour >= 8 && ctHour <= 15;   // Saturday: last slot 3pm (closes 4pm)
-  return ctHour >= 8 && ctHour <= 16;                  // Mon–Wed, Fri: last slot 4pm (closes 5pm)
+  return ctHour >= 8 && ctHour <= 16;                  // Mon–Fri: last slot 4pm (closes 5pm)
 }
 
 // Build a UTC ISO string for a specific CT hour:minute on a given date
@@ -81,12 +81,12 @@ const BOOT_CAMP_SLOTS: Record<string, { ctHour: number; ctMinute: number }> = {
 
 // Generate available time slots for a given date (all in Central Time)
 // Last slot is 1hr before close so appointments end at closing time:
-// Mon–Wed, Fri: slots 8am–4pm (business closes 5pm) | Sat: slots 8am–3pm (closes 4pm) | Thu, Sun: closed
+// Mon–Fri: slots 8am–4pm (business closes 5pm) | Sat: slots 8am–3pm (closes 4pm) | Sun: closed
 function getAvailableTimeSlots(date: Date, serviceSlug?: string): string[] {
   const slots: string[] = [];
   const dow = date.getUTCDay();
 
-  if (dow === 0 || dow === 4) return slots; // Sunday, Thursday — closed
+  if (dow === 0) return slots; // Sunday — closed
 
   // Boot camp services: return their specific fixed Saturday slot only
   if (serviceSlug && BOOT_CAMP_SLOTS[serviceSlug]) {
@@ -295,7 +295,7 @@ export async function registerRoutes(
           monWedFri: { open: '08:00', close: '17:00', lastSlot: '16:00' },
           sat: { open: '08:00', close: '16:00', lastSlot: '15:00' },
         },
-        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Friday', 'Saturday'],
+        daysOpen: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
       });
     } catch (error: any) {
       console.error('Error fetching available slots:', error.message);
@@ -317,7 +317,7 @@ export async function registerRoutes(
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
-          error: 'Invalid appointment time. Mon–Wed & Fri: last slot 4pm, Sat: last slot 3pm CT. Closed Thursday & Sunday.',
+          error: 'Invalid appointment time. Mon–Fri: last slot 4pm, Sat: last slot 3pm CT. Closed Sunday.',
         });
       }
 
@@ -532,6 +532,9 @@ export async function registerRoutes(
       res.status(500).json({ success: false, error: error.message });
     }
   });
+
+  // Corporate Notary Division routes
+  await registerCorporateRoutes(app);
 
   return httpServer;
 }
