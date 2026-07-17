@@ -344,7 +344,7 @@ export default function Home() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/book">
+            <Link href="/services/certification-exam-testing">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white px-8"
