@@ -19,7 +19,6 @@ const corporateLinks = [
   { href: "/corporate", label: "Overview" },
   { href: "/corporate/programs", label: "Plans & Pricing" },
   { href: "/corporate/enroll", label: "Enroll Now" },
-  { href: "/corporate/book", label: "Book Appointment" },
   { href: "/admin/corporate", label: "Admin Dashboard" },
 ];
 
