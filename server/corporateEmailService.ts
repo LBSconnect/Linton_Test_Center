@@ -446,3 +446,38 @@ export async function sendCorporateBookingNotificationToAdmin(
     attendeeName: appt.employeeName,
   }).catch(console.error);
 }
+
+// ─── Portal: Message to LBS ───────────────────────────────────────────────────
+export async function sendPortalMessage(
+  account: CorporateAccount,
+  senderName: string,
+  senderEmail: string,
+  subject: string,
+  message: string
+): Promise<boolean> {
+  const adminEmail = process.env.ADMIN_EMAIL || LBS_EMAIL;
+
+  const html = emailWrapper(`
+    <h2 style="margin:0 0 20px;font-size:20px;color:#0d1b35;">Message from Client Portal</h2>
+    <div style="background:#f0f4ff;border-left:4px solid #1e3a6e;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:20px;">
+      <p style="margin:0;font-size:13px;color:#5a6a7e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Account</p>
+      <p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#0d1b35;">${account.companyName}</p>
+      <p style="margin:2px 0 0;font-size:13px;color:#5a6a7e;">Code: ${account.accountCode} &nbsp;|&nbsp; Plan: ${PLAN_NAMES[account.planTier || ""] || account.planTier}</p>
+    </div>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0;font-size:13px;color:#5a6a7e;"><strong>From:</strong> ${senderName} &lt;${senderEmail}&gt;</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#5a6a7e;"><strong>Subject:</strong> ${subject}</p>
+    </div>
+    <div style="font-size:15px;color:#1f2d40;line-height:1.7;white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+    <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e2e8f0;">
+      <p style="margin:0;font-size:13px;color:#5a6a7e;">Reply directly to <a href="mailto:${senderEmail}" style="color:#1e3a6e;">${senderEmail}</a> to respond to this message.</p>
+    </div>
+  `);
+
+  return sendEmail({
+    to: adminEmail,
+    subject: `[Portal Message] ${account.companyName}: ${subject}`,
+    html,
+    replyTo: senderEmail,
+  });
+}

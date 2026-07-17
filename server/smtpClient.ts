@@ -59,6 +59,7 @@ export async function sendEmail(options: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
   attachments?: Array<{
     filename: string;
     content: string | Buffer;
@@ -108,6 +109,7 @@ export async function sendEmail(options: {
         to: options.to,
         subject: options.subject,
         html: options.html,
+        ...(options.replyTo ? { replyTo: options.replyTo } : {}),
       };
 
       if (options.attachments?.length) {

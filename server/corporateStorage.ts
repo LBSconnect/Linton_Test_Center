@@ -494,6 +494,29 @@ export async function getCorporateDashboardStats() {
   };
 }
 
+// ─── Portal Helpers ───────────────────────────────────────────────────────────
+
+export async function getCorporateUsageHistory(
+  accountId: number,
+  months: number = 6
+): Promise<{ monthYear: string; actsUsed: number; actsIncluded: number; overageActs: number; overageChargeCents: number }[]> {
+  const database = getDb();
+  const rows = await database
+    .select()
+    .from(corporateUsageTracking)
+    .where(eq(corporateUsageTracking.accountId, accountId))
+    .orderBy(desc(corporateUsageTracking.monthYear))
+    .limit(months);
+
+  return rows.map((r) => ({
+    monthYear: r.monthYear,
+    actsUsed: r.actsUsed,
+    actsIncluded: r.actsIncluded,
+    overageActs: r.overageActs,
+    overageChargeCents: (r as any).overageChargeCents ?? 0,
+  })).reverse();
+}
+
 // ─── Reporting ────────────────────────────────────────────────────────────────
 
 export async function getAdminReportingData() {

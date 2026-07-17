@@ -16,6 +16,7 @@ import {
   updateCorporateAppointmentStatus,
   incrementCorporateUsage,
   getCorporateUsage,
+  getCorporateUsageHistory,
   getAdminReportingData,
   getAuditLogEntries,
   getExportData,
@@ -30,6 +31,7 @@ import {
   sendActivationEmail,
   sendCorporateBookingConfirmation,
   sendCorporateBookingNotificationToAdmin,
+  sendPortalMessage,
 } from "./corporateEmailService";
 import { insertCorporateAccountSchema, insertCorporateAppointmentSchema } from "@shared/schema";
 import { getUncachableStripeClient } from "./stripeClient";
@@ -661,6 +663,89 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
     } catch (err) {
       console.error("Portal login error:", err);
       return res.status(500).json({ error: "Login failed. Please try again." });
+    }
+  });
+
+  // ── Customer Portal: Full Account Info ───────────────────────────────────────
+
+  app.get("/api/corporate/portal/account", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const account = await getCorporateAccount(accountId);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      return res.json({
+        accountCode: account.accountCode,
+        companyName: account.companyName,
+        planTier: account.planTier,
+        status: account.status,
+        primaryContactName: account.primaryContactName,
+        primaryContactEmail: account.primaryContactEmail,
+        primaryContactPhone: account.primaryContactPhone,
+        authorizedUsers: account.authorizedUsers || [],
+        businessAddress: account.businessAddress,
+        city: account.city,
+        state: account.state,
+        zip: account.zip,
+        needsScanToEmail: account.needsScanToEmail,
+        enrolledAt: account.enrolledAt,
+      });
+    } catch (err) {
+      console.error("Portal account error:", err);
+      return res.status(500).json({ error: "Failed to load account" });
+    }
+  });
+
+  // ── Customer Portal: Cancel Appointment ──────────────────────────────────────
+
+  app.put("/api/corporate/portal/appointments/:id/cancel", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const id = req.params.id as string;
+      const appt = await getCorporateAppointment(id);
+      if (!appt) return res.status(404).json({ error: "Appointment not found" });
+      if (appt.accountId !== accountId) return res.status(403).json({ error: "Not authorized" });
+      if (appt.status !== "scheduled") return res.status(400).json({ error: "Only scheduled appointments can be cancelled" });
+      const updated = await updateCorporateAppointmentStatus(id, "cancelled", "Cancelled by client via portal");
+      return res.json({ success: true, appointment: updated });
+    } catch (err) {
+      console.error("Portal cancel error:", err);
+      return res.status(500).json({ error: "Failed to cancel appointment" });
+    }
+  });
+
+  // ── Customer Portal: Usage History (last 6 months) ───────────────────────────
+
+  app.get("/api/corporate/portal/usage/history", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const months = Math.min(parseInt(req.query.months as string || "6", 10), 12);
+      const history = await getCorporateUsageHistory(accountId, months);
+      return res.json(history);
+    } catch (err) {
+      console.error("Usage history error:", err);
+      return res.status(500).json({ error: "Failed to load usage history" });
+    }
+  });
+
+  // ── Customer Portal: Send Message to LBS ─────────────────────────────────────
+
+  app.post("/api/corporate/portal/message", requirePortalToken, async (req: Request, res: Response) => {
+    try {
+      const accountId = (req as any).portalAccountId as number;
+      const { senderName, senderEmail, subject, message } = req.body as {
+        senderName?: string; senderEmail?: string; subject?: string; message?: string;
+      };
+      if (!senderName || !senderEmail || !subject || !message) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      const account = await getCorporateAccount(accountId);
+      if (!account) return res.status(404).json({ error: "Account not found" });
+      await sendPortalMessage(account, senderName, senderEmail, subject, message).catch(console.error);
+      await logAudit("account", String(accountId), "portal_message_sent", senderEmail, { subject });
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Portal message error:", err);
+      return res.status(500).json({ error: "Failed to send message" });
     }
   });
 
