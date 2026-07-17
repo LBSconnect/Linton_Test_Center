@@ -110,7 +110,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#fbbf24] text-xl tracking-wide leading-none">★★★★★</span>
-              <span className="text-white/75 text-sm">4.9 on Google Reviews</span>
+              <span className="text-white/75 text-sm">5.0 on Google Reviews</span>
             </div>
             <h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
@@ -165,7 +165,7 @@ export default function Home() {
               { icon: Award, label: "Certiport", sub: "Authorized Center", amber: false },
               { icon: Users, label: "PMI Exams", sub: "Authorized Center", amber: false },
               { icon: CheckCircle2, label: "1,200+ Exams", sub: "Administered", amber: false },
-              { icon: null, label: "4.9 Stars", sub: "Google Reviews", amber: true },
+              { icon: null, label: "5.0 Stars", sub: "Google Reviews", amber: true },
             ].map((item) => (
               <div
                 key={item.label}
