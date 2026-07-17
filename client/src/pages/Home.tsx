@@ -56,28 +56,27 @@ const faqs = [
   },
 ];
 
-// Replace these with real reviews from your Google Business profile
 const testimonials = [
   {
-    initials: "MT",
-    name: "Marcus T.",
-    service: "CompTIA Security+ Exam",
+    initials: "KS",
+    name: "Kelly Somes",
+    service: "Google Review",
     quote:
-      "The staff made me feel completely at ease before my exam. Quiet, professional environment and everything worked perfectly. Passed on the first try — couldn't be happier.",
+      "I have no words to describe how great Linton Business Solutions was. The facility is clean, comfortable and very well managed. I was welcomed with a smile when I first walked in. Mr. Linton was so kind and welcoming — he definitely put me at ease. I had to take an exam and was very nervous. I've taken other tests at other testing centers and this was by far the best experience. Thank you Mr. Linton.",
   },
   {
-    initials: "JR",
-    name: "Jennifer R.",
-    service: "Life Insurance Bootcamp",
+    initials: "CF",
+    name: "Cayla Fisch",
+    service: "Google Review",
     quote:
-      "Took the Saturday Life Insurance bootcamp and passed my state exam the following week. The instructor knew exactly what to focus on. Worth every penny.",
+      "They are absolutely amazing!!! So helpful in every way and literally my own personal cheerleaders!! They didn't let me give up and made sure I was gonna pass!! God send people and so thankful for them!!",
   },
   {
-    initials: "DA",
-    name: "David A.",
-    service: "Notary + Passport Photos",
+    initials: "KL",
+    name: "Kel Living",
+    service: "Google Review",
     quote:
-      "Got my notary and passport photo done in the same visit. Fast, friendly, and professional. I've already referred three coworkers here.",
+      "I had a wonderful experience. Everyone was so nice. The process from setup all the way to pressing submit was great. They provide reassurance and speak positivity into you to help calm you before entering the testing area. And let's not forget the celebration they provide after you pass! Definitely will always be my site of choice!!! Thank you all for everything.",
   },
 ];
 
@@ -111,7 +110,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#fbbf24] text-xl tracking-wide leading-none">★★★★★</span>
-              <span className="text-white/75 text-sm">4.9 on Google Reviews</span>
+              <span className="text-white/75 text-sm">5.0 on Google Reviews</span>
             </div>
             <h1
               className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight"
@@ -166,7 +165,7 @@ export default function Home() {
               { icon: Award, label: "Certiport", sub: "Authorized Center", amber: false },
               { icon: Users, label: "PMI Exams", sub: "Authorized Center", amber: false },
               { icon: CheckCircle2, label: "1,200+ Exams", sub: "Administered", amber: false },
-              { icon: null, label: "4.9 Stars", sub: "Google Reviews", amber: true },
+              { icon: null, label: "5.0 Stars", sub: "Google Reviews", amber: true },
             ].map((item) => (
               <div
                 key={item.label}
@@ -208,32 +207,32 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
 
-            {/* Path 1: Certification Exam */}
-            <Link href="/book">
+            {/* Path 1: Certiport */}
+            <Link href="/services/certification-exam-testing">
               <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-12 h-12 rounded-xl bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center mb-5">
                   <Award className="w-6 h-6 text-[#1e3a6e] dark:text-[#6b9aed]" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Take a Certification Exam</h3>
+                <h3 className="text-xl font-bold mb-3">Certiport Exam Testing</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-                  Book a seat at our authorized testing center for your Pearson VUE, Certiport, or PMI exam.
+                  Book a seat at our authorized Certiport testing center for Microsoft Office Specialist, Adobe, IC3, and other Certiport certification exams. $35/session.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-5">
-                  {["Pearson VUE", "Certiport", "PMI"].map((tag) => (
+                  {["Certiport Authorized", "Microsoft (MOS)", "Adobe", "IC3"].map((tag) => (
                     <span key={tag} className="text-xs bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 text-[#1e3a6e] dark:text-[#6b9aed] px-2.5 py-1 rounded-full font-medium">
                       {tag}
                     </span>
                   ))}
                 </div>
                 <div className="flex items-center gap-1.5 text-sm font-bold text-[#e85d40] group-hover:gap-2.5 transition-all">
-                  Book your exam seat <ArrowRight className="w-4 h-4" />
+                  Book your Certiport seat <ArrowRight className="w-4 h-4" />
                 </div>
               </div>
             </Link>
 
             {/* Path 2: Bootcamp */}
-            <Link href="/services">
+            <Link href="/services?filter=bootcamp">
               <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start justify-between mb-5">
@@ -262,7 +261,7 @@ export default function Home() {
             </Link>
 
             {/* Path 3: Business Services */}
-            <Link href="/services/notary-service">
+            <Link href="/services?filter=business">
               <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start justify-between mb-5">
@@ -275,7 +274,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3">Business Services</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-                  Professional notary services and passport photos. No appointment needed during business hours.
+                  Professional <strong className="text-foreground">Notary</strong> services and <strong className="text-foreground">Passport</strong> photos. No appointment needed during business hours.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-5">
                   {["Notary", "Passport Photos", "Same Day"].map((tag) => (
@@ -345,7 +344,7 @@ export default function Home() {
             ))}
           </div>
           <div className="text-center mt-10">
-            <Link href="/book">
+            <Link href="/services/certification-exam-testing">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white px-8"
