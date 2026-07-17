@@ -16,6 +16,9 @@ import {
   updateCorporateAppointmentStatus,
   incrementCorporateUsage,
   getCorporateUsage,
+  getAdminReportingData,
+  getAuditLogEntries,
+  getExportData,
   runCorporateMigrations,
   logAudit,
 } from "./corporateStorage";
@@ -575,6 +578,48 @@ export async function registerCorporateRoutes(app: Express): Promise<void> {
     } catch (err) {
       console.error("Usage error:", err);
       return res.status(500).json({ error: "Failed to load usage" });
+    }
+  });
+
+  // ── Admin: Reporting Overview ───────────────────────────────────────────────
+
+  app.get("/api/admin/corporate/reporting", requireAdminToken, async (_req: Request, res: Response) => {
+    try {
+      const data = await getAdminReportingData();
+      return res.json(data);
+    } catch (err) {
+      console.error("Reporting error:", err);
+      return res.status(500).json({ error: "Failed to load reporting data" });
+    }
+  });
+
+  // ── Admin: Audit Log ────────────────────────────────────────────────────────
+
+  app.get("/api/admin/corporate/audit", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string || "100", 10), 500);
+      const offset = parseInt(req.query.offset as string || "0", 10);
+      const entries = await getAuditLogEntries(limit, offset);
+      return res.json(entries);
+    } catch (err) {
+      console.error("Audit log error:", err);
+      return res.status(500).json({ error: "Failed to load audit log" });
+    }
+  });
+
+  // ── Admin: CSV Exports ──────────────────────────────────────────────────────
+
+  app.get("/api/admin/corporate/export/:type", requireAdminToken, async (req: Request, res: Response) => {
+    try {
+      const type = req.params.type as "appointments" | "accounts";
+      if (!["appointments", "accounts"].includes(type)) return res.status(400).json({ error: "Invalid export type" });
+      const csv = await getExportData(type);
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="lbs-corporate-${type}-${new Date().toISOString().slice(0, 10)}.csv"`);
+      return res.send(csv);
+    } catch (err) {
+      console.error("Export error:", err);
+      return res.status(500).json({ error: "Failed to generate export" });
     }
   });
 

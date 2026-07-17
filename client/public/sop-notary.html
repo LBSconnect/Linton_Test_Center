@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LBS Notary — Standard Operating Procedures</title>
+<style>
+/* ── Tokens ──────────────────────────────────────────────────────── */
+:root {
+  --navy:       #0d1b35;
+  --navy-mid:   #1e3a6e;
+  --gold:       #c9a84c;
+  --gold-dim:   #a88935;
+  --bg:         #f0f3f8;
+  --surface:    #ffffff;
+  --border:     #dce3ef;
+  --text:       #1f2d40;
+  --muted:      #5a6a7e;
+  --do-bg:      #f0fdf4;
+  --do-border:  #86efac;
+  --do-text:    #14532d;
+  --warn-bg:    #fffbeb;
+  --warn-border:#fcd34d;
+  --warn-text:  #78350f;
+  --stop-bg:    #fff1f2;
+  --stop-border:#fca5a5;
+  --stop-text:  #7f1d1d;
+  --note-bg:    #eff6ff;
+  --note-border:#93c5fd;
+  --note-text:  #1e3a6e;
+  --sidebar-w:  260px;
+  --radius:     10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:         #0a1220;
+    --surface:    #0f1e32;
+    --border:     #1e3554;
+    --text:       #d4dcea;
+    --muted:      #7a8fa8;
+    --do-bg:      #052e16;
+    --do-border:  #166534;
+    --do-text:    #86efac;
+    --warn-bg:    #2d1a00;
+    --warn-border:#92400e;
+    --warn-text:  #fcd34d;
+    --stop-bg:    #2d0a0a;
+    --stop-border:#991b1b;
+    --stop-text:  #fca5a5;
+    --note-bg:    #0c1f40;
+    --note-border:#1e3a6e;
+    --note-text:  #93c5fd;
+  }
+}
+:root[data-theme="light"] {
+  --bg:         #f0f3f8;
+  --surface:    #ffffff;
+  --border:     #dce3ef;
+  --text:       #1f2d40;
+  --muted:      #5a6a7e;
+  --do-bg:      #f0fdf4;
+  --do-border:  #86efac;
+  --do-text:    #14532d;
+  --warn-bg:    #fffbeb;
+  --warn-border:#fcd34d;
+  --warn-text:  #78350f;
+  --stop-bg:    #fff1f2;
+  --stop-border:#fca5a5;
+  --stop-text:  #7f1d1d;
+  --note-bg:    #eff6ff;
+  --note-border:#93c5fd;
+  --note-text:  #1e3a6e;
+}
+:root[data-theme="dark"] {
+  --bg:         #0a1220;
+  --surface:    #0f1e32;
+  --border:     #1e3554;
+  --text:       #d4dcea;
+  --muted:      #7a8fa8;
+  --do-bg:      #052e16;
+  --do-border:  #166534;
+  --do-text:    #86efac;
+  --warn-bg:    #2d1a00;
+  --warn-border:#92400e;
+  --warn-text:  #fcd34d;
+  --stop-bg:    #2d0a0a;
+  --stop-border:#991b1b;
+  --stop-text:  #fca5a5;
+  --note-bg:    #0c1f40;
+  --note-border:#1e3a6e;
+  --note-text:  #93c5fd;
+}
+
+/* ── Reset & Base ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.doc-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 28px 40px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+}
+.doc-header-logo {
+  width: 48px;
+  height: 48px;
+  background: var(--gold);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Georgia, serif;
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+.doc-header-text h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  text-wrap: balance;
+}
+.doc-header-text p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+.doc-header-meta {
+  margin-left: auto;
+  text-align: right;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.doc-header-meta strong { color: var(--gold); display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .doc-header { flex-wrap: wrap; }
+  .doc-header-meta { margin-left: 0; text-align: left; }
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.sidebar-label {
+  padding: 12px 16px;
+  background: var(--navy);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.sidebar nav { padding: 8px 0; }
+.toc-part {
+  padding: 6px 16px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--gold);
+  margin-top: 6px;
+}
+.toc-link {
+  display: block;
+  padding: 6px 16px 6px 24px;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  border-left: 2px solid transparent;
+  margin-left: 0;
+}
+.toc-link:hover {
+  background: var(--bg);
+  color: var(--text);
+  border-left-color: var(--gold);
+}
+
+/* ── Main Content ────────────────────────────────────────────────── */
+.main { min-width: 0; }
+
+.part-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 48px 0 28px;
+}
+.part-divider:first-child { margin-top: 0; }
+.part-badge {
+  background: var(--navy);
+  color: var(--gold);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.part-line { flex: 1; height: 1px; background: var(--border); }
+.part-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--navy);
+  text-wrap: balance;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+:root[data-theme="dark"] .part-title,
+@media (prefers-color-scheme: dark) { .part-title { color: #c8d8f0; } }
+.part-scope {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  max-width: 65ch;
+}
+
+/* ── Section ─────────────────────────────────────────────────────── */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.section-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.section-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  text-wrap: balance;
+}
+:root[data-theme="dark"] .section-title { color: #c8d8f0; }
+.section-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Steps ───────────────────────────────────────────────────────── */
+.steps { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.step-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Subsection heading inside body ─────────────────────────────── */
+.sub-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 4px;
+}
+
+/* ── Callout boxes ───────────────────────────────────────────────── */
+.callout {
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  border-left: 3px solid;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.callout-do    { background: var(--do-bg);   border-color: var(--do-border);   color: var(--do-text);   }
+.callout-warn  { background: var(--warn-bg); border-color: var(--warn-border); color: var(--warn-text); }
+.callout-stop  { background: var(--stop-bg); border-color: var(--stop-border); color: var(--stop-text); }
+.callout-note  { background: var(--note-bg); border-color: var(--note-border); color: var(--note-text); }
+.callout-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.callout strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+/* ── ID table ────────────────────────────────────────────────────── */
+.id-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 8px;
+}
+.id-tag {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.id-tag::before { content: "✓"; color: var(--do-text); font-weight: 700; }
+
+/* ── Checklist ───────────────────────────────────────────────────── */
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+}
+.check-box {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+/* ── Code / Ref ──────────────────────────────────────────────────── */
+code {
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--navy);
+}
+:root[data-theme="dark"] code { color: #93c5fd; }
+
+/* ── Decline table ───────────────────────────────────────────────── */
+.decline-table { width: 100%; border-collapse: collapse; font-size: 13.5px; overflow-x: auto; display: block; }
+.decline-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+.decline-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.decline-table tr:last-child td { border-bottom: none; }
+.decline-table tr:nth-child(even) td { background: var(--bg); }
+
+/* ── Fee table ───────────────────────────────────────────────────── */
+.fee-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.fee-table th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+.fee-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.fee-table tr:last-child td { border-bottom: none; }
+.fee-table tr:nth-child(even) td { background: var(--bg); }
+.fee-amount { font-weight: 700; color: var(--navy); }
+:root[data-theme="dark"] .fee-amount { color: var(--gold); }
+
+/* ── Footer ──────────────────────────────────────────────────────── */
+.doc-footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+
+/* ── Print ───────────────────────────────────────────────────────── */
+@media print {
+  .sidebar { display: none !important; }
+  .layout { grid-template-columns: 1fr; padding: 16px; }
+  .section { break-inside: avoid; }
+  body { background: #fff; color: #000; }
+  .doc-header { background: #0d1b35 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section-head { background: #f8f9fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  a { text-decoration: none; color: inherit; }
+}
+
+/* Dark mode part title fix */
+@media (prefers-color-scheme: dark) {
+  .part-title { color: #c8d8f0; }
+  .section-title { color: #c8d8f0; }
+  code { color: #93c5fd; }
+  .fee-amount { color: var(--gold); }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="doc-header">
+  <div class="doc-header-logo">LBS</div>
+  <div class="doc-header-text">
+    <h1>Standard Operating Procedures — Notary Services</h1>
+    <p>Linton Business Solutions LLC &nbsp;·&nbsp; LBS Test &amp; Exam Center &nbsp;·&nbsp; Houston, TX</p>
+  </div>
+  <div class="doc-header-meta">
+    <strong>Document Ref</strong>
+    SOP-NOT-2025<br />
+    616 FM 1960 Rd W, Ste 101<br />
+    (281) 836-5357
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar TOC -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Contents</div>
+    <nav>
+      <div class="toc-part">Part 1 — Notary</div>
+      <a class="toc-link" href="#n1">Supplies &amp; Setup</a>
+      <a class="toc-link" href="#n2">Customer Check-In</a>
+      <a class="toc-link" href="#n3">Identity Verification</a>
+      <a class="toc-link" href="#n4">Document Review</a>
+      <a class="toc-link" href="#n5">The Notarial Act</a>
+      <a class="toc-link" href="#n6">Certificate Completion</a>
+      <a class="toc-link" href="#n7">Journal &amp; Record Keeping</a>
+      <a class="toc-link" href="#n8">Fee Collection</a>
+      <a class="toc-link" href="#n9">Special Services</a>
+      <a class="toc-link" href="#n10">Situations to Decline</a>
+      <a class="toc-link" href="#n11">End-of-Day Closeout</a>
+
+      <div class="toc-part">Part 2 — Corporate</div>
+      <a class="toc-link" href="#c1">Before the Appointment</a>
+      <a class="toc-link" href="#c2">Employee Check-In</a>
+      <a class="toc-link" href="#c3">Identity &amp; Documentation</a>
+      <a class="toc-link" href="#c4">Conducting the Appointment</a>
+      <a class="toc-link" href="#c5">Completing in the System</a>
+      <a class="toc-link" href="#c6">Overage Billing</a>
+      <a class="toc-link" href="#c7">Account Issues</a>
+      <a class="toc-link" href="#c8">Corporate Record Keeping</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PART 1 — STANDARD NOTARY                                   -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+
+    <div class="part-divider">
+      <span class="part-badge">Part 1</span>
+      <div class="part-line"></div>
+    </div>
+
+    <h2 class="part-title">Standard Notary Procedures</h2>
+    <p class="part-scope">Applies to all walk-in and scheduled notary appointments. All notarizations must comply with <strong>Texas Government Code, Chapter 406</strong>. This SOP does not cover remote online notarization (RON).</p>
+
+    <!-- N1 -->
+    <div class="section" id="n1">
+      <div class="section-head">
+        <div class="section-num">1</div>
+        <h3 class="section-title">Supplies &amp; Setup — Before Your Shift Opens</h3>
+      </div>
+      <div class="section-body">
+        <p class="sub-label">Daily Checklist</p>
+        <ul class="checklist">
+          <li><div class="check-box"></div>Notary seal/stamp — confirm ink is fresh and impression is clear</li>
+          <li><div class="check-box"></div>Notary journal — open to the next blank entry, pen available (blue or black ink only)</li>
+          <li><div class="check-box"></div>Certificate forms — acknowledgment, jurat, and copy certification blanks stocked</li>
+          <li><div class="check-box"></div>Review today's scheduled appointments in the booking system</li>
+          <li><div class="check-box"></div>Confirm scanner and printer are powered on and have paper/ink</li>
+          <li><div class="check-box"></div>Test the stamp on scratch paper — legible seal = good to go</li>
+        </ul>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <div><strong>Stamp Clarity</strong>All text in the notary seal impression must be legible. A smudged or partial stamp can render the notarization invalid. Replace ink pads before they fade.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N2 -->
+    <div class="section" id="n2">
+      <div class="section-head">
+        <div class="section-num">2</div>
+        <h3 class="section-title">Customer Check-In</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Greet the customer and confirm their name and appointment time.</li>
+          <li class="step"><div class="step-dot">2</div>Ask them to provide <strong>all documents requiring notarization</strong> — collect every page now so you can review them together.</li>
+          <li class="step"><div class="step-dot">3</div>Direct them to the signing station and ask them to <strong>keep the documents unsigned</strong> until instructed.</li>
+          <li class="step"><div class="step-dot">4</div>Log the appointment start time in the journal.</li>
+        </ol>
+        <div class="callout callout-stop">
+          <span class="callout-icon">✕</span>
+          <div><strong>Never begin while the customer is standing at the counter.</strong> The identity check and document review must be completed at a dedicated signing area with privacy from other customers.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N3 -->
+    <div class="section" id="n3">
+      <div class="section-head">
+        <div class="section-num">3</div>
+        <h3 class="section-title">Identity Verification</h3>
+      </div>
+      <div class="section-body">
+        <p style="font-size:14px;color:var(--muted);">Texas law requires satisfactory identification of every signer. Each person signing must present one of the following:</p>
+        <div class="id-grid">
+          <div class="id-tag">Driver's License</div>
+          <div class="id-tag">State ID Card</div>
+          <div class="id-tag">U.S. Passport</div>
+          <div class="id-tag">U.S. Passport Card</div>
+          <div class="id-tag">Military ID (CAC)</div>
+          <div class="id-tag">Permanent Resident Card</div>
+          <div class="id-tag">Foreign Passport</div>
+        </div>
+        <p class="sub-label" style="margin-top:8px;">Inspect Each ID for All Four Criteria</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">A</div><strong>Photo</strong> — the person in front of you matches the photo. If uncertain, ask a second staff member to confirm.</li>
+          <li class="step"><div class="step-dot">B</div><strong>Name</strong> — name on ID matches name on the document (minor variations like middle initial omission are acceptable; entirely different surnames are not).</li>
+          <li class="step"><div class="step-dot">C</div><strong>Expiration</strong> — ID must not be expired on the date of notarization. A driver's license grace period does not apply for notary purposes.</li>
+          <li class="step"><div class="step-dot">D</div><strong>Integrity</strong> — no visible laminate bubbles, altered text, or printed-over fields. If any signs of tampering are present, decline.</li>
+        </ol>
+        <div class="callout callout-note">
+          <span class="callout-icon">ℹ</span>
+          <div><strong>Personal Knowledge</strong> If you personally know the signer well enough to vouch for their identity, Texas law permits personal knowledge as an alternative — document this explicitly in the journal.</div>
+        </div>
+        <div class="callout callout-stop">
+          <span class="callout-icon">✕</span>
+          <div><strong>If ID fails any check</strong> — politely explain you are unable to proceed. Do not attempt to notarize. Offer them the opportunity to return with acceptable ID. Record the attempt and refusal in the journal.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N4 -->
+    <div class="section" id="n4">
+      <div class="section-head">
+        <div class="section-num">4</div>
+        <h3 class="section-title">Document Review — Before the Signer Signs Anything</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Flip through every page. Look for <strong>blank spaces</strong> that appear to require completion (dates, names, dollar amounts). A document with unfilled blanks may not be notarized.</li>
+          <li class="step"><div class="step-dot">2</div>Locate the notary certificate. If one is already printed on the document, read the certificate type (acknowledgment or jurat). If none is present, you will attach a <strong>loose certificate</strong> after the act.</li>
+          <li class="step"><div class="step-dot">3</div>Confirm the number of pages and signers matches what was booked.</li>
+          <li class="step"><div class="step-dot">4</div>Do <strong>not</strong> read the body of the document for content. You are verifying structure, not advising on the substance.</li>
+        </ol>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <div><strong>Certificate Type — Do Not Choose for the Signer</strong> If a customer asks "which one should I use?", explain: an <em>acknowledgment</em> is for confirming a signature was made voluntarily; a <em>jurat</em> is for swearing to the truth of the contents. Direct them to their attorney or the receiving party for the final decision. Under no circumstances advise which certificate is legally appropriate for their situation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N5 -->
+    <div class="section" id="n5">
+      <div class="section-head">
+        <div class="section-num">5</div>
+        <h3 class="section-title">The Notarial Act</h3>
+      </div>
+      <div class="section-body">
+        <p class="sub-label">Acknowledgment</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Ask: <em>"Did you sign this document voluntarily and for its stated purposes?"</em> The signer must confirm verbally.</li>
+          <li class="step"><div class="step-dot">2</div>The signer does <strong>not</strong> need to sign in your presence for an acknowledgment — only acknowledge they signed it.</li>
+          <li class="step"><div class="step-dot">3</div>If the document is unsigned, have them sign it now before you affix the certificate.</li>
+        </ol>
+        <p class="sub-label" style="margin-top:12px;">Jurat (Oath or Affirmation)</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>The signer <strong>must not have signed yet</strong>. If they have, you cannot proceed with a jurat on that signature.</li>
+          <li class="step"><div class="step-dot">2</div>Administer the oath: <em>"Do you solemnly swear (or affirm) that the contents of this document are true and correct to the best of your knowledge?"</em></li>
+          <li class="step"><div class="step-dot">3</div>The signer signs in your physical presence immediately after the oath.</li>
+        </ol>
+        <p class="sub-label" style="margin-top:12px;">Copy Certification</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>You must have access to the <strong>original document</strong>. You cannot certify a copy of a copy.</li>
+          <li class="step"><div class="step-dot">2</div>Make the copy yourself using the office scanner/copier and verify page-by-page that the copy is a true and complete reproduction.</li>
+          <li class="step"><div class="step-dot">3</div>You may not certify copies of vital records (birth, death, marriage certificates) — those must be obtained from the issuing authority.</li>
+        </ol>
+        <div class="callout callout-do">
+          <span class="callout-icon">✓</span>
+          <div><strong>Maintain Visual Contact</strong> Keep the signing signer, their ID, and the document in your field of view throughout the act. Never leave the room or look away during a jurat signing.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N6 -->
+    <div class="section" id="n6">
+      <div class="section-head">
+        <div class="section-num">6</div>
+        <h3 class="section-title">Certificate Completion</h3>
+      </div>
+      <div class="section-body">
+        <p style="font-size:14px;color:var(--muted);">Complete every field. An incomplete certificate is as invalid as no certificate at all.</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div><strong>Date:</strong> The date the notarial act occurred — never pre-date or post-date.</li>
+          <li class="step"><div class="step-dot">2</div><strong>Venue:</strong> Houston, Harris County, Texas (the location where the act is performed).</li>
+          <li class="step"><div class="step-dot">3</div><strong>Signer's Name:</strong> Write exactly as it appears on the document — no abbreviations.</li>
+          <li class="step"><div class="step-dot">4</div><strong>Notary Signature:</strong> Sign your name as it appears on your notary commission — in ink, no stamp or initials.</li>
+          <li class="step"><div class="step-dot">5</div><strong>Notary Seal:</strong> Affix the stamp clearly and entirely within the certificate area. The seal must be legible in a photocopy.</li>
+          <li class="step"><div class="step-dot">6</div><strong>Commission Expiration:</strong> Write or confirm your commission expiration date is shown on or with the seal.</li>
+        </ol>
+        <div class="callout callout-stop">
+          <span class="callout-icon">✕</span>
+          <div><strong>Never correct errors by crossing out and initialing.</strong> If you make an error on a certificate before signing it, discard the certificate and complete a new one. Once signed, any error must be noted and a corrected certificate may need to be re-attached — consult management.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N7 -->
+    <div class="section" id="n7">
+      <div class="section-head">
+        <div class="section-num">7</div>
+        <h3 class="section-title">Journal &amp; Record Keeping</h3>
+      </div>
+      <div class="section-body">
+        <p style="font-size:14px;color:var(--muted);">Texas does not mandate a notary journal, but LBS requires one for every notarial act. It is your strongest defense in a dispute.</p>
+        <p class="sub-label">Required Journal Entry Fields</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Date and time of the act</li>
+          <li class="step"><div class="step-dot">2</div>Type of notarial act (Acknowledgment / Jurat / Copy Certification)</li>
+          <li class="step"><div class="step-dot">3</div>Document type (e.g., "Power of Attorney", "Deed of Trust")</li>
+          <li class="step"><div class="step-dot">4</div>Signer's full name</li>
+          <li class="step"><div class="step-dot">5</div>Type of ID presented and the ID number (last 4 digits only for security)</li>
+          <li class="step"><div class="step-dot">6</div>Fee charged</li>
+          <li class="step"><div class="step-dot">7</div>Signer's signature in the journal</li>
+        </ol>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <div><strong>Journal Security</strong> The journal is a legal record. Never leave it unattended on a counter. Store it in a locked drawer when not in use. Do not allow customers to add entries or alter existing ones. Report lost or stolen journals to management and the Texas Secretary of State immediately.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N8 -->
+    <div class="section" id="n8">
+      <div class="section-head">
+        <div class="section-num">8</div>
+        <h3 class="section-title">Fee Collection</h3>
+      </div>
+      <div class="section-body">
+        <div style="overflow-x:auto;">
+          <table class="fee-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Texas Statutory Rate</th>
+                <th>LBS Service Fee</th>
+                <th>Total per Act</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Acknowledgment</td>
+                <td>$6.00</td>
+                <td class="fee-amount">Per rate card</td>
+                <td class="fee-amount">Per rate card</td>
+              </tr>
+              <tr>
+                <td>Jurat</td>
+                <td>$6.00</td>
+                <td class="fee-amount">Per rate card</td>
+                <td class="fee-amount">Per rate card</td>
+              </tr>
+              <tr>
+                <td>Copy Certification</td>
+                <td>$6.00</td>
+                <td class="fee-amount">Per rate card</td>
+                <td class="fee-amount">Per rate card</td>
+              </tr>
+              <tr>
+                <td>Oath / Affirmation only</td>
+                <td>$6.00</td>
+                <td class="fee-amount">Per rate card</td>
+                <td class="fee-amount">Per rate card</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-note">
+          <span class="callout-icon">ℹ</span>
+          <div>Texas caps fees per notarial act, not per document. A document with two acknowledgments incurs two fees. Check the current LBS rate card for the service fee schedule — do not quote prices from memory.</div>
+        </div>
+        <ol class="steps" style="margin-top:4px;">
+          <li class="step"><div class="step-dot">1</div>State the total aloud before collecting payment.</li>
+          <li class="step"><div class="step-dot">2</div>Accept payment and issue a printed receipt.</li>
+          <li class="step"><div class="step-dot">3</div>Record the amount in the journal entry.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- N9 -->
+    <div class="section" id="n9">
+      <div class="section-head">
+        <div class="section-num">9</div>
+        <h3 class="section-title">Special Services</h3>
+      </div>
+      <div class="section-body">
+        <p class="sub-label">Witnesses</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Witnesses must also present valid government-issued photo ID — apply the same identity check as for signers.</li>
+          <li class="step"><div class="step-dot">2</div>Witnesses sign the document and may be asked to sign the journal confirming their presence.</li>
+          <li class="step"><div class="step-dot">3</div>LBS staff may serve as a witness only when there is no conflict of interest and at least one other staff member is present.</li>
+          <li class="step"><div class="step-dot">4</div>The notary public may <strong>not</strong> act as a witness on a document they are also notarizing.</li>
+        </ol>
+        <p class="sub-label" style="margin-top:12px;">Document Printing</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Print all pages before the customer arrives at the signing area.</li>
+          <li class="step"><div class="step-dot">2</div>Verify page count before handing the document to the customer.</li>
+          <li class="step"><div class="step-dot">3</div>Printing fees are separate from notary fees — collect and receipt separately.</li>
+        </ol>
+        <p class="sub-label" style="margin-top:12px;">Scan to Email</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Confirm the destination email address in writing (have the customer write it down or show it on their phone).</li>
+          <li class="step"><div class="step-dot">2</div>Scan all notarized pages into a single PDF.</li>
+          <li class="step"><div class="step-dot">3</div>Send and confirm delivery — ask the customer to check their inbox before leaving.</li>
+          <li class="step"><div class="step-dot">4</div>Delete the scan file from the shared scanner queue after confirmed delivery.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- N10 -->
+    <div class="section" id="n10">
+      <div class="section-head">
+        <div class="section-num">10</div>
+        <h3 class="section-title">Situations to Decline</h3>
+      </div>
+      <div class="section-body">
+        <div style="overflow-x:auto;">
+          <table class="decline-table">
+            <thead>
+              <tr>
+                <th>Situation</th>
+                <th>Why</th>
+                <th>What to Say</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cannot satisfactorily identify the signer</td>
+                <td>Legal requirement</td>
+                <td>"I'm not able to complete this without an acceptable ID. Please return with one of the listed forms."</td>
+              </tr>
+              <tr>
+                <td>Document contains unfilled blank spaces</td>
+                <td>Risk of later falsification</td>
+                <td>"This document has blank fields. Please complete it fully and return."</td>
+              </tr>
+              <tr>
+                <td>Signer has already signed a jurat document</td>
+                <td>The oath must precede the signature</td>
+                <td>"For this certificate type, you must sign in my presence after the oath. We'll need to start with a fresh document."</td>
+              </tr>
+              <tr>
+                <td>Signer appears under duress or coerced</td>
+                <td>Voluntary act is required</td>
+                <td>Ask to speak privately; if concern persists, decline and offer to call for assistance.</td>
+              </tr>
+              <tr>
+                <td>Signer does not appear to understand what they are signing</td>
+                <td>Capacity is required</td>
+                <td>"I need to be confident you understand this document. I'd recommend consulting an attorney first."</td>
+              </tr>
+              <tr>
+                <td>You are the signer</td>
+                <td>Self-notarization is prohibited</td>
+                <td>Another commissioned notary must perform the act.</td>
+              </tr>
+              <tr>
+                <td>You have a financial interest in the transaction</td>
+                <td>Conflict of interest</td>
+                <td>Disclose the conflict and have another notary perform the act.</td>
+              </tr>
+              <tr>
+                <td>Certifying a copy of a vital record (birth, death, marriage)</td>
+                <td>Prohibited by Texas law</td>
+                <td>"Certified copies of vital records must come directly from the issuing agency."</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout-stop" style="margin-top:12px;">
+          <span class="callout-icon">✕</span>
+          <div><strong>Never feel pressured to proceed.</strong> You have the right to decline any notarization for a lawful reason. When in doubt, decline and consult management rather than notarizing and regretting it. An improperly performed notarization is a liability for you personally.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- N11 -->
+    <div class="section" id="n11">
+      <div class="section-head">
+        <div class="section-num">11</div>
+        <h3 class="section-title">End-of-Day Closeout</h3>
+      </div>
+      <div class="section-body">
+        <ul class="checklist">
+          <li><div class="check-box"></div>Verify all journal entries for the day are complete — no blank fields, no open lines</li>
+          <li><div class="check-box"></div>Lock the notary journal in the designated secure drawer</li>
+          <li><div class="check-box"></div>Store the notary stamp/seal in its case, locked away from public access</li>
+          <li><div class="check-box"></div>Clear the scanner queue — verify no document files remain on shared drives</li>
+          <li><div class="check-box"></div>Confirm all completed appointments are logged in the booking system</li>
+          <li><div class="check-box"></div>Note any supplies needing replenishment (ink, certificate forms) for the next shift</li>
+        </ul>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- PART 2 — CORPORATE NOTARY                                  -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+
+    <div class="part-divider">
+      <span class="part-badge">Part 2</span>
+      <div class="part-line"></div>
+    </div>
+
+    <h2 class="part-title">Corporate Notary Procedures</h2>
+    <p class="part-scope">Applies to appointments booked under an LBS Corporate Account. These clients hold monthly subscription plans (Bronze, Silver, or Gold) and have employees who book through the LBS Corporate Portal. All standard notary requirements (Part 1) still apply — this section covers the additional steps specific to corporate clients.</p>
+
+    <!-- C1 -->
+    <div class="section" id="c1">
+      <div class="section-head">
+        <div class="section-num">1</div>
+        <h3 class="section-title">Before the Appointment — Admin Dashboard Review</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Open the LBS Admin Dashboard and navigate to the <strong>Appointments</strong> tab.</li>
+          <li class="step"><div class="step-dot">2</div>Locate today's corporate appointments. For each, note:
+            <ul style="margin-top:6px;margin-left:12px;font-size:13.5px;color:var(--muted);line-height:1.8;">
+              <li>Company name and account code (format: <code>LBS-ACCT-XXXXXX</code>)</li>
+              <li>Appointment code (format: <code>LBS-000001-MMDD-XXXX</code>)</li>
+              <li>Number of signers and documents</li>
+              <li>Special flags: witnesses, printing, scan-to-email</li>
+              <li>Special instructions from the booking</li>
+            </ul>
+          </li>
+          <li class="step"><div class="step-dot">3</div>Check the account's plan tier and current monthly usage — if they are near their limit, be prepared to explain the overage process.</li>
+          <li class="step"><div class="step-dot">4</div>If printing was requested, print documents before the employee arrives.</li>
+        </ol>
+        <div class="callout callout-note">
+          <span class="callout-icon">ℹ</span>
+          <div><strong>Plan Tiers at a Glance</strong><br/>
+            Bronze — up to 15 notarial acts/month &nbsp;·&nbsp;
+            Silver — up to 25 acts/month &nbsp;·&nbsp;
+            Gold — up to 100 acts/month.<br/>
+            Overage rate: <strong>$10.00 per document + $1.00 per additional stamp</strong> beyond the first, when the monthly limit is exceeded.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C2 -->
+    <div class="section" id="c2">
+      <div class="section-head">
+        <div class="section-num">2</div>
+        <h3 class="section-title">Employee Check-In &amp; Appointment Verification</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Greet the employee and ask for their <strong>appointment confirmation code</strong>.</li>
+          <li class="step"><div class="step-dot">2</div>In the Admin Dashboard, locate the appointment by its code and confirm the status shows <strong>Scheduled</strong>.</li>
+          <li class="step"><div class="step-dot">3</div>Verify the company name matches what the employee states — they should know what company they are booking for.</li>
+          <li class="step"><div class="step-dot">4</div>Note any discrepancies (wrong date, cancelled status) before proceeding.</li>
+        </ol>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <div><strong>No Appointment Code = No Service</strong> If an employee arrives without a confirmation code and the company cannot provide one promptly, do not proceed. Contact the account's primary contact to verify authorization. Never extend notary services on verbal authorization alone.</div>
+        </div>
+        <div class="callout callout-stop">
+          <span class="callout-icon">✕</span>
+          <div><strong>Inactive Accounts</strong> If the account status shows anything other than <em>Active</em>, do not perform notarial services. Contact management. Do not inform the employee that the account is delinquent — simply state that you need to verify the account and will be in touch with their office.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C3 -->
+    <div class="section" id="c3">
+      <div class="section-head">
+        <div class="section-num">3</div>
+        <h3 class="section-title">Identity Verification &amp; Document Review</h3>
+      </div>
+      <div class="section-body">
+        <p style="font-size:14px;color:var(--muted);">Follow Part 1, Sections 3 and 4 without exception. Corporate account status does not waive any identity or document requirements.</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Check the ID type noted in the booking — if the employee arrives with a different form of ID, confirm it is on the accepted list before proceeding.</li>
+          <li class="step"><div class="step-dot">2</div>Verify all signers are present — the booking will specify how many. Do not start until all signers are in the room.</li>
+          <li class="step"><div class="step-dot">3</div>Confirm documents are unsigned (for jurats) or acknowledge the employee is ready to proceed (for acknowledgments).</li>
+        </ol>
+        <div class="callout callout-note">
+          <span class="callout-icon">ℹ</span>
+          <div>Corporate clients have acknowledged in their enrollment agreement that signers must appear in person, documents must not be signed before arrival, and LBS staff do not provide legal advice or choose certificate types on their behalf.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C4 -->
+    <div class="section" id="c4">
+      <div class="section-head">
+        <div class="section-num">4</div>
+        <h3 class="section-title">Conducting the Appointment</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Follow standard notarial procedures from Part 1, Sections 5 and 6.</li>
+          <li class="step"><div class="step-dot">2</div>Handle all services flagged in the booking:
+            <ul style="margin-top:6px;margin-left:12px;font-size:13.5px;color:var(--muted);line-height:1.8;">
+              <li><strong>Witnesses:</strong> Ensure witness is present and has shown ID before beginning.</li>
+              <li><strong>Printing:</strong> Should be done before the appointment — if not, print now and verify all pages before beginning.</li>
+              <li><strong>Scan to Email:</strong> Have the scan station ready; confirm email address before starting.</li>
+            </ul>
+          </li>
+          <li class="step"><div class="step-dot">3</div>Count the total number of notarial acts performed — this is the figure that goes into the usage tracker.</li>
+        </ol>
+        <div class="callout callout-do">
+          <span class="callout-icon">✓</span>
+          <div><strong>Count Each Act Separately</strong> A single appointment may involve multiple documents and multiple signers. Each individual notarization (per signer, per document) counts as one notarial act against the company's monthly plan.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C5 -->
+    <div class="section" id="c5">
+      <div class="section-head">
+        <div class="section-num">5</div>
+        <h3 class="section-title">Completing the Appointment in the System</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>In the Admin Dashboard, locate the appointment and click <strong>Mark Complete</strong>.</li>
+          <li class="step"><div class="step-dot">2</div>The system will automatically increment the account's monthly usage based on the number of documents and stamps recorded in the booking.</li>
+          <li class="step"><div class="step-dot">3</div>Review the completion confirmation for any overage notification (see Section 6 below).</li>
+          <li class="step"><div class="step-dot">4</div>Do <strong>not</strong> collect payment from the employee — all billing goes to the account administrator on file.</li>
+        </ol>
+        <div class="callout callout-warn">
+          <span class="callout-icon">⚠</span>
+          <div><strong>Mark Complete the Same Day.</strong> Usage tracking is date-sensitive. Do not leave appointments in "Scheduled" status overnight — mark them complete before your shift ends so monthly totals stay accurate.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C6 -->
+    <div class="section" id="c6">
+      <div class="section-head">
+        <div class="section-num">6</div>
+        <h3 class="section-title">Overage Billing</h3>
+      </div>
+      <div class="section-body">
+        <p style="font-size:14px;color:var(--muted);">Overages occur when the account exceeds its monthly plan limit. The system calculates this automatically when you mark the appointment complete.</p>
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>If the completion screen shows an overage charge, note the dollar amount displayed.</li>
+          <li class="step"><div class="step-dot">2</div>Perform the notarization regardless — the account is still authorized; the overage is a billing matter, not a service denial.</li>
+          <li class="step"><div class="step-dot">3</div>Do not discuss the overage charge with the employee. The charge will be communicated to the account's billing contact by management.</li>
+          <li class="step"><div class="step-dot">4</div>If the overage amount appears unusually large, flag it for a manager to review before the billing cycle closes.</li>
+        </ol>
+        <div class="callout callout-note">
+          <span class="callout-icon">ℹ</span>
+          <div>
+            <strong>Overage Rate Reminder</strong><br/>
+            $10.00 per document + $1.00 per additional stamp beyond the first stamp on that document.<br/>
+            Example: 3 documents, 5 stamps total &rarr; (3 × $10.00) + (2 × $1.00) = <strong>$32.00</strong> overage charge.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C7 -->
+    <div class="section" id="c7">
+      <div class="section-head">
+        <div class="section-num">7</div>
+        <h3 class="section-title">Account Issues &amp; Escalation</h3>
+      </div>
+      <div class="section-body">
+        <div style="overflow-x:auto;">
+          <table class="decline-table">
+            <thead>
+              <tr>
+                <th>Issue</th>
+                <th>Immediate Action</th>
+                <th>Do Not</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Account status is not Active</td>
+                <td>Contact management. Place employee in waiting area.</td>
+                <td>Tell the employee the account is overdue or suspended.</td>
+              </tr>
+              <tr>
+                <td>No confirmation code available</td>
+                <td>Call the account's primary contact to obtain authorization in writing.</td>
+                <td>Proceed on a verbal "it should be in the system."</td>
+              </tr>
+              <tr>
+                <td>Employee names don't match booking</td>
+                <td>Verify with the primary contact whether the substitution is authorized.</td>
+                <td>Assume the substitution is fine without confirmation.</td>
+              </tr>
+              <tr>
+                <td>Employee questions their company's billing</td>
+                <td>Direct them to contact their company's HR or AP department.</td>
+                <td>Discuss the account's balance, plan limit, or overage amounts.</td>
+              </tr>
+              <tr>
+                <td>Dispute about services rendered</td>
+                <td>Document the concern, do not attempt to resolve billing independently. Escalate to management by end of day.</td>
+                <td>Issue refunds, adjust invoices, or make promises about credits.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- C8 -->
+    <div class="section" id="c8">
+      <div class="section-head">
+        <div class="section-num">8</div>
+        <h3 class="section-title">Corporate Record Keeping</h3>
+      </div>
+      <div class="section-body">
+        <ol class="steps">
+          <li class="step"><div class="step-dot">1</div>Complete a journal entry for every notarial act as required under Part 1, Section 7.</li>
+          <li class="step"><div class="step-dot">2</div>Include the corporate appointment code in the journal entry's "Notes" field (e.g., <code>LBS-000001-0717-AB12</code>).</li>
+          <li class="step"><div class="step-dot">3</div>Record the company name alongside the individual signer's name.</li>
+          <li class="step"><div class="step-dot">4</div>If scan-to-email was performed, note the recipient email address and confirm sent status in the journal.</li>
+          <li class="step"><div class="step-dot">5</div>Retain any printed copies or originals per the retention policy — do not give the LBS copy to the employee.</li>
+        </ol>
+        <div class="callout callout-do">
+          <span class="callout-icon">✓</span>
+          <div><strong>Double-check the system before the employee leaves.</strong> Confirm the appointment is marked Complete in the dashboard and the usage total has updated. A few seconds now prevents a reconciliation issue at month-end.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Footer -->
+<div class="doc-footer">
+  LBS Test &amp; Exam Center &nbsp;·&nbsp; 616 FM 1960 Rd W, Ste 101, Houston, TX 77090-3048 &nbsp;·&nbsp; (281) 836-5357 &nbsp;·&nbsp; info@lbsconnect.net<br/>
+  <span style="margin-top:4px;display:inline-block;">SOP-NOT-2025 &nbsp;·&nbsp; For internal use only &nbsp;·&nbsp; Questions: contact management</span>
+</div>
+
+</body>
+</html>
