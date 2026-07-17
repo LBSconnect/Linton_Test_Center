@@ -14,12 +14,15 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const corporateLinks = [
-  { href: "/corporate/portal", label: "Client Portal" },
+const corporateMainLinks = [
   { href: "/corporate", label: "Overview" },
   { href: "/corporate/programs", label: "Plans & Pricing" },
   { href: "/corporate/enroll", label: "Enroll Now" },
-  { href: "/admin/corporate", label: "Admin Dashboard" },
+];
+
+const corporateAccountLinks = [
+  { href: "/corporate/portal", label: "Client Portal", bg: "bg-[#c9a84c] hover:bg-[#b8973b]", text: "text-[#0d1b35] font-semibold" },
+  { href: "/admin/corporate", label: "Admin Dashboard", bg: "bg-[#0d1b35] hover:bg-[#1a2d52]", text: "text-white font-semibold" },
 ];
 
 export default function Header() {
@@ -120,11 +123,22 @@ export default function Header() {
                   <ChevronDown className={`w-3.5 h-3.5 transition-transform ${corpOpen ? "rotate-180" : ""}`} />
                 </Button>
                 {corpOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-border/50 rounded-xl shadow-lg py-1 z-50">
-                    {corporateLinks.map((link) => (
+                  <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-border/50 rounded-xl shadow-lg py-1 z-50">
+                    {corporateMainLinks.map((link) => (
                       <Link key={link.href} href={link.href}>
                         <span
                           className="block px-4 py-2.5 text-sm text-foreground hover:bg-[#f8f9fb] cursor-pointer transition-colors"
+                          onClick={() => setCorpOpen(false)}
+                        >
+                          {link.label}
+                        </span>
+                      </Link>
+                    ))}
+                    <div className="my-1 border-t border-border/50" />
+                    {corporateAccountLinks.map((link) => (
+                      <Link key={link.href} href={link.href}>
+                        <span
+                          className={`block mx-2 my-0.5 px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${link.bg} ${link.text}`}
                           onClick={() => setCorpOpen(false)}
                         >
                           {link.label}
@@ -198,11 +212,22 @@ export default function Header() {
                           <Building2 className="w-3 h-3" /> Corporate
                         </p>
                       </div>
-                      {corporateLinks.map((link) => (
+                      {corporateMainLinks.map((link) => (
                         <Link key={link.href} href={link.href}>
                           <Button
                             variant="ghost"
                             className="w-full justify-start text-sm pl-4"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {link.label}
+                          </Button>
+                        </Link>
+                      ))}
+                      <div className="my-1 border-t border-border/50" />
+                      {corporateAccountLinks.map((link) => (
+                        <Link key={link.href} href={link.href}>
+                          <Button
+                            className={`w-full justify-start text-sm ${link.bg} ${link.text}`}
                             onClick={() => setMobileOpen(false)}
                           >
                             {link.label}
