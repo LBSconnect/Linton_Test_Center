@@ -56,28 +56,27 @@ const faqs = [
   },
 ];
 
-// Replace these with real reviews from your Google Business profile
 const testimonials = [
   {
-    initials: "MT",
-    name: "Marcus T.",
-    service: "CompTIA Security+ Exam",
+    initials: "KS",
+    name: "Kelly Somes",
+    service: "Google Review",
     quote:
-      "The staff made me feel completely at ease before my exam. Quiet, professional environment and everything worked perfectly. Passed on the first try — couldn't be happier.",
+      "I have no words to describe how great Linton Business Solutions was. The facility is clean, comfortable and very well managed. I was welcomed with a smile when I first walked in. Mr. Linton was so kind and welcoming — he definitely put me at ease. I had to take an exam and was very nervous. I've taken other tests at other testing centers and this was by far the best experience. Thank you Mr. Linton.",
   },
   {
-    initials: "JR",
-    name: "Jennifer R.",
-    service: "Life Insurance Bootcamp",
+    initials: "CF",
+    name: "Cayla Fisch",
+    service: "Google Review",
     quote:
-      "Took the Saturday Life Insurance bootcamp and passed my state exam the following week. The instructor knew exactly what to focus on. Worth every penny.",
+      "They are absolutely amazing!!! So helpful in every way and literally my own personal cheerleaders!! They didn't let me give up and made sure I was gonna pass!! God send people and so thankful for them!!",
   },
   {
-    initials: "DA",
-    name: "David A.",
-    service: "Notary + Passport Photos",
+    initials: "KL",
+    name: "Kel Living",
+    service: "Google Review",
     quote:
-      "Got my notary and passport photo done in the same visit. Fast, friendly, and professional. I've already referred three coworkers here.",
+      "I had a wonderful experience. Everyone was so nice. The process from setup all the way to pressing submit was great. They provide reassurance and speak positivity into you to help calm you before entering the testing area. And let's not forget the celebration they provide after you pass! Definitely will always be my site of choice!!! Thank you all for everything.",
   },
 ];
 
