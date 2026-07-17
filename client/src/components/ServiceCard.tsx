@@ -13,6 +13,7 @@ interface ServiceCardProps {
   href?: string; // overrides the default /services/:slug link
   icon?: React.ReactNode;
   buttonLabel?: string;
+  badge?: string; // e.g. "Next: Sat, Jul 19"
 }
 
 export default function ServiceCard({
@@ -25,6 +26,7 @@ export default function ServiceCard({
   href,
   icon,
   buttonLabel,
+  badge,
 }: ServiceCardProps) {
   const isExternal = !!href && (href.startsWith("http://") || href.startsWith("https://"));
 
@@ -40,6 +42,11 @@ export default function ServiceCard({
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {badge && (
+          <div className="absolute top-3 right-3 bg-[#c9a84c] text-[#0d1b35] rounded-md px-2.5 py-1 text-xs font-bold shadow-sm">
+            {badge}
+          </div>
+        )}
         {price && (
           <div className="absolute bottom-3 left-3 bg-white/95 dark:bg-card/95 backdrop-blur-sm rounded-md px-3 py-1.5 shadow-sm">
             <span className="text-lg font-bold text-[#1e3a6e] dark:text-white">

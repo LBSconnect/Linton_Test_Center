@@ -7,7 +7,18 @@ import { Shield, GraduationCap, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+function getNextSaturday(): string {
+  const today = new Date();
+  const day = today.getDay();
+  const daysUntilSat = day === 6 ? 7 : 6 - day;
+  const next = new Date(today);
+  next.setDate(today.getDate() + daysUntilSat);
+  return next.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
 export default function Services() {
+  const nextSat = getNextSaturday();
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
@@ -93,6 +104,7 @@ export default function Services() {
                 slug={service.slug}
                 href={service.link}
                 icon={<service.icon className="w-5 h-5" />}
+                badge={service.saturdayOnly ? `Next: ${nextSat}` : undefined}
               />
             ))}
           </div>
