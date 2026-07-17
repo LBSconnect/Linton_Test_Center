@@ -393,30 +393,7 @@ export async function registerRoutes(
           // Update appointment with Stripe session ID
           await storage.updateAppointmentPayment(appointment.id, 'pending', session.id || undefined);
 
-          // Send emails (without waiting for completion)
-          sendAppointmentConfirmation({
-            appointmentId: appointment.id,
-            customerName: data.customerName,
-            customerEmail: data.customerEmail,
-            serviceName: data.serviceName,
-            appointmentDate: appointmentDate,
-            priceAmount: data.priceAmount,
-            paymentStatus: 'pending',
-            notes: data.notes,
-          });
-
-          sendAppointmentCalendarInvite({
-            appointmentId: appointment.id,
-            customerName: data.customerName,
-            customerEmail: data.customerEmail,
-            customerPhone: data.customerPhone,
-            serviceName: data.serviceName,
-            appointmentDate: appointmentDate,
-            priceAmount: data.priceAmount,
-            paymentStatus: 'pending',
-            notes: data.notes,
-          });
-
+          // Emails are sent by the webhook after payment is confirmed — do not send here
           return res.json({
             success: true,
             appointment: appointment,
