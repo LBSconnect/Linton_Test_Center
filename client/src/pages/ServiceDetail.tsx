@@ -70,6 +70,7 @@ export default function ServiceDetail() {
 
   const isCertiport = slug === "certification-exam-testing";
   const isNotary = slug === "notary-service";
+  const isBootcamp = !!service?.saturdayOnly;
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{
     data: Array<{
@@ -201,6 +202,15 @@ export default function ServiceDetail() {
       return;
     }
 
+    if (isBootcamp && !price) {
+      toast({
+        title: "Payment Required",
+        description: "Boot Camp bookings require online payment. Please call (281) 836-5357 to complete your registration.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const examNote = isCertiport && selectedExam ? `Exam: ${selectedExam}` : "";
     const combinedNotes = [examNote, notes].filter(Boolean).join("\n\n") || undefined;
 
@@ -213,7 +223,7 @@ export default function ServiceDetail() {
       priceId: price?.id,
       priceAmount: price?.unit_amount,
       appointmentDate: selectedTime,
-      payNow: isNotary ? false : !!price,
+      payNow: isNotary ? false : (isBootcamp ? true : !!price),
       notes: combinedNotes,
     };
 
@@ -534,6 +544,8 @@ export default function ServiceDetail() {
                               </>
                             ) : price && !isNotary ? (
                               <>Book &amp; Pay ${(price.unit_amount / 100).toFixed(2)}</>
+                            ) : isBootcamp ? (
+                              <>Book &amp; Pay {service.price}</>
                             ) : (
                               "Book Appointment"
                             )}

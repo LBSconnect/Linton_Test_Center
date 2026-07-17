@@ -314,6 +314,14 @@ export async function registerRoutes(
       const data = parsed.data;
       const appointmentDate = new Date(data.appointmentDate);
 
+      // Enforce payment for Boot Camp services
+      const isBootcampService = data.serviceName.toLowerCase().includes('boot camp');
+      if (isBootcampService && (!data.payNow || !(data.priceId || data.priceAmount))) {
+        return res.status(400).json({
+          error: 'Payment is required for Boot Camp bookings. Please complete payment to reserve your seat.',
+        });
+      }
+
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
@@ -416,7 +424,14 @@ export async function registerRoutes(
           });
         } catch (stripeError: any) {
           console.error('Stripe checkout error:', stripeError.message);
-          // Continue without payment if Stripe fails
+          if (isBootcampService) {
+            // Mark the appointment as payment-failed and reject — bootcamps cannot proceed without payment
+            await storage.updateAppointmentPayment(appointment.id, 'failed');
+            return res.status(500).json({
+              error: 'Payment processing failed. Please try again or call (281) 836-5357 to book your Boot Camp session.',
+            });
+          }
+          // For non-bootcamp services, continue without payment if Stripe fails
         }
       }
 
