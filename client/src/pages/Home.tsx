@@ -274,7 +274,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-bold mb-3">Business Services</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
-                  Professional notary services and passport photos. No appointment needed during business hours.
+                  Professional <strong className="text-foreground">Notary</strong> services and <strong className="text-foreground">Passport</strong> photos. No appointment needed during business hours.
                 </p>
                 <div className="flex flex-wrap gap-2 mb-5">
                   {["Notary", "Passport Photos", "Same Day"].map((tag) => (
