@@ -494,6 +494,172 @@ export async function getCorporateDashboardStats() {
   };
 }
 
+// ─── Reporting ────────────────────────────────────────────────────────────────
+
+export async function getAdminReportingData() {
+  const database = getDb();
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
+
+  const [allAccounts, allAppointments, usageThisMonth, usageLastMonth, auditSample] = await Promise.all([
+    database.select().from(corporateAccounts).orderBy(desc(corporateAccounts.enrolledAt)),
+    database.select().from(corporateAppointments).orderBy(desc(corporateAppointments.appointmentDatetime)),
+    database.select().from(corporateUsageTracking).where(eq(corporateUsageTracking.monthYear, currentMonth)),
+    database.select().from(corporateUsageTracking).where(eq(corporateUsageTracking.monthYear, lastMonth)),
+    database.select().from(corporateAuditLog).orderBy(desc(corporateAuditLog.createdAt)).limit(5),
+  ]);
+
+  const activeAccounts = allAccounts.filter((a) => a.status === "active");
+  const prices: Record<string, number> = { bronze: 250, silver: 400, gold: 750 };
+  const planLimits: Record<string, number> = { bronze: 15, silver: 25, gold: 100 };
+
+  // Plan tier breakdown
+  const planBreakdown = {
+    bronze: activeAccounts.filter((a) => a.planTier === "bronze").length,
+    silver: activeAccounts.filter((a) => a.planTier === "silver").length,
+    gold: activeAccounts.filter((a) => a.planTier === "gold").length,
+  };
+
+  // Revenue
+  const revenueThisMonth = activeAccounts.reduce((s, a) => s + (prices[a.planTier || ""] || 0), 0);
+  const overageThisMonth = usageThisMonth.reduce((s, u) => s + ((u as any).overageChargeCents || 0), 0) / 100;
+  const overageLastMonth = usageLastMonth.reduce((s, u) => s + ((u as any).overageChargeCents || 0), 0) / 100;
+
+  // Projected overage alerts (>= 80% of plan limit this month)
+  const overageAlerts = activeAccounts
+    .map((acct) => {
+      const usage = usageThisMonth.find((u) => u.accountId === acct.id);
+      const limit = planLimits[acct.planTier || ""] || 15;
+      const used = usage?.actsUsed || 0;
+      const pct = Math.round((used / limit) * 100);
+      return { accountId: acct.id, accountCode: acct.accountCode, companyName: acct.companyName, planTier: acct.planTier, actsUsed: used, actsIncluded: limit, pct };
+    })
+    .filter((a) => a.pct >= 80)
+    .sort((a, b) => b.pct - a.pct);
+
+  // Appointment volume by day (0=Sun) and hour
+  const byDay = new Array(7).fill(0);
+  const byHour = new Array(24).fill(0);
+  let totalTurnaroundMs = 0;
+  let turnaroundCount = 0;
+
+  for (const appt of allAppointments) {
+    if (appt.status === "completed") {
+      const dt = new Date(appt.appointmentDatetime);
+      byDay[dt.getDay()]++;
+      byHour[dt.getHours()]++;
+      const created = appt.createdAt ? new Date(appt.createdAt) : null;
+      if (!created) continue;
+      const diff = dt.getTime() - created.getTime();
+      if (diff > 0) { totalTurnaroundMs += diff; turnaroundCount++; }
+    }
+  }
+  const avgTurnaroundDays = turnaroundCount > 0 ? Math.round((totalTurnaroundMs / turnaroundCount / 86400000) * 10) / 10 : 0;
+
+  // Account health: active accounts by last completed appointment date
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 86400000);
+
+  const completedByAccount: Record<number, Date> = {};
+  for (const appt of allAppointments) {
+    if (appt.status === "completed") {
+      const dt = new Date(appt.appointmentDatetime);
+      if (!completedByAccount[appt.accountId] || dt > completedByAccount[appt.accountId]) {
+        completedByAccount[appt.accountId] = dt;
+      }
+    }
+  }
+
+  const inactiveAccounts = activeAccounts
+    .filter((acct) => {
+      const last = completedByAccount[acct.id];
+      return !last || last < thirtyDaysAgo;
+    })
+    .map((acct) => ({
+      id: acct.id,
+      companyName: acct.companyName,
+      accountCode: acct.accountCode,
+      planTier: acct.planTier,
+      lastAppointment: completedByAccount[acct.id]?.toISOString() || null,
+      daysSinceLast: completedByAccount[acct.id]
+        ? Math.floor((now.getTime() - completedByAccount[acct.id].getTime()) / 86400000)
+        : null,
+    }));
+
+  // Enrollment trend: last 6 months
+  const enrollmentTrend = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    const label = d.toLocaleString("en-US", { month: "short", year: "2-digit" });
+    const count = allAccounts.filter((a) => {
+      if (!a.enrolledAt) return false;
+      const e = new Date(a.enrolledAt);
+      return e.getFullYear() === d.getFullYear() && e.getMonth() === d.getMonth();
+    }).length;
+    return { month: label, count };
+  });
+
+  return {
+    planBreakdown,
+    revenueThisMonth,
+    overageThisMonth,
+    overageLastMonth,
+    overageAlerts,
+    appointmentVolumeByDay: byDay,
+    appointmentVolumeByHour: byHour,
+    avgTurnaroundDays,
+    inactiveAccounts,
+    accountsInactive30: inactiveAccounts.length,
+    accountsInactive90: activeAccounts.filter((acct) => {
+      const last = completedByAccount[acct.id];
+      return !last || last < ninetyDaysAgo;
+    }).length,
+    enrollmentTrend,
+    totalAppointments: allAppointments.length,
+    completedAppointments: allAppointments.filter((a) => a.status === "completed").length,
+    scheduledAppointments: allAppointments.filter((a) => a.status === "scheduled").length,
+  };
+}
+
+export async function getAuditLogEntries(limit = 100, offset = 0): Promise<any[]> {
+  const database = getDb();
+  return database
+    .select()
+    .from(corporateAuditLog)
+    .orderBy(desc(corporateAuditLog.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getExportData(type: "appointments" | "accounts"): Promise<string> {
+  const database = getDb();
+  if (type === "accounts") {
+    const accounts = await database.select().from(corporateAccounts).orderBy(desc(corporateAccounts.enrolledAt));
+    const header = "Account Code,Company Name,Plan Tier,Status,Primary Contact,Email,Phone,Enrolled At,Approved At\n";
+    const rows = accounts.map((a) =>
+      [a.accountCode, `"${a.companyName}"`, a.planTier || "", a.status, `"${a.primaryContactName}"`, a.primaryContactEmail, a.primaryContactPhone || "", a.enrolledAt ? new Date(a.enrolledAt).toLocaleDateString() : "", a.approvedAt ? new Date(a.approvedAt).toLocaleDateString() : ""].join(",")
+    );
+    return header + rows.join("\n");
+  }
+
+  // appointments export with account info
+  const [appointments, accounts] = await Promise.all([
+    database.select().from(corporateAppointments).orderBy(desc(corporateAppointments.appointmentDatetime)),
+    database.select().from(corporateAccounts),
+  ]);
+  const acctMap: Record<number, (typeof accounts)[0]> = Object.fromEntries(accounts.map((a) => [a.id, a]));
+  const header = "Appointment Code,Company,Account Code,Employee Name,Employee Email,Date,Time CT,Signers,Documents,Status,Completed At,Witnesses,Printing,Scan Email\n";
+  const rows = appointments.map((a) => {
+    const acct = acctMap[a.accountId];
+    const dt = new Date(a.appointmentDatetime);
+    const dateStr = dt.toLocaleDateString("en-US", { timeZone: "America/Chicago" });
+    const timeStr = dt.toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", hour12: true });
+    return [a.appointmentCode, `"${acct?.companyName || ""}"`, acct?.accountCode || "", `"${a.employeeName}"`, a.employeeEmail, dateStr, timeStr, a.numSigners, a.numDocuments, a.status, a.completedAt ? new Date(a.completedAt).toLocaleDateString() : "", a.needWitnesses ? "Yes" : "No", a.needPrinting ? "Yes" : "No", a.needScanEmail ? "Yes" : "No"].join(",");
+  });
+  return header + rows.join("\n");
+}
+
 // ─── Migrations ───────────────────────────────────────────────────────────────
 export async function runCorporateMigrations(): Promise<void> {
   const database = getDb();
