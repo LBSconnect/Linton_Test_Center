@@ -614,7 +614,7 @@ test.describe("ServiceDetail — Certiport Exam Testing", () => {
       // Skip exam — click book button
       await page.locator('button:has-text("Book")').last().click();
       await expect(
-        page.locator('[role="alert"]').filter({ hasText: /exam|missing/i })
+        page.locator('[role="status"]').filter({ hasText: /exam|missing/i })
       ).toBeVisible({ timeout: 5000 });
     }
   });
@@ -653,7 +653,7 @@ test.describe("ServiceDetail — Notary Service", () => {
     if (found) {
       await page.locator('button:has-text("Book Appointment")').click();
       await expect(
-        page.locator('[role="alert"]').filter({ hasText: /missing/i })
+        page.locator('[role="status"]').filter({ hasText: /missing/i })
       ).toBeVisible({ timeout: 5000 });
     }
   });
@@ -701,7 +701,7 @@ test.describe("ServiceDetail — Life Insurance Boot Camp", () => {
       const navigatedToStripe = page.url().includes("stripe.com");
       if (!navigatedToStripe) {
         await expect(
-          page.locator('[role="alert"]').filter({ hasText: /payment|call/i })
+          page.locator('[role="status"]').filter({ hasText: /payment|call/i })
         ).toBeVisible({ timeout: 6000 });
       }
     }
