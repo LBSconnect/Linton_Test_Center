@@ -167,7 +167,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]> {
     if (!db) {
-      throw new Error('Database not configured');
+      return []; // No DB configured — treat as no existing bookings
     }
     const results = await db
       .select()

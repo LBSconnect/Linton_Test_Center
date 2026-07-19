@@ -250,6 +250,7 @@ export async function sendAppointmentConfirmation(data: {
       timeZone: 'America/Chicago',
     });
 
+    const isNotaryService = data.serviceName.toLowerCase().includes('notary');
     const priceDisplay = data.priceAmount ? `$${(data.priceAmount / 100).toFixed(2)}` : 'To be determined';
     const paymentBadge = data.paymentStatus === 'paid'
       ? '<span style="background-color: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 12px; font-size: 12px;">PAID</span>'
@@ -267,7 +268,7 @@ export async function sendAppointmentConfirmation(data: {
           ${durationDisplay ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Duration:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${durationDisplay}</td></tr>` : ''}
           <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Date:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${formattedDate}</td></tr>
           <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Time:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${formattedTime} CT</td></tr>
-          <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Price:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${priceDisplay}</td></tr>
+          ${!isNotaryService ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Price:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${priceDisplay}</td></tr>` : ''}
           <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Payment:</td><td style="font-size:14px;padding:4px 0;">${paymentBadge}</td></tr>
         </table>
       </div>
@@ -324,6 +325,7 @@ export async function sendAppointmentCalendarInvite(data: {
       timeZone: 'America/Chicago',
     });
 
+    const isNotaryService = data.serviceName.toLowerCase().includes('notary');
     const priceDisplay = data.priceAmount ? `$${(data.priceAmount / 100).toFixed(2)}` : 'To be determined';
     const paymentBadge = data.paymentStatus === 'paid'
       ? '<span style="background-color: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 12px; font-size: 12px;">PAID</span>'
@@ -359,7 +361,7 @@ export async function sendAppointmentCalendarInvite(data: {
           ${durationDisplay ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Duration:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${durationDisplay}</td></tr>` : ''}
           <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Date:</td><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">${formattedDate}</td></tr>
           <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Time:</td><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">${formattedTime} CT</td></tr>
-          <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Price:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${priceDisplay}</td></tr>
+          ${!isNotaryService ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Price:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${priceDisplay}</td></tr>` : ''}
           <tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Payment:</td><td style="font-size:14px;padding:4px 0;">${paymentBadge}</td></tr>
           ${remainingNotes ? `<tr><td style="font-size:14px;padding:4px 0;font-weight:600;color:#374151;">Notes:</td><td style="font-size:14px;padding:4px 0;color:#374151;">${remainingNotes}</td></tr>` : ''}
         </table>

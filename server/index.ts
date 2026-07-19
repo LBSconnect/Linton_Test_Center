@@ -4,7 +4,6 @@ import { serveStatic } from "./static";
 import { createServer } from "http";
 import { getUncachableStripeClient } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
-import { sendPaymentNotification } from './emailService';
 import { seedStripeProducts } from './seedProducts';
 import { storage } from './storage';
 
@@ -61,28 +60,6 @@ app.post(
       const rawBody = req.body as Buffer;
 
       await WebhookHandlers.processWebhook(rawBody, sig);
-
-      try {
-        const event = JSON.parse(rawBody.toString());
-        console.log(`Received webhook ${event.id}: ${event.type} for ${event.data?.object?.id}`);
-
-        if (event.type === 'checkout.session.completed') {
-          const session = event.data.object;
-          const stripe = await getUncachableStripeClient();
-          const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
-          const productName = lineItems.data[0]?.description || undefined;
-          sendPaymentNotification({
-            customerEmail: session.customer_details?.email || undefined,
-            customerName: session.customer_details?.name || undefined,
-            amount: session.amount_total || 0,
-            currency: session.currency || 'usd',
-            productName,
-            sessionId: session.id,
-          });
-        }
-      } catch (emailErr: any) {
-        console.error('Error processing webhook notification:', emailErr.message);
-      }
 
       res.status(200).json({ received: true });
     } catch (error: any) {

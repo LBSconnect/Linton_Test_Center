@@ -140,12 +140,11 @@ export default function Home() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <a href="tel:2818365357">
+              <a href="tel:2818365357" data-testid="button-hero-call">
                 <Button
                   size="lg"
                   variant="outline"
                   className="border-white/30 text-white bg-white/5 backdrop-blur-sm"
-                  data-testid="button-hero-call"
                 >
                   <Phone className="w-4 h-4 mr-2" />
                   (281) 836-5357
@@ -209,7 +208,7 @@ export default function Home() {
 
             {/* Path 1: Certiport */}
             <Link href="/services/certification-exam-testing">
-              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col" data-testid="card-path-certiport">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-12 h-12 rounded-xl bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center mb-5">
                   <Award className="w-6 h-6 text-[#1e3a6e] dark:text-[#6b9aed]" />
@@ -233,7 +232,7 @@ export default function Home() {
 
             {/* Path 2: Bootcamp */}
             <Link href="/services?filter=bootcamp">
-              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col" data-testid="card-path-bootcamp">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start justify-between mb-5">
                   <div className="w-12 h-12 rounded-xl bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center">
@@ -262,7 +261,7 @@ export default function Home() {
 
             {/* Path 3: Business Services */}
             <Link href="/services?filter=business">
-              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+              <div className="group relative bg-card border border-border/50 rounded-xl p-7 cursor-pointer transition-all duration-200 hover:border-[#1e3a6e]/60 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col" data-testid="card-path-business">
                 <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl bg-gradient-to-r from-[#1e3a6e] to-[#2a4f8e] opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-start justify-between mb-5">
                   <div className="w-12 h-12 rounded-xl bg-[#1e3a6e]/10 dark:bg-[#4a72c4]/20 flex items-center justify-center">
@@ -392,7 +391,7 @@ export default function Home() {
           <p className="text-center mt-8 text-sm text-muted-foreground">
             See more reviews on{" "}
             <a
-              href="https://g.co/kgs/your-google-business-link"
+              href="https://g.page/r/lbs-test-exam-center/review"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#1e3a6e] dark:text-[#6b9aed] font-medium hover:underline"
@@ -553,12 +552,11 @@ export default function Home() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <a href="tel:2818365357">
+            <a href="tel:2818365357" data-testid="button-cta-call">
               <Button
                 size="lg"
                 variant="outline"
                 className="border-white/30 text-white bg-white/5"
-                data-testid="button-cta-call"
               >
                 <Phone className="w-4 h-4 mr-2" />
                 Call (281) 836-5357

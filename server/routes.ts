@@ -314,6 +314,14 @@ export async function registerRoutes(
       const data = parsed.data;
       const appointmentDate = new Date(data.appointmentDate);
 
+      // Enforce payment for Boot Camp services
+      const isBootcampService = data.serviceName.toLowerCase().includes('boot camp');
+      if (isBootcampService && (!data.payNow || !(data.priceId || data.priceAmount))) {
+        return res.status(400).json({
+          error: 'Payment is required for Boot Camp bookings. Please complete payment to reserve your seat.',
+        });
+      }
+
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
@@ -375,7 +383,7 @@ export async function registerRoutes(
             line_items: lineItems,
             mode: 'payment',
             success_url: `${req.protocol}://${req.get('host')}/checkout/success?appointment_id=${appointment.id}`,
-            cancel_url: `${req.protocol}://${req.get('host')}/services?appointment_id=${appointment.id}&payment_cancelled=true`,
+            cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel?appointment_id=${appointment.id}`,
             metadata: {
               appointment_id: appointment.id,
             },
@@ -385,30 +393,7 @@ export async function registerRoutes(
           // Update appointment with Stripe session ID
           await storage.updateAppointmentPayment(appointment.id, 'pending', session.id || undefined);
 
-          // Send emails (without waiting for completion)
-          sendAppointmentConfirmation({
-            appointmentId: appointment.id,
-            customerName: data.customerName,
-            customerEmail: data.customerEmail,
-            serviceName: data.serviceName,
-            appointmentDate: appointmentDate,
-            priceAmount: data.priceAmount,
-            paymentStatus: 'pending',
-            notes: data.notes,
-          });
-
-          sendAppointmentCalendarInvite({
-            appointmentId: appointment.id,
-            customerName: data.customerName,
-            customerEmail: data.customerEmail,
-            customerPhone: data.customerPhone,
-            serviceName: data.serviceName,
-            appointmentDate: appointmentDate,
-            priceAmount: data.priceAmount,
-            paymentStatus: 'pending',
-            notes: data.notes,
-          });
-
+          // Emails are sent by the webhook after payment is confirmed — do not send here
           return res.json({
             success: true,
             appointment: appointment,
@@ -416,7 +401,14 @@ export async function registerRoutes(
           });
         } catch (stripeError: any) {
           console.error('Stripe checkout error:', stripeError.message);
-          // Continue without payment if Stripe fails
+          if (isBootcampService) {
+            // Mark the appointment as payment-failed and reject — bootcamps cannot proceed without payment
+            await storage.updateAppointmentPayment(appointment.id, 'failed');
+            return res.status(500).json({
+              error: 'Payment processing failed. Please try again or call (281) 836-5357 to book your Boot Camp session.',
+            });
+          }
+          // For non-bootcamp services, continue without payment if Stripe fails
         }
       }
 

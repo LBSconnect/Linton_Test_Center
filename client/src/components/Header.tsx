@@ -150,12 +150,11 @@ export default function Header() {
               </div>
             )}
 
-            <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.myeasypass.net" target="_blank" rel="noopener noreferrer" data-testid="link-nav-exam-cram">
               <Button
                 variant="ghost"
                 size="sm"
                 className="text-foreground"
-                data-testid="link-nav-exam-cram"
               >
                 Exam Cram
               </Button>

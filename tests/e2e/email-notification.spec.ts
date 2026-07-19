@@ -28,6 +28,7 @@ import { TEST_TAG } from "../fixtures/seed.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
+const NO_DB = !process.env.DATABASE_URL;
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5000";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -117,6 +118,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
    * This is the value rendered in both the customer email and business email.
    */
   test("Notary Service — Monday 10 AM slot is stored correctly", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const mon = nextDayOfWeek(1);
     const expectedSlot = slotISO(mon, 10); // 10 AM CT Monday
     const email = `notify-notary+${Date.now()}@e2e.test`;
@@ -167,6 +169,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
 
 
   test("Passport Photos — Wednesday 8 AM (first slot) is stored correctly", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const wed = nextDayOfWeek(3);
     const expectedSlot = slotISO(wed, 8); // 8 AM CT Wednesday
     const email = `notify-passport+${Date.now()}@e2e.test`;
@@ -200,6 +203,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
   });
 
   test("Private Exam Testing — Saturday 3 PM (last slot) is stored correctly", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const sat = nextDayOfWeek(6);
     const expectedSlot = slotISO(sat, 15); // 3 PM CT Saturday — last valid slot
     const email = `notify-proctoring+${Date.now()}@e2e.test`;
@@ -234,6 +238,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
   });
 
   test("Certiport Exam Testing — Monday 4 PM (last weekday slot) is stored correctly", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const mon = nextDayOfWeek(1);
     const expectedSlot = slotISO(mon, 16); // 4 PM CT Monday — last valid slot
     const email = `notify-cert+${Date.now()}@e2e.test`;
@@ -275,6 +280,7 @@ test.describe("Email notification — both recipients triggered by webhook", () 
    * of this DB update. If this test passes, both emails will be triggered.
    */
   test("webhook sets appointment to confirmed/paid (triggers both email sends)", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const mon = nextDayOfWeek(1);
     const slot = slotISO(mon, 11); // 11 AM CT
     const email = `notify-both+${Date.now()}@e2e.test`;
@@ -321,6 +327,7 @@ test.describe("Email notification — both recipients triggered by webhook", () 
    * Verify customer phone is stored — it's included in the business calendar invite.
    */
   test("customer phone is persisted and available for business email", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
     const tue = nextDayOfWeek(2);
     const slot = slotISO(tue, 9); // 9 AM CT Tuesday
     const email = `notify-phone+${Date.now()}@e2e.test`;

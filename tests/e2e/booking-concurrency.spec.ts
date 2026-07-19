@@ -21,6 +21,7 @@ import { nextMondayAt10CT, TEST_TAG } from "../fixtures/seed.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
+const NO_DB = !process.env.DATABASE_URL;
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5000";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ test.describe("Concurrency — double-booking prevention", () => {
    * Attempts to book it again — expects 409 since it's already taken.
    */
   test("rejects booking for a pre-booked slot with 409", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL with pre-seeded appointment data");
     const takenSlot = nextMondayAt10CT();
 
     const response = await postBooking({
@@ -80,6 +82,7 @@ test.describe("Concurrency — double-booking prevention", () => {
    *  - Responses: one 200/201, one 409
    */
   test("only one booking succeeds when two requests race for the same free slot", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify concurrent bookings");
     // Use a slot 2 weeks out at 11 AM CT (CST=17:00 UTC) — unlikely to be taken
     const now = new Date();
     const twoWeeksOut = new Date(now);
@@ -131,6 +134,7 @@ test.describe("Concurrency — double-booking prevention", () => {
    * Verifies the 409 response body is user-friendly (shown in the UI toast).
    */
   test("409 response includes a user-facing error message", async () => {
+    test.skip(NO_DB, "Requires live DATABASE_URL with pre-seeded appointment data");
     const takenSlot = nextMondayAt10CT();
 
     const response = await postBooking({
