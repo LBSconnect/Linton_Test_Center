@@ -14,6 +14,7 @@ const bookAppointmentSchema = z.object({
   customerEmail: z.string().email("Invalid email address"),
   customerPhone: z.string().optional(),
   serviceName: z.string().min(1, "Service name is required"),
+  serviceSlug: z.string().optional(),
   serviceId: z.string().optional(),
   priceId: z.string().optional(),
   priceAmount: z.number().optional(),
@@ -271,22 +272,26 @@ export async function registerRoutes(
       // Get all possible slots for the day
       const allSlots = getAvailableTimeSlots(requestedDate, serviceSlug);
 
-      // Get existing appointments for that day
-      const startOfDay = new Date(requestedDate);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(requestedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      // Boot camp slots are never filtered — group classes allow multiple registrations
+      const isBootcamp = serviceSlug != null && serviceSlug in { 'life-insurance-boot-camp': 1, 'property-casualty-boot-camp': 1 };
 
-      const existingAppointments = await storage.getAppointmentsByDateRange(startOfDay, endOfDay);
+      let availableSlots = allSlots;
+      if (!isBootcamp) {
+        const startOfDay = new Date(requestedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(requestedDate);
+        endOfDay.setHours(23, 59, 59, 999);
 
-      // Filter out already booked slots
-      const bookedTimes = new Set(
-        existingAppointments
-          .filter(apt => apt.status !== 'cancelled')
-          .map(apt => new Date(apt.appointmentDate).toISOString())
-      );
+        const existingAppointments = await storage.getAppointmentsByDateRange(startOfDay, endOfDay);
 
-      const availableSlots = allSlots.filter(slot => !bookedTimes.has(slot));
+        const bookedTimes = new Set(
+          existingAppointments
+            .filter(apt => apt.status !== 'cancelled')
+            .map(apt => new Date(apt.appointmentDate).toISOString())
+        );
+
+        availableSlots = allSlots.filter(slot => !bookedTimes.has(slot));
+      }
 
       res.json({
         date: requestedDate.toISOString().split('T')[0],
@@ -322,6 +327,14 @@ export async function registerRoutes(
         });
       }
 
+      // Certiport bookings must include an exam selection (encoded as "Exam: <name>" in notes)
+      const isCertiportService = data.serviceName.toLowerCase().includes('certiport');
+      if (isCertiportService && !data.notes?.includes('Exam:')) {
+        return res.status(400).json({
+          error: 'Please select the exam you are registering for.',
+        });
+      }
+
       // Validate business hours
       if (!isValidBusinessTime(appointmentDate)) {
         return res.status(400).json({
@@ -329,19 +342,21 @@ export async function registerRoutes(
         });
       }
 
-      // Check if the slot is already booked
-      const startOfHour = new Date(appointmentDate);
-      startOfHour.setMinutes(0, 0, 0);
-      const endOfHour = new Date(appointmentDate);
-      endOfHour.setMinutes(59, 59, 999);
+      // Boot camp sessions are group classes — multiple students may book the same slot
+      if (!isBootcampService) {
+        const startOfHour = new Date(appointmentDate);
+        startOfHour.setMinutes(0, 0, 0);
+        const endOfHour = new Date(appointmentDate);
+        endOfHour.setMinutes(59, 59, 999);
 
-      const existingAppointments = await storage.getAppointmentsByDateRange(startOfHour, endOfHour);
-      const conflictingAppointment = existingAppointments.find(apt => apt.status !== 'cancelled');
+        const existingAppointments = await storage.getAppointmentsByDateRange(startOfHour, endOfHour);
+        const conflictingAppointment = existingAppointments.find(apt => apt.status !== 'cancelled');
 
-      if (conflictingAppointment) {
-        return res.status(409).json({
-          error: 'This time slot is no longer available. Please select a different time.',
-        });
+        if (conflictingAppointment) {
+          return res.status(409).json({
+            error: 'This time slot is no longer available. Please select a different time.',
+          });
+        }
       }
 
       // Create the appointment
@@ -383,7 +398,7 @@ export async function registerRoutes(
             line_items: lineItems,
             mode: 'payment',
             success_url: `${req.protocol}://${req.get('host')}/checkout/success?appointment_id=${appointment.id}`,
-            cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel?appointment_id=${appointment.id}`,
+            cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel?appointment_id=${appointment.id}${data.serviceSlug ? `&service=${encodeURIComponent(data.serviceSlug)}` : ''}`,
             metadata: {
               appointment_id: appointment.id,
             },
@@ -466,6 +481,29 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error('Payment update error:', error.message);
       res.status(500).json({ error: 'Failed to update payment status' });
+    }
+  });
+
+  // Cancel an appointment (called from checkout cancel page when customer backs out of Stripe)
+  app.post('/api/appointments/:id/cancel', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const appointment = await storage.getAppointment(id);
+
+      if (!appointment) {
+        return res.status(404).json({ error: 'Appointment not found' });
+      }
+
+      // Only cancel pending/unpaid appointments — don't undo confirmed paid bookings
+      if (appointment.status === 'confirmed' || appointment.paymentStatus === 'paid') {
+        return res.status(409).json({ error: 'Cannot cancel a confirmed booking' });
+      }
+
+      const cancelled = await storage.cancelAppointment(id);
+      res.json({ success: true, appointment: cancelled });
+    } catch (error: any) {
+      console.error('Cancel appointment error:', error.message);
+      res.status(500).json({ error: 'Failed to cancel appointment' });
     }
   });
 

@@ -40,6 +40,9 @@ export class WebhookHandlers {
       case 'payment_intent.payment_failed':
         console.log('Payment failed:', event.data.object);
         break;
+      case 'checkout.session.expired':
+        await this.handleCheckoutExpired(event.data.object as Stripe.Checkout.Session);
+        break;
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -97,6 +100,30 @@ export class WebhookHandlers {
       console.log('Payment confirmation emails queued for customer:', appointment.customerEmail, 'and company');
     } catch (error: any) {
       console.error('Error processing checkout.session.completed:', error.message);
+    }
+  }
+
+  /**
+   * Handle checkout.session.expired — cancel the orphaned appointment so the slot opens back up
+   */
+  private static async handleCheckoutExpired(session: Stripe.Checkout.Session): Promise<void> {
+    console.log('Processing checkout.session.expired for session:', session.id);
+
+    const appointmentId = session.metadata?.appointment_id;
+    if (!appointmentId) {
+      console.log('No appointment_id in expired session metadata, skipping');
+      return;
+    }
+
+    try {
+      const cancelled = await storage.cancelAppointment(appointmentId);
+      if (cancelled) {
+        console.log(`Appointment ${appointmentId} cancelled after checkout session expired`);
+      } else {
+        console.warn(`Appointment ${appointmentId} not found when cancelling expired session`);
+      }
+    } catch (error: any) {
+      console.error('Error cancelling appointment for expired session:', error.message);
     }
   }
 }

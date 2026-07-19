@@ -34,6 +34,7 @@ export interface IStorage {
   createAppointment(data: InsertAppointment): Promise<Appointment>;
   getAppointment(id: string): Promise<Appointment | null>;
   updateAppointmentPayment(id: string, paymentStatus: string, stripeSessionId?: string): Promise<Appointment | null>;
+  cancelAppointment(id: string): Promise<Appointment | null>;
   getAppointmentsByDateRange(startDate: Date, endDate: Date): Promise<Appointment[]>;
   runMigrations(): Promise<void>;
 }
@@ -160,6 +161,18 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .update(appointments)
       .set(updateData)
+      .where(eq(appointments.id, id))
+      .returning();
+    return result || null;
+  }
+
+  async cancelAppointment(id: string): Promise<Appointment | null> {
+    if (!db) {
+      throw new Error('Database not configured');
+    }
+    const [result] = await db
+      .update(appointments)
+      .set({ status: 'cancelled', paymentStatus: 'unpaid', updatedAt: new Date() })
       .where(eq(appointments.id, id))
       .returning();
     return result || null;
