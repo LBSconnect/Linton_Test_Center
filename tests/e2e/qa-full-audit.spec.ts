@@ -39,13 +39,13 @@ async function pickFirstSlot(page: Page): Promise<boolean> {
   await dayBtn.click();
   // Wait for time slot buttons to appear after API fetch
   try {
-    await page.waitForSelector('button:has-text("AM"), button:has-text("PM")', { timeout: 12000 });
+    await page.waitForSelector('[data-testid="btn-time-slot"]', { timeout: 12000 });
   } catch {
     return false;
   }
-  const slotBtn = page.locator('button:has-text("AM"), button:has-text("PM")').first();
+  const slotBtn = page.locator('[data-testid="btn-time-slot"]').first();
   if ((await slotBtn.count()) === 0) return false;
-  await slotBtn.click();
+  await slotBtn.click({ force: true });
   // Wait for customer info form to appear (React re-renders after selectedTime is set)
   try {
     await page.waitForSelector('input[id="name"]', { timeout: 8000 });

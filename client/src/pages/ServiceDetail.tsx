@@ -446,6 +446,7 @@ export default function ServiceDetail() {
                               {slotsData.slots.map((slot) => (
                                 <Button
                                   key={slot}
+                                  data-testid="btn-time-slot"
                                   variant={selectedTime === slot ? "default" : "outline"}
                                   size="sm"
                                   className={selectedTime === slot ? "bg-[#1e3a6e]" : ""}
