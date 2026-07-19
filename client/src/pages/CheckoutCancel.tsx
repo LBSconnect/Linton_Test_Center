@@ -33,11 +33,10 @@ export default function CheckoutCancel() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <a href="tel:2818365357">
+              <a href="tel:2818365357" data-testid="button-call-help">
                 <Button
                   variant="outline"
                   className="w-full mt-2"
-                  data-testid="button-call-help"
                 >
                   <Phone className="w-4 h-4 mr-2" />
                   Call for Help

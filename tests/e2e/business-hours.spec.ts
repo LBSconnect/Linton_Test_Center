@@ -19,6 +19,12 @@ import { TEST_TAG } from "../fixtures/seed.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
+test.use({
+  launchOptions: {
+    executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+  },
+});
+
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5000";
 
 // ─── Timezone helpers ───────────────────────────────────────────────────────

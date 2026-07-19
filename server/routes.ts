@@ -383,7 +383,7 @@ export async function registerRoutes(
             line_items: lineItems,
             mode: 'payment',
             success_url: `${req.protocol}://${req.get('host')}/checkout/success?appointment_id=${appointment.id}`,
-            cancel_url: `${req.protocol}://${req.get('host')}/services?appointment_id=${appointment.id}&payment_cancelled=true`,
+            cancel_url: `${req.protocol}://${req.get('host')}/checkout/cancel?appointment_id=${appointment.id}`,
             metadata: {
               appointment_id: appointment.id,
             },
