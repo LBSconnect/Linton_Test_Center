@@ -26,8 +26,10 @@ async function teardown() {
       `DELETE FROM appointments WHERE notes LIKE '${TEST_TAG}%' RETURNING id`
     );
     console.log(`[teardown] Deleted ${result.rowCount} test appointments.`);
+  } catch (err: any) {
+    console.warn(`[teardown] DB unreachable — skipping cleanup (${err.message ?? err}).`);
   } finally {
-    await pool.end();
+    await pool.end().catch(() => {});
   }
 }
 
