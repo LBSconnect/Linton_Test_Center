@@ -319,6 +319,13 @@ export async function registerRoutes(
       const data = parsed.data;
       const appointmentDate = new Date(data.appointmentDate);
 
+      // Reject appointments in the past
+      if (appointmentDate < new Date()) {
+        return res.status(400).json({
+          error: 'Cannot book appointments in the past.',
+        });
+      }
+
       // Enforce payment for Boot Camp services
       const isBootcampService = data.serviceName.toLowerCase().includes('boot camp');
       if (isBootcampService && (!data.payNow || !(data.priceId || data.priceAmount))) {

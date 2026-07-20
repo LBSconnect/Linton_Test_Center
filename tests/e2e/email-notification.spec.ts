@@ -255,7 +255,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
       serviceName: "Certiport Exam Testing",
       appointmentDate: expectedSlot,
       payNow: true,
-      notes: `${TEST_TAG}:email-cert-mon`,
+      notes: `${TEST_TAG}:email-cert-mon Exam: Microsoft Word`,
     });
 
     expect(body.success).toBe(true);
