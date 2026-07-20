@@ -29,6 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
 const NO_DB = !process.env.DATABASE_URL;
+const NO_STRIPE_WEBHOOK = !process.env.STRIPE_WEBHOOK_SECRET;
 const BASE_URL = process.env.BASE_URL ?? "http://localhost:5000";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -119,6 +120,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
    */
   test("Notary Service — Monday 10 AM slot is stored correctly", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const mon = nextDayOfWeek(1);
     const expectedSlot = slotISO(mon, 10); // 10 AM CT Monday
     const email = `notify-notary+${Date.now()}@e2e.test`;
@@ -170,6 +172,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
 
   test("Passport Photos — Wednesday 8 AM (first slot) is stored correctly", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const wed = nextDayOfWeek(3);
     const expectedSlot = slotISO(wed, 8); // 8 AM CT Wednesday
     const email = `notify-passport+${Date.now()}@e2e.test`;
@@ -204,6 +207,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
 
   test("Private Exam Testing — Saturday 3 PM (last slot) is stored correctly", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const sat = nextDayOfWeek(6);
     const expectedSlot = slotISO(sat, 15); // 3 PM CT Saturday — last valid slot
     const email = `notify-proctoring+${Date.now()}@e2e.test`;
@@ -239,6 +243,7 @@ test.describe("Email data integrity — appointment time in DB matches booked sl
 
   test("Certiport Exam Testing — Monday 4 PM (last weekday slot) is stored correctly", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const mon = nextDayOfWeek(1);
     const expectedSlot = slotISO(mon, 16); // 4 PM CT Monday — last valid slot
     const email = `notify-cert+${Date.now()}@e2e.test`;
@@ -281,6 +286,7 @@ test.describe("Email notification — both recipients triggered by webhook", () 
    */
   test("webhook sets appointment to confirmed/paid (triggers both email sends)", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const mon = nextDayOfWeek(1);
     const slot = slotISO(mon, 11); // 11 AM CT
     const email = `notify-both+${Date.now()}@e2e.test`;
@@ -328,6 +334,7 @@ test.describe("Email notification — both recipients triggered by webhook", () 
    */
   test("customer phone is persisted and available for business email", async () => {
     test.skip(NO_DB, "Requires live DATABASE_URL to persist and verify appointment records");
+    test.skip(NO_STRIPE_WEBHOOK, "Requires STRIPE_WEBHOOK_SECRET to send signed webhook events to live server");
     const tue = nextDayOfWeek(2);
     const slot = slotISO(tue, 9); // 9 AM CT Tuesday
     const email = `notify-phone+${Date.now()}@e2e.test`;

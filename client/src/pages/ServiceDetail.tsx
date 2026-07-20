@@ -219,6 +219,7 @@ export default function ServiceDetail() {
       customerEmail,
       customerPhone,
       serviceName: service.title,
+      serviceSlug: service.slug,
       serviceId: matchingProduct?.id,
       priceId: price?.id,
       priceAmount: price?.unit_amount,

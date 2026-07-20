@@ -63,8 +63,10 @@ async function seed() {
 
     console.log(`[seed] Pre-booked slot at ${takenSlot}`);
     console.log("[seed] Done.");
+  } catch (err: any) {
+    console.warn(`[seed] DB unreachable — skipping seed (${err.message ?? err}). Tests needing the pre-seeded slot will fail.`);
   } finally {
-    await pool.end();
+    await pool.end().catch(() => {});
   }
 }
 

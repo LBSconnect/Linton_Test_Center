@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,19 @@ import { Link } from "wouter";
 import { XCircle, ArrowRight, Phone } from "lucide-react";
 
 export default function CheckoutCancel() {
+  const params = new URLSearchParams(window.location.search);
+  const appointmentId = params.get("appointment_id");
+  const serviceSlug = params.get("service");
+
+  useEffect(() => {
+    if (!appointmentId) return;
+    fetch(`/api/appointments/${appointmentId}/cancel`, { method: "POST" }).catch(() => {
+      // Silent — slot will be freed when Stripe fires checkout.session.expired anyway
+    });
+  }, [appointmentId]);
+
+  const tryAgainHref = serviceSlug ? `/services/${serviceSlug}` : "/services";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -24,7 +38,7 @@ export default function CheckoutCancel() {
               try again or contact us if you need assistance.
             </p>
             <div className="space-y-3 pt-2">
-              <Link href="/services">
+              <Link href={tryAgainHref}>
                 <Button
                   className="w-full bg-gradient-to-r from-[#e85d40] to-[#f07050] text-white"
                   data-testid="button-try-again"
