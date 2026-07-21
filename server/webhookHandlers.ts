@@ -63,11 +63,23 @@ export class WebhookHandlers {
     }
 
     try {
+      // Idempotency guard — Stripe may retry the same event multiple times.
+      // Read current state first; if already paid, skip all side-effects.
+      const existing = await storage.getAppointment(appointmentId);
+      if (!existing) {
+        console.error('Appointment not found for ID:', appointmentId);
+        return;
+      }
+      if (existing.paymentStatus === 'paid') {
+        console.log(`Appointment ${appointmentId} already paid — ignoring duplicate webhook (session ${session.id})`);
+        return;
+      }
+
       // Update appointment payment status
       const appointment = await storage.updateAppointmentPayment(appointmentId, 'paid', session.id);
 
       if (!appointment) {
-        console.error('Appointment not found for ID:', appointmentId);
+        console.error('Appointment update returned null for ID:', appointmentId);
         return;
       }
 

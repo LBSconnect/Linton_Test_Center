@@ -55,6 +55,15 @@ export default function Footer() {
                   </span>
                 </Link>
               ))}
+              <a
+                href="https://time-keeper-tnb8.onrender.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-white/70 transition-colors hover:text-white"
+                data-testid="link-footer-time-keeper"
+              >
+                Time Keeper
+              </a>
             </nav>
           </div>
 
