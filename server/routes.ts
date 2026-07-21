@@ -537,12 +537,12 @@ export async function registerRoutes(
     const to = (req.query.to as string) || process.env.NOTIFICATION_EMAIL || 'info@lbsconnect.net';
 
     const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASSWORD;
+    const smtpPass = process.env.SMTP_PASS;
 
     if (!smtpUser || !smtpPass) {
       return res.status(500).json({
         success: false,
-        error: 'SMTP_USER or SMTP_PASSWORD not set in environment variables',
+        error: 'SMTP_USER or SMTP_PASS not set in environment variables',
       });
     }
 
