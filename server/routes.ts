@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { insertContactSchema } from "@shared/schema";
-import { sendContactNotification, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
+import { sendContactNotification, sendContactAcknowledgement, sendAppointmentConfirmation, sendAppointmentCalendarInvite } from "./emailService";
 import { sendEmail } from "./smtpClient";
 import { registerCorporateRoutes } from "./corporateRoutes";
 import { z } from "zod";
@@ -247,6 +247,7 @@ export async function registerRoutes(
       const submission = await storage.createContactSubmission(parsed.data);
       console.log('Contact form submission saved:', submission.id);
       sendContactNotification(parsed.data);
+      sendContactAcknowledgement(parsed.data);
       res.json({ success: true, message: 'Message received' });
     } catch (error: any) {
       console.error('Contact form error:', error.message);

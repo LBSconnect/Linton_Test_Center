@@ -123,6 +123,60 @@ END:VEVENT
 END:VCALENDAR`;
 }
 
+export async function sendContactAcknowledgement(data: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  service?: string | null;
+  message: string;
+}) {
+  try {
+    const serviceRow = data.service
+      ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;width:40%;">Service:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${data.service}</td></tr>`
+      : '';
+    const phoneRow = data.phone
+      ? `<tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Phone:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${data.phone}</td></tr>`
+      : '';
+
+    const content = `
+      <h2 style="margin:0 0 6px;color:#0d1b35;font-size:24px;font-weight:700;">We received your message</h2>
+      <p style="margin:0 0 24px;color:#64748b;font-size:14px;">Hi ${data.name}, thank you for reaching out. A member of our team will get back to you within one business day.</p>
+
+      <div style="background:#f0f4ff;border-radius:8px;padding:20px 24px;margin-bottom:24px;border-left:4px solid #1e3a6e;">
+        <div style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">Your Submission</div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;width:40%;">Name:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${data.name}</td></tr>
+          <tr><td style="color:#374151;font-size:14px;padding:4px 0;font-weight:600;">Email:</td><td style="color:#374151;font-size:14px;padding:4px 0;">${data.email}</td></tr>
+          ${phoneRow}
+          ${serviceRow}
+        </table>
+        <div style="margin-top:14px;padding:14px 16px;background:#ffffff;border-radius:6px;border:1px solid #e2e8f0;">
+          <div style="color:#64748b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Message</div>
+          <p style="margin:0;color:#374151;font-size:14px;white-space:pre-wrap;line-height:1.6;">${data.message}</p>
+        </div>
+      </div>
+
+      <div style="background:#f8fafc;border-radius:8px;padding:18px 20px;margin-bottom:20px;border-left:4px solid #c9a84c;">
+        <p style="margin:0 0 4px;color:#0d1b35;font-size:14px;font-weight:600;">Need to reach us sooner?</p>
+        <p style="margin:0;color:#374151;font-size:14px;">
+          Call us at <a href="tel:${LBS_PHONE}" style="color:#1e3a6e;font-weight:600;">${LBS_PHONE}</a> or
+          email <a href="mailto:${NOTIFICATION_EMAIL}" style="color:#1e3a6e;">${NOTIFICATION_EMAIL}</a>.<br />
+          Mon–Fri 8 AM–5 PM &nbsp;|&nbsp; Sat 8 AM–4 PM CT
+        </p>
+      </div>
+    `;
+
+    await sendEmail({
+      to: data.email,
+      subject: `We received your message — ${BUSINESS_NAME}`,
+      html: emailWrapper(content),
+    });
+    console.log('Contact acknowledgement email sent to', data.email);
+  } catch (error: any) {
+    console.error('Failed to send contact acknowledgement email:', error.message);
+  }
+}
+
 export async function sendContactNotification(data: {
   name: string;
   email: string;
